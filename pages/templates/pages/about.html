@@ -1,0 +1,109 @@
+{% extends  base_template %} 
+{% load static %}
+
+{% block title %}About Us - PharmaHub{% endblock %}
+
+{% block content %}
+<style>
+  .dark .about-page .about-hero { background: linear-gradient(135deg, #0f172a, #1f2937) !important; }
+  .dark .about-page .about-soft { background-color: #111827 !important; }
+  .dark .about-page .about-accent { background-color: #0f172a !important; }
+  .dark .about-page .about-card {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+  }
+  .dark .about-page .about-card p { color: #d1d5db !important; }
+</style>
+<div class="about-page">
+<!-- Hero Section -->
+<section class="about-hero bg-gradient-to-r from-teal-50 to-white py-16 text-center">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">About <span class="text-teal-600">PharmaHub</span></h1>
+    <p class="text-gray-600 mb-8">We’re revolutionizing healthcare access by connecting patients with verified pharmacies, ensuring quality medicines reach every doorstep with speed and reliability.</p>
+  </div>
+</section>
+<section class="about-soft py-16 bg-teal-50/60">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center px-6">
+    <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80" 
+         alt="Mission Doctors" 
+         class="rounded-xl shadow-md">
+    <div>
+      <h2 class="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
+      <p class="text-gray-700">To make healthcare accessible, affordable, and reliable for everyone. We bridge the gap between patients and pharmacies through technology, ensuring that quality medicines are just a click away.</p>
+      <p class="text-gray-700 mt-4">Since our founding in 2025, we’ve connected thousands of customers with verified pharmacies, delivering medicines with a 99.2% satisfaction rate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Our Values -->
+<section class="py-16 bg-white">
+  <div class="max-w-6xl mx-auto text-center px-6">
+    <h2 class="text-3xl font-bold text-gray-900 mb-2">Our Values</h2>
+    <p class="text-gray-600 mb-12">These core values guide everything we do and help us deliver exceptional healthcare services.</p>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="about-card p-6 bg-gray-50 rounded-xl shadow hover:shadow-lg transition">
+        <i class="ri-shield-check-line text-teal-600 text-4xl mb-4"></i>
+        <h3 class="text-lg font-semibold mb-2">Trust & Safety</h3>
+        <p class="text-gray-600">Every pharmacy on our platform is verified and licensed. We ensure all medicines are genuine and stored under proper conditions.</p>
+      </div>
+      <div class="about-card p-6 bg-gray-50 rounded-xl shadow hover:shadow-lg transition">
+        <i class="ri-truck-line text-teal-600 text-4xl mb-4"></i>
+        <h3 class="text-lg font-semibold mb-2">Fast Delivery</h3>
+        <p class="text-gray-600">Our network of trusted delivery partners ensures your medicines reach you quickly, safely, and at the right time.</p>
+      </div>
+      <div class="about-card p-6 bg-gray-50 rounded-xl shadow hover:shadow-lg transition">
+        <i class="ri-customer-service-2-line text-teal-600 text-4xl mb-4"></i>
+        <h3 class="text-lg font-semibold mb-2">24/7 Support</h3>
+        <p class="text-gray-600">Our dedicated support team is available round the clock to help you with any queries or concerns about your orders.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Meet Our Leadership -->
+<section class="about-accent py-16 bg-teal-600">
+  <div class="max-w-6xl mx-auto text-center px-6 text-white">
+    <h2 class="text-3xl font-bold mb-4">Meet Our Leadership</h2>
+    <p class="mb-12 text-teal-100">Our experienced team of healthcare and technology professionals are committed to transforming healthcare accessibility.</p>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="about-card bg-white rounded-xl shadow p-6 text-gray-800">
+        <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80" alt="Dr Abdul Bari Khan" class="w-24 h-24 rounded-full mx-auto mb-4">
+        <h3 class="text-lg font-semibold">Dr. Abdul Bari Khan</h3>
+        <p class="text-teal-600 mb-2">CEO, Indus Hospital</p>
+        <p class="text-gray-600 text-sm">Renowned Pakistani cardiac surgeon and philanthropist leading healthcare access for underserved communities.</p>
+      </div>
+      <div class="about-card bg-white rounded-xl shadow p-6 text-gray-800">
+        <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80" alt="Dr Adeeb Rizvi" class="w-24 h-24 rounded-full mx-auto mb-4">
+        <h3 class="text-lg font-semibold">Dr. Adeeb Rizvi</h3>
+        <p class="text-teal-600 mb-2">Founder, SIUT</p>
+        <p class="text-gray-600 text-sm">Pioneer of free kidney and liver transplants in Pakistan, transforming thousands of lives.</p>
+      </div>
+      <div class="about-card bg-white rounded-xl shadow p-6 text-gray-800">
+        <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80" alt="Dr Sania Nishtar" class="w-24 h-24 rounded-full mx-auto mb-4">
+        <h3 class="text-lg font-semibold">Dr. Sania Nishtar</h3>
+        <p class="text-teal-600 mb-2">Global Health Expert</p>
+        <p class="text-gray-600 text-sm">Leader in health policy and social protection, recognized globally for her contributions to public health.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Our Journey -->
+<section class="py-16 bg-white">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center px-6">
+    <img src="{% static 'pharmacy/images/ab1.jpg' %}" 
+         alt="Journey Doctors" 
+         class="rounded-xl shadow-md">
+    <div>
+      <h2 class="text-3xl font-bold text-gray-900 mb-6">Our Journey</h2>
+      <ul class="space-y-4 text-gray-700">
+        <li><strong>2025 – The Idea:</strong> Founded with the vision to make healthcare accessible through technology, starting with a small team of passionate healthcare and tech experts.</li>
+        <li><strong>2025 – Platform Launch:</strong> Launched our digital platform connecting customers with verified pharmacies, starting with 50 partner pharmacies in major cities.</li>
+        <li><strong>2025 – Rapid Growth:</strong> Expanded to 500+ pharmacies, 10,000+ customers, and launched additional services like health consultations and home lab tests.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,333 @@
+{% extends 'dashboards/pharmacy_base.html' %}
+{% load static %}
+{% block title %}Partner with PharmaHub{% endblock %}
+{% block content %}
+
+<section class="relative min-h-screen flex items-center bg-gray-50 dark:bg-gray-900 overflow-hidden">
+  <div class="absolute inset-0">
+    <img src="{% static 'pharmacy/images/p1.png' %}" alt="Background" class="w-full h-full object-cover blur-sm" />
+    <div class="absolute inset-0 bg-white/40 dark:bg-black/50"></div>
+  </div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+    <div>
+      <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-gray-100 leading-snug">
+        Elevate Your Pharmacy, <span class="text-teal-600">Digitally</span>
+      </h1>
+      <p class="mt-4 text-lg text-gray-700 dark:text-gray-300">
+        The all-in-one platform to manage inventory, fulfill online orders, and connect with a wider customer base effortlessly.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+        <a href="/pharmacy_dashboard/?tab=profile" class="bg-teal-600 text-white px-7 py-4 rounded-lg hover:bg-teal-800 font-bold text-lg transition duration-300 shadow-xl">
+          Pharmacy Profile
+        </a>
+        <a href="#demo-video" class="bg-orange-500 text-white px-7 py-4 rounded-lg hover:bg-orange-600 font-bold text-lg transition duration-300 shadow-xl">
+          Watch Platform Demo
+        </a>
+      </div>
+    </div>
+
+    <div class="flex justify-center">
+      <img src="{% static 'pharmacy/images/s1.jpeg' %}" alt="Pharmacist using system" class="w-3/4 rounded-2xl shadow-2xl" />
+    </div>
+  </div>
+</section>
+
+<section class="py-16 bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Your Digital Pharmacy Partner</h2>
+    <p class="mt-2 text-gray-600 dark:text-gray-400">We provide the tools necessary to modernize your operations and boost your bottom line.</p>
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 hover:shadow-xl transition duration-300">
+        <i class="ri-database-2-line text-teal-600 text-3xl"></i>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Inventory Automation</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Real-time stock monitoring, low-stock alerts, and automated ordering suggestions.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 hover:shadow-xl transition duration-300">
+        <i class="ri-global-line text-teal-600 text-3xl"></i>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Expanded Customer Reach</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Connect with thousands of new customers in your area for online delivery and pickup.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 hover:shadow-xl transition duration-300">
+        <i class="ri-bar-chart-box-line text-teal-600 text-3xl"></i>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Performance Analytics</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Intuitive dashboard to track key metrics, sales trends, and popular products.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="demo-video" class="py-16 bg-teal-50 dark:bg-gray-800/60">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">See Our Platform in Action</h2>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">A quick tour of how PharmaHub streamlines your pharmacy operations for maximum efficiency.</p>
+        
+        <div class="mt-8 relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl shadow-2xl overflow-hidden max-w-4xl mx-auto">
+            <img src="{% static 'pharmacy/images/phone1.jpg' %}" alt="Platform Demo Mockup" class="w-full h-full object-cover">
+            
+            <div class="absolute inset-0 flex items-center justify-center">
+                <a href="[Your_Demo_Video_Link]" target="_blank" class="w-20 h-20 bg-teal-600/80 rounded-full flex items-center justify-center text-white hover:bg-teal-700/90 transition duration-300 scale-100 hover:scale-105">
+                    <i class="ri-play-fill text-4xl"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bg-white dark:bg-gray-900 py-16">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+    <h2 id="howTitle" class="text-3xl font-bold text-gray-900 dark:text-gray-100 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      How PharmaHub Drives Your Growth
+    </h2>
+    <p id="howText" class="mt-2 text-gray-600 dark:text-gray-400 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      Streamline your operations and fulfill orders in four easy steps, maximizing efficiency.
+    </p>
+    
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="bg-gray-50 dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <i class="ri-link text-teal-600 text-3xl mb-3"></i>
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Integrate Inventory</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Seamlessly connect your existing POS or inventory system to sync product data.</p>
+      </div>
+      <div class="bg-gray-50 dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <i class="ri-shopping-bag-line text-teal-600 text-3xl mb-3"></i>
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Receive Digital Orders</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Get clear, consolidated order notifications from new and existing customers.</p>
+      </div>
+      <div class="bg-gray-50 dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <i class="ri-send-plane-line text-teal-600 text-3xl mb-3"></i>
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Fulfill & Dispatch</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Manage order preparation and coordinate fast, reliable delivery or customer pickup.</p>
+      </div>
+      <div class="bg-gray-50 dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <i class="ri-line-chart-line text-teal-600 text-3xl mb-3"></i>
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Analyze & Optimize</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Use our data analytics to identify popular products and improve future sales strategies.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 bg-gray-50 dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center mb-10">
+      Trusted by Leading Pharmacy Partners
+    </h2>
+
+    <div class="swiper mySwiper">
+      <div class="swiper-wrapper">
+
+        <!-- 1 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden text-center p-6 hover:shadow-xl transition">
+          <img src="{% static 'pharmacy/images/ph1.jpg' %}" 
+               class="h-40 w-full object-cover rounded-xl mx-auto" 
+               alt="Clinix+ Cover Photo">
+          <h3 class="mt-4 font-bold text-gray-900 dark:text-gray-100 text-lg">Clinix+</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Online Revenue Boosted by <b>40%</b></p>
+        </div>
+
+        <!-- 2 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden text-center p-6 hover:shadow-xl transition">
+          <img src="{% static 'pharmacy/images/ph2.png' %}"
+               class="h-40 w-full object-cover rounded-xl mx-auto" 
+               alt="Quick Scripts Cover Photo">
+          <h3 class="mt-4 font-bold text-gray-900 dark:text-gray-100 text-lg">Bashir Son's Pharmacy</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Inventory Time Reduced by <b>50%</b></p>
+        </div>
+
+        <!-- 3 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden text-center p-6 hover:shadow-xl transition">
+          <img src="{% static 'pharmacy/images/ph3.jpg' %}" 
+               class="h-40 w-full object-cover rounded-xl mx-auto" 
+               alt="MediCare Plus Cover Photo">
+          <h3 class="mt-4 font-bold text-gray-900 dark:text-gray-100 text-lg">MediCare Plus</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Achieved <b>99% Accuracy</b></p>
+        </div>
+
+        <!-- 4 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden text-center p-6 hover:shadow-xl transition">
+          <img src="{% static 'pharmacy/images/ph4.jpg' %}" 
+               class="h-40 w-full object-cover rounded-xl mx-auto" 
+               alt="Trust Care Pharma Cover Photo">
+          <h3 class="mt-4 font-bold text-gray-900 dark:text-gray-100 text-lg">Trust Care Pharma</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Expanded Delivery by <b>+5 km</b></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-teal-600 dark:bg-gray-900 py-16 text-white">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+    <h2 id="trustTitle" class="text-3xl font-bold opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      Proven Results for Pharmacy Owners
+    </h2>
+    <p id="trustText" class="mt-2 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      Join our growing network of successful pharmacies leveraging technology for growth.
+    </p>
+    
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="1000000">0</h3>
+        <p class="mt-2">Orders Fulfilled</p>
+      </div>
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="500">0</h3>
+        <p class="mt-2">Partner Pharmacies</p>
+      </div>
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="50000000">0</h3>
+        <p class="mt-2">Revenue Generated</p>
+      </div>
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="4.9">0</h3>
+        <p class="mt-2">Average Partner Rating</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-orange-500 dark:bg-gray-950 py-16 text-center text-white relative">
+  <h2 id="ctaTitle" class="text-3xl font-bold opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+    Ready to Grow Your Business?
+  </h2>
+  <p id="ctaText" class="mt-2 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+    Stop managing sales manually and start leveraging the power of digitalization today.
+  </p>
+  <div id="ctaBtns" class="mt-6 flex justify-center space-x-4 opacity-0 scale-90 transition-all duration-1000 ease-out">
+    <a href="/pharmacy_dashboard/?tab=inventory" class="bg-slate-50 text-orange-700 hover:bg-orange-50 dark:bg-slate-100 dark:text-orange-700 dark:hover:bg-slate-200 px-7 py-4 rounded-lg font-bold text-lg shadow-xl hover:shadow-2xl transition duration-300">Start Managing Inventory</a>
+    <a href="/pharmacy_dashboard/?tab=prescription" class="bg-black/20 hover:bg-black/30 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100 text-white px-7 py-4 rounded-lg font-bold text-lg transition duration-300">View Prescription Requests</a>
+  </div>
+
+  <div class="mt-12 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="bg-white/20 dark:bg-gray-800 rounded-2xl p-6 shadow-lg text-white opacity-0 scale-90 transition-all duration-1000 ease-out ctaItem">
+      <div class="flex justify-center">
+        <i class="ri-pencil-ruler-line text-4xl"></i>
+      </div>
+      <h3 class="mt-4 text-xl font-semibold">Inventory Management</h3>
+      <p class="mt-2 text-sm">Automate stock tracking, reduce waste, and manage expiry dates efficiently.</p>
+    </div>
+    <div class="bg-white/20 dark:bg-gray-800 rounded-2xl p-6 shadow-lg text-white opacity-0 scale-90 transition-all duration-1000 ease-out ctaItem">
+      <div class="flex justify-center">
+        <i class="ri-user-star-line text-4xl"></i>
+      </div>
+      <h3 class="mt-4 text-xl font-semibold">Customer Acquisition</h3>
+      <p class="mt-2 text-sm">Grow your loyal customer base through online visibility and effective marketing tools.</p>
+    </div>
+    <div class="bg-white/20 dark:bg-gray-800 rounded-2xl p-6 shadow-lg text-white opacity-0 scale-90 transition-all duration-1000 ease-out ctaItem">
+      <div class="flex justify-center">
+        <i class="ri-customer-service-line text-4xl"></i>
+      </div>
+      <h3 class="mt-4 text-xl font-semibold">Dedicated Support</h3>
+      <p class="mt-2 text-sm">Get 24/7 technical assistance and training from our specialized support team.</p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  // Original script for CTA section (kept for animation)
+  const ctaObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelector("#ctaTitle").classList.remove("opacity-0","translate-y-6");
+        document.querySelector("#ctaText").classList.remove("opacity-0","translate-y-6");
+        document.querySelector("#ctaBtns").classList.remove("opacity-0","scale-90");
+        document.querySelectorAll(".ctaItem").forEach((el, i) => {
+          setTimeout(() => el.classList.remove("opacity-0","scale-90"), i * 300);
+        });
+        ctaObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  ctaObserver.observe(document.querySelector("#ctaTitle"));
+</script>
+
+<script>
+  // Original script for Trusted Section (kept for animation and counter)
+  const trustObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll("#trustTitle, #trustText, .trustItem").forEach((el, i) => {
+          setTimeout(() => el.classList.remove("opacity-0", "translate-y-6"), i * 200);
+        });
+        document.querySelectorAll(".counter").forEach(counter => {
+          const target = +counter.dataset.target;
+          let count = 0;
+          let step;
+          let suffix = target >= 1000 ? "+" : (target < 10 && target % 1 !== 0 ? "" : "+"); // Logic for large numbers vs decimals
+
+          // Adjust step based on target size for smoother counting
+          if (target > 1000000) {
+            step = 10000; 
+          } else if (target > 1000) {
+            step = 50; 
+          } else if (target < 10) {
+            step = 0.05; // For 4.9 metric
+          } else {
+            step = 1;
+          }
+
+          const update = () => {
+            count += step;
+            if (count > target) count = target;
+            
+            let displayCount;
+            if (target > 1000000) {
+              // Convert to millions if very large
+              displayCount = (count / 1000000).toFixed(1);
+              suffix = "M+";
+            } else if (target >= 1000) {
+              displayCount = Math.floor(count).toLocaleString();
+            } else if (target < 10) {
+              // Handle decimals for rating (e.g., 4.9)
+              displayCount = count.toFixed(1);
+              suffix = "/5 stars";
+            } else {
+              displayCount = count.toLocaleString();
+            }
+            
+            counter.textContent = displayCount + suffix;
+
+            if (count < target) requestAnimationFrame(update);
+          };
+          update();
+        });
+        trustObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  trustObserver.observe(document.querySelector("#trustTitle"));
+</script>
+
+<script>
+  const howObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelector("#howTitle").classList.remove("opacity-0", "translate-y-6");
+        document.querySelector("#howText").classList.remove("opacity-0", "translate-y-6");
+        document.querySelectorAll(".howStep").forEach((step, i) => {
+          setTimeout(() => step.classList.remove("opacity-0", "-translate-x-10"), i * 300);
+        });
+        howObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  howObserver.observe(document.querySelector("#howTitle"));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+<script>
+  // Original Swiper script (kept for the Famous Pharmacies carousel)
+  var swiper = new Swiper(".mySwiper", {
+    slidesPerView: 3,
+    spaceBetween: 24,
+    loop: true,
+    autoplay: { delay: 3000, disableOnInteraction: false }, // Adjusted delay for better reading
+    breakpoints: { 640:{slidesPerView:1},768:{slidesPerView:2},1024:{slidesPerView:3} }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+ /* Removed unused 'Pacifico' font import. 'Inter' remains for the dashboard UI. */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+        }
+
+        /* Custom Styles that are not standard Tailwind utilities */
+        .gradient-bg {
+            background-image: linear-gradient(to bottom, #d9f3ff, #f3f4f6);
+        }
+
+        .edit-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+
+        .tab-btn.active {
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .low-stock-alert {
+            background-color: #fffbe6;
+            border-left: 4px solid #f6b400;
+            color: #8c5d00;
+        }
+
+        .action-button-icon {
+            transition: color 0.2s;
+        }
+
+        .action-button-icon.edit {
+            background-color: #e0f2fe;
+            color: #3b82f6;
+        }
+
+        .action-button-icon.edit:hover {
+            background-color: #dbeafe;
+        }
+
+        .action-button-icon.delete {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .action-button-icon.delete:hover {
+            background-color: #fecaca;
+        }
+
+        /* Form Visibility Transition */
+        #medicineFormContainer {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        #medicineFormContainer.visible {
+            max-height: 1000px;
+            opacity: 1;
+            margin-top: 1.5rem;
+        }
+
+        /* Status Badges */
+        .status-badge.Pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.Processing {
+            background-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.Shipped {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-badge.Delivered {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.Cancelled {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.Returned {
+            background-color: #e5e7eb;
+            color: #374151;
+        }

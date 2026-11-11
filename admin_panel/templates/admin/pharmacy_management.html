@@ -1,0 +1,128 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Pharmacy Management | PharmaHub Admin{% endblock %}
+{% block page_title %}Pharmacy Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
+            <p class="text-blue-500 text-xs font-bold uppercase tracking-wider">Total Pharmacies</p>
+            <h4 class="text-3xl font-black text-gray-800">{{ total_pharmacies }}</h4>
+        </div>
+        <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
+            <p class="text-emerald-500 text-xs font-bold uppercase tracking-wider">Verified</p>
+            <h4 class="text-3xl font-black text-gray-800">{{ verified_count }}</h4>
+        </div>
+        <div class="bg-red-50 p-5 rounded-2xl border border-red-100">
+            <p class="text-red-500 text-xs font-bold uppercase tracking-wider">Suspended</p>
+            <h4 class="text-3xl font-black text-gray-800">{{ suspended_count }}</h4>
+        </div>
+        <div class="bg-purple-50 p-5 rounded-2xl border border-purple-100">
+            <p class="text-purple-500 text-xs font-bold uppercase tracking-wider">Avg Rating</p>
+            <h4 class="text-3xl font-black text-gray-800">{{ avg_rating|floatformat:1 }}</h4>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <form method="get" class="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-3">
+            <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Search pharmacy, owner, license..."
+                class="w-full md:w-96 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+            >
+            <select name="status" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold">
+                <option value="" {% if not status_filter %}selected{% endif %}>All Status</option>
+                <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                <option value="unverified" {% if status_filter == 'unverified' %}selected{% endif %}>Unverified</option>
+                <option value="suspended" {% if status_filter == 'suspended' %}selected{% endif %}>Suspended</option>
+            </select>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">
+                Apply
+            </button>
+        </form>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase">Pharmacy</th>
+                        <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase">Owner</th>
+                        <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase">Location</th>
+                        <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase">Rating</th>
+                        <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for pharmacy in pharmacies %}
+                    <tr>
+                        <td class="px-6 py-4">
+                            <p class="font-semibold text-slate-900">{{ pharmacy.name }}</p>
+                            <p class="text-xs text-slate-500">{{ pharmacy.license_number }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-700">{{ pharmacy.owner_name }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-700">{{ pharmacy.address }}, {{ pharmacy.city }}</td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm text-slate-700 mb-1">{{ pharmacy.address }}, {{ pharmacy.city }}</p>
+                            <form method="post" action="{% url 'admin_panel:update_pharmacy_location' pharmacy.id %}" class="flex items-center gap-1">
+                                {% csrf_token %}
+                                <input type="number" step="any" name="latitude" value="{{ pharmacy.latitude|default:'' }}"
+                                       placeholder="Lat" class="w-20 px-2 py-1 text-xs border border-slate-200 rounded-lg">
+                                <input type="number" step="any" name="longitude" value="{{ pharmacy.longitude|default:'' }}"
+                                       placeholder="Lng" class="w-20 px-2 py-1 text-xs border border-slate-200 rounded-lg">
+                                <button type="submit" class="px-2 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold">
+                                    Save
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'admin_panel:update_pharmacy_location' pharmacy.id %}" class="mt-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="auto" value="1">
+                                <button type="submit" class="px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold">
+                                    📍 Auto-locate from address
+                                </button>
+                            </form>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if pharmacy.is_verified %}
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Verified</span>
+                            {% elif pharmacy.verification_status == 'rejected' %}
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Suspended</span>
+                            {% else %}
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Unverified</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-700">N/A</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-end gap-2">
+                                {% if pharmacy.is_verified %}
+                                <form method="post" action="{% url 'admin_panel:suspend_pharmacy' pharmacy.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold">
+                                        Suspend
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'admin_panel:activate_pharmacy' pharmacy.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">
+                                        Activate
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">No pharmacies found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}PharmaHub{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'pharmacy/images/logoB.png' %}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: {} } }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { transition: background-color 220ms ease, color 220ms ease; }
+    .site-header, .site-nav a, .brand-wrap, .brand-logo, .brand-text { transition: all 220ms ease; }
+    .page-transition { animation: pageFadeIn 220ms ease both; will-change: opacity, transform; }
+    @keyframes pageFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    body.is-leaving .page-transition { opacity: 0; transform: translateY(6px); transition: opacity 140ms ease, transform 140ms ease; }
+
+    .dark .theme-content .bg-white { background-color: #1f2937 !important; }
+    .dark .theme-content .bg-gray-50 { background-color: #111827 !important; }
+    .dark .theme-content .bg-gray-100 { background-color: #1f2937 !important; }
+    .dark .theme-content .border-gray-100,
+    .dark .theme-content .border-gray-200,
+    .dark .theme-content .border-gray-300 { border-color: #374151 !important; }
+    .dark .theme-content .text-gray-900,
+    .dark .theme-content .text-gray-800,
+    .dark .theme-content .text-gray-700 { color: #f3f4f6 !important; }
+    .dark .theme-content .text-gray-600,
+    .dark .theme-content .text-gray-500,
+    .dark .theme-content .text-gray-400 { color: #d1d5db !important; }
+    .dark .theme-content input,
+    .dark .theme-content select,
+    .dark .theme-content textarea {
+      background-color: #1f2937 !important;
+      color: #f3f4f6 !important;
+      border-color: #4b5563 !important;
+    }
+    .dark .theme-content input::placeholder,
+    .dark .theme-content textarea::placeholder { color: #9ca3af !important; }
+  </style>
+
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('pharmahub-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+      document.documentElement.classList.toggle('dark', isDark);
+      document.body.classList.toggle('dark', isDark);
+    })();
+  </script>
+</head>
+
+<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <main class="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+
+  <header class="site-header bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+
+        <div class="flex items-center space-x-3">
+          <a href="{% url 'pharmacy:index' %}" class="brand-wrap flex items-center space-x-2">
+            <div class="brand-logo w-10 h-10 rounded-lg flex items-center justify-center">
+              <img src="{% static 'pharmacy/images/logoB.png' %}" alt="Logo" class="w-full h-full object-cover">
+            </div>
+            <span class="brand-text text-xl font-semibold text-teal-600">PharmaHub</span>
+          </a>
+        </div>
+
+        <nav class="site-nav hidden md:flex items-center space-x-6">
+          <a href="{% url 'pharmacy:index' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Home</a>
+          <a href="{% url 'pages:medicine' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Medicines</a>
+          <a href="{% url 'pages:pharmacies' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Pharmacies</a>
+          <a href="{% url 'pages:about' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">About</a>
+          <a href="{% url 'pages:contact' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Contact</a>
+        </nav>
+
+{% if messages %}
+<div id="message-container" class="fixed top-24 right-5 z-[1000] flex flex-col gap-2 pointer-events-none">
+    {% for message in messages %}
+    <div class="message-item pointer-events-auto bg-white dark:bg-slate-800 border-l-4 shadow-2xl p-4 rounded-md flex items-center min-w-[300px] transform transition-all duration-500
+        {% if message.tags == 'success' %} border-emerald-500 text-emerald-700 {% else %} border-red-500 text-red-700 {% endif %}">
+        <i class="ri-information-line mr-3 text-lg"></i>
+        <span class="flex-1 text-sm font-bold">{{ message }}</span>
+        <button onclick="this.parentElement.remove()" class="ml-3 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+        <div class="flex items-center space-x-4">
+          <button type="button" aria-label="Toggle dark mode" id="publicThemeToggle" class="theme-toggle text-2xl text-gray-700 dark:text-gray-200 hover:text-teal-600 focus:outline-none">
+            <i id="publicThemeIcon" class="theme-icon ri-moon-line"></i>
+          </button>
+          <div class="hidden md:flex items-center space-x-4">
+            <a href="{% url 'authentication:login_signup' %}?show=login" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Login</a>
+            <a href="{% url 'authentication:login_signup' %}?show=signup" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow">Sign Up</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="theme-content page-transition">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center space-x-3 mb-5">
+            <div class="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+              <i class="ri-capsule-fill text-white text-xl"></i>
+            </div>
+            <span class="font-pacifico text-2xl text-teal-600 font-semibold">PharmaHub</span>
+          </div>
+          <p class="text-gray-600 dark:text-gray-400 mb-5 max-w-md leading-relaxed">
+            Your trusted online pharmacy marketplace connecting customers with verified pharmacies and reliable delivery services.
+          </p>
+          <div class="flex space-x-4">
+            <a href="https://www.facebook.com/profile.php?id=61585328528943&rdid=JFkXOdZ9ZVaAMkRt&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1EheLS6vrE%2F#" class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-200 dark:hover:bg-teal-800 transition"><i class="ri-facebook-fill text-lg"></i></a>
+            <a href="https://x.com/pharmaHub17795" class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-200 dark:hover:bg-teal-800 transition"><i class="ri-twitter-fill text-lg"></i></a>
+            <a href="https://www.instagram.com/official.pharmahub01?igsh=MXFzcmx3aHE3aTM1ZQ==" class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-200 dark:hover:bg-teal-800 transition"><i class="ri-instagram-fill text-lg"></i></a>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-gray-900 dark:text-gray-100 font-semibold mb-5 text-lg">Quick Links</h3>
+          <ul class="space-y-3">
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:medicine' %}">Browse Medicines</a></li>
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:pharmacies' %}">Find Pharmacies</a></li>
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'authentication:login_signup' %}?show=signup">Register Pharmacy</a></li>
+
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-gray-900 dark:text-gray-100 font-semibold mb-5 text-lg">Support</h3>
+          <ul class="space-y-3">
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:help' %}">Help Center</a></li>
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:privacy' %}">Privacy Policy</a></li>
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:terms' %}">Terms of Service</a></li>
+            <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:contact' %}">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+
+      
+    </div>
+  </footer>
+
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeToggles = document.querySelectorAll('.theme-toggle');
+
+      function updateThemeIcons() {
+        const isDark = document.documentElement.classList.contains('dark');
+        document.querySelectorAll('.theme-toggle .theme-icon').forEach(icon => {
+          if (isDark) {
+            icon.classList.remove('ri-moon-line');
+            icon.classList.add('ri-sun-line');
+          } else {
+            icon.classList.remove('ri-sun-line');
+            icon.classList.add('ri-moon-line');
+          }
+        });
+      }
+
+      function applyTheme(isDark) {
+        document.documentElement.classList.toggle('dark', isDark);
+        document.body.classList.toggle('dark', isDark);
+        localStorage.setItem('pharmahub-theme', isDark ? 'dark' : 'light');
+        updateThemeIcons();
+      }
+
+      themeToggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const nextDark = !document.documentElement.classList.contains('dark');
+          applyTheme(nextDark);
+        });
+      });
+
+      const savedTheme = localStorage.getItem('pharmahub-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'pharmahub-theme') {
+          applyTheme(e.newValue === 'dark');
+        }
+      });
+
+      });
+  </script>
+  </main>
+  {% block extra_js %}{% endblock %}
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('.message-item');
+        messages.forEach(msg => {
+            // 3 seconds baad fade out shuru hoga
+            setTimeout(() => {
+                msg.style.opacity = '0';
+                msg.style.transform = 'translateX(50px)';
+                // Animation khatam hone ke baad element remove karein
+                setTimeout(() => msg.remove(), 500);
+            }, 3500); 
+        });
+    });
+</script>
+</html>

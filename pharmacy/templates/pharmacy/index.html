@@ -1,0 +1,366 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+{% block title %}Home - PharmaHub{% endblock %}
+
+{% block content %}
+<style>
+  /* Base Transitions */
+  .ph-public-home { overflow-x: hidden; }
+  
+  /* Dark Mode Overrides for New Sections */
+  .dark .ph-public-home .bg-white { background-color: #0f172a !important; }
+  .dark .ph-public-home .bg-gray-50 { background-color: #111827 !important; }
+  .dark .ph-public-home .text-gray-900 { color: #f3f4f6 !important; }
+  .dark .ph-public-home .text-gray-600, .dark .ph-public-home .text-gray-500 { color: #9ca3af !important; }
+  .dark .ph-public-home .border-gray-100 { border-color: #1f2937 !important; }
+
+  /* Custom Animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+  .animate-float { animation: float 5s ease-in-out infinite; }
+  
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+  .animate-blob { animation: blob 7s infinite; }
+  .animation-delay-2000 { animation-delay: 2s; }
+
+  /* Swiper Slide Fix */
+  .swiper-slide { height: auto !important; }
+</style>
+
+<div class="ph-public-home">
+
+  <section class="relative min-h-screen flex items-center bg-white dark:bg-gray-900 overflow-hidden">
+    <div class="absolute top-0 -left-20 w-96 h-96 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+    <div class="absolute bottom-0 -right-20 w-96 h-96 bg-orange-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent z-10 dark:from-gray-900 dark:via-gray-900/80"></div>
+      <img src="{% static 'pharmacy/images/p2.png' %}" alt="Background" class="w-full h-full object-cover opacity-20" />
+    </div>
+
+    <div class="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <div id="heroLeft" class="transition-all duration-1000">
+        <div class="inline-flex items-center space-x-2 bg-teal-50 dark:bg-teal-900/30 border border-teal-100 dark:border-teal-800 px-3 py-1 rounded-full mb-6">
+          <span class="flex h-2 w-2 rounded-full bg-teal-600 animate-pulse"></span>
+          <span class="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-widest">Trusted by 500+ Local Pharmacies</span>
+        </div>
+
+       <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
+    Bridging the Gap <br/>
+    Between <span class="text-teal-600">Patient and <br/> Verified Pharmacies</span>
+  </h1>
+        
+        <p class="mt-6 text-xl text-gray-600 dark:text-gray-300 max-w-lg leading-relaxed">
+          PharmaHub brings the entire pharmacy network to your fingertips. Fast delivery and expert care from verified pharmacies near you.
+        </p>
+
+        <div class="mt-10 flex flex-wrap gap-4">
+          <a href="{% url 'pages:medicine' %}" class="group relative bg-teal-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-teal-700 transition-all shadow-xl shadow-teal-100 dark:shadow-none">
+            Explore Medicines <i class="ri-arrow-right-line ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          <a href="{% url 'authentication:login_signup' %}?show=signup" class="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-8 py-4 rounded-2xl font-bold hover:border-orange-500 hover:text-orange-600 transition-all">
+            Join as Pharmacy
+          </a>
+        </div>
+
+        <div class="mt-12 flex items-center space-x-8 border-t border-gray-100 dark:border-gray-800 pt-8">
+          <div><p class="text-2xl font-bold text-gray-900 dark:text-white">10k+</p><p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Verified Users</p></div>
+          <div class="h-8 w-[1px] bg-gray-200 dark:bg-gray-700"></div>
+          <div><p class="text-2xl font-bold text-gray-900 dark:text-white">24/7</p><p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Support Service</p></div>
+          <div class="h-8 w-[1px] bg-gray-200 dark:bg-gray-700"></div>
+          <div><p class="text-2xl font-bold text-gray-900 dark:text-white">Fast</p><p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Instant Delivery</p></div>
+        </div>
+      </div>
+
+      <div id="heroRight" class="relative flex justify-center animate-float transition-all duration-1000">
+        <div class="absolute inset-0 bg-teal-400 rounded-full filter blur-[100px] opacity-20 animate-pulse"></div>
+        <div class="relative bg-white dark:bg-gray-800 p-4 rounded-[2.5rem] shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500 border border-gray-50 dark:border-gray-700">
+           <img src="{% static 'pharmacy/images/p2.jpg' %}" alt="Doctor" class="w-full max-w-md rounded-[2rem] object-cover" />
+           <div class="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-xl border border-gray-50 dark:border-gray-700 flex items-center space-x-3">
+             <div class="bg-orange-100 dark:bg-orange-900/50 p-2 rounded-lg"><i class="ri-shield-check-fill text-orange-600 text-xl"></i></div>
+             <div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Guarantee</p><p class="text-sm font-bold text-gray-800 dark:text-white">100% Authentic</p></div>
+           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+    <div class="absolute top-10 right-0 text-[10rem] font-black text-gray-50 dark:text-gray-800 select-none -z-10 opacity-50">CARE</div>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div id="whyHeader" class="text-center max-w-3xl mx-auto mb-16 opacity-0 translate-y-6 transition-all duration-1000">
+        <h2 class="text-xs font-bold text-teal-600 uppercase tracking-[0.3em] mb-3">Core Values</h2>
+        <h2 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-gray-100">Why People Trust <span class="text-teal-600">PharmaHub?</span></h2>
+        <div class="h-1.5 w-24 bg-orange-400 mx-auto mt-4 rounded-full"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div class="cardAnim group bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 hover:border-teal-500 transition-all duration-500 hover:-translate-y-2 shadow-sm hover:shadow-2xl opacity-0 translate-y-10">
+          <div class="w-16 h-16 bg-teal-50 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform"><i class="ri-capsule-fill text-teal-600 text-4xl"></i></div>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Verified Medicines</h3>
+          <p class="text-gray-500 dark:text-gray-400">Licensed pharmacies only. Zero tolerance for fake medicines.</p>
+        </div>
+        <div class="cardAnim group bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 hover:border-orange-500 transition-all duration-500 hover:-translate-y-2 shadow-sm hover:shadow-2xl opacity-0 translate-y-10">
+          <div class="w-16 h-16 bg-orange-50 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><i class="ri-truck-line text-orange-600 text-4xl"></i></div>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Fast Delivery</h3>
+          <p class="text-gray-500 dark:text-gray-400">Doorstep delivery within 30-120 minutes across the network.</p>
+        </div>
+        <div class="cardAnim group bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 hover:border-blue-500 transition-all duration-500 hover:-translate-y-2 shadow-sm hover:shadow-2xl opacity-0 translate-y-10">
+          <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:-rotate-12 transition-transform"><i class="ri-shield-check-line text-blue-600 text-4xl"></i></div>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Secure Experience</h3>
+          <p class="text-gray-500 dark:text-gray-400">Your prescriptions and personal data are always encrypted.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-24 bg-gray-50 dark:bg-gray-950 relative">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div id="howHeader" class="text-center max-w-2xl mx-auto mb-20 opacity-0 translate-y-6 transition-all duration-1000">
+        <h2 class="text-xs font-bold text-orange-500 uppercase tracking-[0.3em] mb-3">Simple Process</h2>
+        <h2 class="text-4xl font-black text-gray-900 dark:text-gray-100">Your Medicine in <span class="text-teal-600">4 Simple Steps</span></h2>
+      </div>
+
+      <div class="relative grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div class="hidden md:block absolute top-24 left-0 w-full h-0.5 border-t-2 border-dashed border-teal-200 -z-0"></div>
+        
+        <div class="howStep relative z-10 flex flex-col items-center text-center group opacity-0 -translate-x-10 transition-all duration-1000">
+          <div class="w-16 h-16 bg-teal-600 text-white rounded-full flex items-center justify-center text-2xl font-black mb-8 shadow-xl shadow-teal-200">1</div>
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-[2rem] shadow-xl border border-gray-100 dark:border-gray-700 mb-6 group-hover:-rotate-2 transition-transform">
+            <img src="{% static 'pharmacy/images/phone1.jpg' %}" class="w-full h-40 object-cover rounded-[1.5rem]" />
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">Search Medicine</h3>
+        </div>
+        <div class="howStep relative z-10 flex flex-col items-center text-center group opacity-0 -translate-x-10 transition-all duration-1000">
+          <div class="w-16 h-16 bg-white border-4 border-teal-600 text-teal-600 rounded-full flex items-center justify-center text-2xl font-black mb-8 shadow-xl">2</div>
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-[2rem] shadow-xl border border-gray-100 dark:border-gray-700 mb-6 group-hover:rotate-2 transition-transform">
+            <img src="{% static 'pharmacy/images/pharm.jpg' %}" class="w-full h-40 object-cover rounded-[1.5rem]" />
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">Choose Pharmacy</h3>
+        </div>
+        <div class="howStep relative z-10 flex flex-col items-center text-center group opacity-0 -translate-x-10 transition-all duration-1000">
+          <div class="w-16 h-16 bg-teal-600 text-white rounded-full flex items-center justify-center text-2xl font-black mb-8 shadow-xl shadow-teal-200">3</div>
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-[2rem] shadow-xl border border-gray-100 dark:border-gray-700 mb-6 group-hover:-rotate-2 transition-transform">
+            <img src="{% static 'pharmacy/images/cart.jpg' %}" class="w-full h-40 object-cover rounded-[1.5rem]" />
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">Place Order</h3>
+        </div>
+        <div class="howStep relative z-10 flex flex-col items-center text-center group opacity-0 -translate-x-10 transition-all duration-1000">
+          <div class="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center text-2xl font-black mb-8 shadow-xl shadow-orange-200">4</div>
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-[2rem] shadow-xl border border-gray-100 dark:border-gray-700 mb-6 group-hover:rotate-2 transition-transform">
+            <img src="{% static 'pharmacy/images/delivery.jpg' %}" class="w-full h-40 object-cover rounded-[1.5rem]" />
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">Fast Delivery</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-24 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <h2 class="text-4xl font-black text-gray-900 dark:text-white text-center mb-16">Famous Medicines</h2>
+      <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+          {% for med_name, med_img, med_desc in medicines_list %}
+          {% endfor %}
+          <div class="swiper-slide p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-50 dark:border-gray-700 group hover:-translate-y-2 transition-transform">
+              <img src="{% static 'pharmacy/images/s1 (4).jpeg' %}" class="w-full h-56 object-contain p-6" alt="Vitamin D3">
+              <div class="p-6 text-center bg-gray-50 dark:bg-gray-800/50">
+                <h3 class="font-bold text-gray-900 dark:text-white text-xl">Vitamin D3</h3>
+                <p class="text-sm text-teal-600 font-bold mt-1">Fever & Pain Relief</p>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-50 dark:border-gray-700 group hover:-translate-y-2 transition-transform">
+              <img src="{% static 'pharmacy/images/cet1.jpeg' %}" class="w-full h-56 object-contain p-6" alt="Cetirizn">
+              <div class="p-6 text-center bg-gray-50 dark:bg-gray-800/50">
+                <h3 class="font-bold text-gray-900 dark:text-white text-xl">Cetirizn</h3>
+                <p class="text-sm text-teal-600 font-bold mt-1">Allergy Relief</p>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-50 dark:border-gray-700 group hover:-translate-y-2 transition-transform">
+              <img src="{% static 'pharmacy/images/s3.jpeg' %}" class="w-full h-56 object-contain p-6" alt="Ibuifen">
+              <div class="p-6 text-center bg-gray-50 dark:bg-gray-800/50">
+                <h3 class="font-bold text-gray-900 dark:text-white text-xl">Ibuifen</h3>
+                <p class="text-sm text-teal-600 font-bold mt-1">Pain & Inflammation</p>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-50 dark:border-gray-700 group hover:-translate-y-2 transition-transform">
+              <img src="{% static 'pharmacy/images/i3.jpeg' %}" class="w-full h-56 object-contain p-6" alt="Omeprazoole">
+              <div class="p-6 text-center bg-gray-50 dark:bg-gray-800/50">
+                <h3 class="font-bold text-gray-900 dark:text-white text-xl">Omeprazoole</h3>
+                <p class="text-sm text-teal-600 font-bold mt-1">Stomach Care</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-teal-600 dark:bg-gray-950 py-24 text-white relative">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+      <h2 id="trustTitle" class="text-4xl font-black opacity-0 translate-y-6 transition-all duration-1000">Trusted by Thousands</h2>
+      <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-12">
+        <div class="trustItem opacity-0 translate-y-6 transition-all duration-1000">
+          <h3 class="text-5xl font-black counter" data-target="10000">0</h3>
+          <p class="mt-2 font-medium opacity-80">Happy Customers</p>
+        </div>
+        <div class="trustItem opacity-0 translate-y-6 transition-all duration-1000">
+          <h3 class="text-5xl font-black counter" data-target="500">0</h3>
+          <p class="mt-2 font-medium opacity-80">Verified Pharmacies</p>
+        </div>
+        <div class="trustItem opacity-0 translate-y-6 transition-all duration-1000">
+          <h3 class="text-5xl font-black counter" data-target="50000">0</h3>
+          <p class="mt-2 font-medium opacity-80">Medicines Available</p>
+        </div>
+        <div class="trustItem opacity-0 translate-y-6 transition-all duration-1000">
+          <h3 class="text-5xl font-black counter" data-target="98">0</h3>
+          <p class="mt-2 font-medium opacity-80">Satisfaction Rate</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-orange-500 dark:bg-gray-900 py-20 text-center text-white relative overflow-hidden">
+  
+  <div class="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+  <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
+
+  <div class="relative z-10">
+    <h2 id="ctaTitle" class="text-3xl md:text-4xl font-black opacity-0 translate-y-6 transition-all duration-1000">
+      Ready to Get Started?
+    </h2>
+
+    <div id="ctaBtns" class="mt-8 flex flex-wrap justify-center gap-3 opacity-0 scale-90 transition-all duration-1000">
+      <a href="{% url 'authentication:login_signup' %}?show=signup" class="bg-white text-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-50 shadow-lg transition-all text-sm">
+        Register as Customer
+      </a>
+      <a href="{% url 'authentication:login_signup' %}?show=signup" class="bg-black/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-xl font-bold hover:bg-black/40 transition-all text-sm">
+        Register Your Pharmacy
+      </a>
+    </div>
+    
+    <div class="mt-12 max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 px-6">
+      
+      <div class="ctaItem bg-white/10 backdrop-blur-lg border border-white/20 rounded-[1.5rem] p-6 opacity-0 scale-90 transition-all duration-1000 hover:bg-white/20 group">
+        <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-6 transition-transform">
+          <i class="ri-user-heart-line text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">For Customers</h3>
+        <p class="text-white/80 text-sm leading-relaxed">
+          Order medicines online and get express delivery to your doorstep.
+        </p>
+      </div>
+
+      <div class="ctaItem bg-white/10 backdrop-blur-lg border border-white/20 rounded-[1.5rem] p-6 opacity-0 scale-90 transition-all duration-1000 hover:bg-white/20 group">
+        <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:-rotate-6 transition-transform">
+          <i class="ri-store-3-line text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">For Pharmacies</h3>
+        <p class="text-white/80 text-sm leading-relaxed">
+          Take your business online and reach thousands of customers.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+<script>
+  // Hero Animation on Load
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("heroLeft").classList.add("opacity-100", "translate-x-0");
+    document.getElementById("heroRight").classList.add("opacity-100", "translate-x-0");
+  });
+
+  // Intersection Observer for All Sections
+  const observerOptions = { threshold: 0.2 };
+
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        
+        if (id === 'whyHeader') {
+          entry.target.classList.remove("opacity-0", "translate-y-6");
+          document.querySelectorAll(".cardAnim").forEach((el, i) => {
+            setTimeout(() => el.classList.remove("opacity-0", "translate-y-10"), i * 200);
+          });
+        }
+        
+        if (id === 'howHeader') {
+          entry.target.classList.remove("opacity-0", "translate-y-6");
+          document.querySelectorAll(".howStep").forEach((el, i) => {
+            setTimeout(() => el.classList.remove("opacity-0", "-translate-x-10"), i * 200);
+          });
+        }
+
+        if (id === 'trustTitle') {
+          entry.target.classList.remove("opacity-0", "translate-y-6");
+          document.querySelectorAll(".trustItem").forEach((el, i) => {
+            setTimeout(() => el.classList.remove("opacity-0", "translate-y-6"), i * 200);
+          });
+          // Counter Logic
+          document.querySelectorAll(".counter").forEach(counter => {
+            const target = +counter.dataset.target;
+            let count = 0;
+            const update = () => {
+              count += Math.ceil(target / 50);
+              if (count > target) count = target;
+              counter.innerText = count.toLocaleString() + (target > 100 ? "+" : "%");
+              if (count < target) requestAnimationFrame(update);
+            };
+            update();
+          });
+        }
+
+        if (id === 'ctaTitle') {
+          entry.target.classList.remove("opacity-0", "translate-y-6");
+          document.getElementById("ctaBtns").classList.remove("opacity-0", "scale-90");
+          document.querySelectorAll(".ctaItem").forEach((el, i) => {
+            setTimeout(() => el.classList.remove("opacity-0", "scale-90"), i * 200);
+          });
+        }
+      }
+    });
+  }, observerOptions);
+
+  // Targets to observe
+  ['whyHeader', 'howHeader', 'trustTitle', 'ctaTitle'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) scrollObserver.observe(el);
+  });
+
+  // Swiper Init
+  var swiper = new Swiper(".mySwiper", {
+    slidesPerView: 3,
+    spaceBetween: 30,
+    loop: true,
+    autoplay: { delay: 2500, disableOnInteraction: false },
+    breakpoints: {
+      320: { slidesPerView: 1 },
+      768: { slidesPerView: 2 },
+      1024: { slidesPerView: 3 }
+    }
+  });
+</script>
+{% endblock %}

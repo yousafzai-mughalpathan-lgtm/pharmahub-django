@@ -1,0 +1,173 @@
+{% extends 'customers_d/customer_base.html' %} 
+{% load static %} 
+
+{% block title %}My Shopping Cart - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 flex-grow font-['Inter']"> 
+    <div class="mb-8 border-l-4 border-teal-600 pl-4">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">🛒 My Shopping Cart</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">Review your items before proceeding to checkout</p>
+    </div>
+    
+    <div id="cart-main-container">
+        {% if cart_items %}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Your Items (<span id="item-count-badge">{{ cart_items|length }}</span>)</h2>
+                    </div>
+                    
+                    <div id="cart-items-list" class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for item in cart_items %}
+                        <div class="p-6 flex items-center space-x-4 cart-item" data-id="{{ item.product.id }}">
+                            <div class="w-20 h-20 bg-teal-50 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 border border-teal-100 dark:border-gray-600">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover rounded-lg">
+                                {% else %}
+                                <i class="ri-medicine-bottle-line text-teal-600 dark:text-teal-400 text-3xl"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex-1">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-lg">{{ item.product.name }}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.product.brand|default:"Verified Pharma" }}</p>
+                                <p class="text-teal-600 dark:text-teal-400 font-bold mt-1">PKR {{ item.product.price }}</p>
+                            </div>
+                            
+                            <div class="flex items-center space-x-6">
+                                <div class="flex items-center border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-700 shadow-sm">
+                                    <button class="decrease-qty px-3 py-1 bg-gray-50 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-white transition" data-id="{{ item.product.id }}">-</button>
+                                    <input type="number" class="w-10 text-center font-semibold text-gray-800 dark:text-white bg-transparent focus:outline-none text-sm" value="{{ item.quantity }}" readonly>
+                                    <button class="increase-qty px-3 py-1 bg-gray-50 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-white transition" data-id="{{ item.product.id }}">+</button>
+                                </div>
+                                
+                                <div class="text-right min-w-[120px]">
+                                    <p class="font-bold text-gray-900 dark:text-white">PKR <span class="item-total-price">{{ item.total_price }}</span></p>
+                                </div>
+                                
+                                <button class="remove-item text-red-400 hover:text-red-600 p-2 transition-colors" data-id="{{item.product.id }}">
+                                    <i class="ri-delete-bin-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-1">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sticky top-24 border border-teal-50 dark:border-gray-700">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 pb-2 border-b-2 border-teal-600 w-fit">Order Summary</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                            <span>Items Subtotal</span>
+                            <span class="font-bold text-gray-800 dark:text-white">PKR <span id="subtotal">{{ total_price }}</span></span>
+                        </div>
+                        
+                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                            <span>Shipping Charges</span>
+                            <span class="font-bold text-red-500">PKR <span id="shipping-cost">200.00</span></span>
+                        </div>
+                        
+                        <div class="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                            <div class="flex justify-between items-center text-xl font-black">
+                                <span class="text-gray-900 dark:text-white">Total Payable</span>
+                                <span class="text-teal-700 dark:text-teal-400">PKR <span id="total-amount">{{ total_price|add:200 }}</span></span>
+                            </div>
+                        </div>
+                        
+                        <a href="{% url 'orders:checkout' %}" class="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md hover:shadow-lg">
+                            Proceed to Checkout <i class="ri-arrow-right-line ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm max-w-2xl mx-auto">
+            <div class="w-24 h-24 bg-teal-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="ri-shopping-cart-2-line text-5xl text-teal-600 dark:text-teal-400"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Your Cart is Empty!</h3>
+            <p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8 text-sm">Please add medicines to your cart first to place an order.</p>
+            <a href="{% url 'pages:pharmacies' %}" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition shadow">
+                <i class="ri-medicine-bottle-line"></i> Browse Medicines
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function handleCartAction(productId, action, element) {
+        let quantityInput = element ? element.querySelector('input') : null;
+        let currentQty = quantityInput ? parseInt(quantityInput.value) : 0;
+        let newQty = (action === 'increase') ? currentQty + 1 : (action === 'decrease') ? currentQty - 1 : 0;
+
+        fetch('{% url "orders:add_to_cart_api" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ medicine_id: productId, quantity: newQty, action: action })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (action === 'remove' || data.current_qty <= 0) {
+                    if(element) element.remove();
+                    if (document.querySelectorAll('.cart-item').length === 0) {
+                        location.reload();
+                    }
+                } else if (quantityInput) {
+                    quantityInput.value = data.current_qty;
+                    element.querySelector('.item-total-price').textContent = data.item_total.toFixed(2);
+                }
+                
+                // Real-time update icon count in header
+                const globalBadge = document.getElementById('cart-count');
+                if (globalBadge) {
+                    globalBadge.textContent = data.cart_count;
+                    if(data.cart_count > 0) globalBadge.classList.remove('hidden');
+                    else globalBadge.classList.add('hidden');
+                }
+                
+                const countBadge = document.getElementById('item-count-badge');
+                if (countBadge) countBadge.textContent = document.querySelectorAll('.cart-item').length;
+                
+                refreshSummary(data);
+            }
+        });
+    }
+
+    document.getElementById('cart-main-container').addEventListener('click', function(e) {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        
+        const itemRow = btn.closest('.cart-item');
+        const pId = btn.dataset.id;
+        
+        if (btn.classList.contains('increase-qty')) handleCartAction(pId, 'increase', itemRow);
+        if (btn.classList.contains('decrease-qty')) handleCartAction(pId, 'decrease', itemRow);
+        if (btn.classList.contains('remove-item')) handleCartAction(pId, 'remove', itemRow);
+    });
+
+    function refreshSummary(data) {
+        const subtotal = parseFloat(data.cart_total);
+        if(document.getElementById('subtotal')) document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        if(document.getElementById('total-amount')) document.getElementById('total-amount').textContent = (subtotal + 200).toFixed(2);
+    }
+});
+
+</script>
+<script>
+    // Agar user order place karne ke baad back button daba kar cart par aaye to page auto-refresh ho jaye
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            window.location.reload();
+        }
+    });
+</script>
+{% endblock %}

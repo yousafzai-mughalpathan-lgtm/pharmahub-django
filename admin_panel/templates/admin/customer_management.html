@@ -1,0 +1,493 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Customer Management | PharmaHub Admin{% endblock %}
+{% block page_title %}Customer Management{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Loading indicator -->
+    <div id="customerLoading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p class="mt-4 text-gray-500">Loading customer data...</p>
+    </div>
+    
+    <!-- Main Content (Initially hidden) -->
+    <div id="customerContent" class="hidden">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100 flex justify-between items-center shadow-sm">
+                <div>
+                    <p class="text-purple-500 text-xs font-bold uppercase tracking-wider mb-1">Total Customers</p>
+                    <h4 id="statsTotalCustomers" class="text-4xl font-black text-gray-800">...</h4>
+                </div>
+                <div class="bg-purple-600 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex justify-between items-center shadow-sm">
+                <div>
+                    <p class="text-emerald-500 text-xs font-bold uppercase tracking-wider mb-1">Active Users</p>
+                    <h4 id="statsActiveCustomers" class="text-4xl font-black text-gray-800">...</h4>
+                </div>
+                <div class="bg-emerald-500 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                    <i class="fas fa-user-check text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-red-50 p-6 rounded-2xl border border-red-100 flex justify-between items-center shadow-sm">
+                <div>
+                    <p class="text-red-500 text-xs font-bold uppercase tracking-wider mb-1">Blocked Users</p>
+                    <h4 id="statsBlockedCustomers" class="text-4xl font-black text-gray-800">...</h4>
+                </div>
+                <div class="bg-red-600 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-200">
+                    <i class="fas fa-user-slash text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex justify-between items-center shadow-sm">
+                <div>
+                    <p class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">New This Month</p>
+                    <h4 id="statsNewCustomers" class="text-4xl font-black text-gray-800">...</h4>
+                </div>
+                <div class="bg-blue-600 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                    <i class="fas fa-user-plus text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Database Table -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-teal-50 overflow-hidden">
+            <div class="p-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h3 class="text-xl font-extrabold text-teal-900 tracking-tight">Customer Database</h3>
+                
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                        <input type="text" id="customerSearch" placeholder="Search customers..." 
+                               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+                               onkeyup="searchCustomers()">
+                    </div>
+
+                    <select id="statusFilter" onchange="filterCustomers()" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2.5 outline-none focus:border-teal-500 transition-all">
+                        <option value="All Status">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50/50 border-y border-slate-100">
+                        <tr>
+                            <th class="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Customer</th>
+                            <th class="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Contact</th>
+                            <th class="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Orders</th>
+                            <th class="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Status</th>
+                            <th class="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody" class="divide-y divide-slate-50 font-medium">
+                        <!-- Data yahan JavaScript se aayega -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Details Modal -->
+    <div id="customerModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
+
+        <div class="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in duration-300">
+            
+            <!-- Left Sidebar -->
+            <div class="md:w-1/3 bg-slate-50 p-8 border-r border-slate-100 flex flex-col items-center text-center">
+                <div class="w-24 h-24 bg-purple-100 rounded-3xl flex items-center justify-center text-purple-600 text-4xl mb-4 shadow-inner">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h3 id="modalCustomerName" class="text-xl font-black text-slate-800 uppercase tracking-tight">...</h3>
+                <p id="modalCustomerId" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">...</p>
+                
+                <div class="w-full space-y-3 text-left">
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <i class="fas fa-envelope text-purple-400 text-sm"></i>
+                        <span id="modalCustomerEmail" class="text-xs font-bold text-slate-600 truncate">...</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center gap-3">
+                        <i class="fas fa-phone text-purple-400 text-sm"></i>
+                        <span id="modalCustomerPhone" class="text-xs font-bold text-slate-600">...</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 w-full border-t border-slate-200">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Status</p>
+                    <span id="modalCustomerStatus" class="text-sm font-black uppercase tracking-widest">...</span>
+                </div>
+            </div>
+
+            <!-- Right Content -->
+            <div class="md:w-2/3 p-10 relative">
+                <button onclick="closeModal()" class="absolute top-6 right-8 text-slate-300 hover:text-slate-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+
+                <h4 class="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Customer Insights</h4>
+                
+                <div class="grid grid-cols-2 gap-6 mb-10">
+                    <div class="bg-blue-50/50 rounded-2xl p-6 border border-blue-100">
+                        <p class="text-[10px] font-black text-blue-400 uppercase mb-1">Total Orders</p>
+                        <p id="modalCustomerOrders" class="text-3xl font-black text-blue-900">...</p>
+                    </div>
+                    <div class="bg-emerald-50/50 rounded-2xl p-6 border border-emerald-100">
+                        <p class="text-[10px] font-black text-emerald-400 uppercase mb-1">Lifetime Spent</p>
+                        <p id="modalCustomerSpent" class="text-3xl font-black text-emerald-900">...</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-10">
+                    <h5 class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt text-red-400"></i> Location
+                    </h5>
+                    <p id="modalCustomerLocation" class="text-sm text-slate-700 font-bold leading-relaxed">...</p>
+                </div>
+
+                <div class="flex gap-4">
+                    <button id="blockButton" onclick="blockCustomer()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-100 transition-all active:scale-95 flex items-center justify-center gap-2 hidden">
+                        <i class="fas fa-user-slash"></i> Block User
+                    </button>
+                    <button id="unblockButton" onclick="unblockCustomer()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2 hidden">
+                        <i class="fas fa-user-check"></i> Unblock User
+                    </button>
+
+                    <button onclick="viewCustomerHistory()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fas fa-history"></i> View History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let allCustomers = [];
+    let currentSelectedCustomer = null;
+    
+    // Page load par customers load karein
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadCustomers();
+        await loadCustomerStats();
+    });
+    
+    // Customer data load karein from API
+    async function loadCustomers() {
+        try {
+            const data = await apiRequest('customers/');
+            
+            // Check if data is array or has results property
+            allCustomers = Array.isArray(data) ? data : data.results || data || [];
+            
+            if (allCustomers.length > 0) {
+                displayCustomers(allCustomers);
+                
+                // Hide loading, show content
+                document.getElementById('customerLoading').classList.add('hidden');
+                document.getElementById('customerContent').classList.remove('hidden');
+            } else {
+                // No customers found
+                document.getElementById('customerLoading').innerHTML = 
+                    '<p class="text-gray-500">No customers found</p>';
+            }
+            
+        } catch (error) {
+            console.error('Load customers error:', error);
+            document.getElementById('customerLoading').innerHTML = 
+                '<p class="text-red-500">Error loading customers. Please check console.</p>';
+        }
+    }
+    
+    // Customer stats load karein from Dashboard API
+    async function loadCustomerStats() {
+        try {
+            const data = await apiRequest('dashboard/stats/');
+            
+            // Update stats cards
+            document.getElementById('statsTotalCustomers').textContent = data.customers?.total || 0;
+            document.getElementById('statsActiveCustomers').textContent = data.customers?.active || 0;
+            document.getElementById('statsBlockedCustomers').textContent = 
+                (data.customers?.total || 0) - (data.customers?.active || 0);
+            document.getElementById('statsNewCustomers').textContent = data.customers?.total || 0;
+            
+        } catch (error) {
+            console.error('Load stats error:', error);
+            // Set default values
+            document.getElementById('statsTotalCustomers').textContent = '0';
+            document.getElementById('statsActiveCustomers').textContent = '0';
+            document.getElementById('statsBlockedCustomers').textContent = '0';
+            document.getElementById('statsNewCustomers').textContent = '0';
+        }
+    }
+    
+    // Display customers in table
+    function displayCustomers(customers) {
+        const tbody = document.getElementById('customersTableBody');
+        tbody.innerHTML = '';
+        
+        if (customers.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-8 py-12 text-center">
+                        <p class="text-gray-500">No customers found</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        customers.forEach(customer => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-teal-50/30 transition-colors';
+            row.innerHTML = `
+                <td class="px-8 py-6">
+                    <p class="text-slate-800 font-bold">${customer.full_name || 'N/A'}</p>
+                    <p class="text-[10px] text-slate-400 font-bold">CUST-${customer.id}</p>
+                </td>
+                <td class="px-8 py-6">
+                    <p class="text-slate-600 text-sm">${customer.email || 'N/A'}</p>
+                    <p class="text-[10px] text-slate-400 font-bold">${customer.phone || 'N/A'}</p>
+                </td>
+                <td class="px-8 py-6 text-center text-slate-800 font-bold">${customer.total_orders || 0}</td>
+                <td class="px-8 py-6 text-center">
+                    <span class="${customer.is_blocked ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'} text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-tighter">
+                        ${customer.is_blocked ? 'blocked' : 'active'}
+                    </span>
+                </td>
+                <td class="px-8 py-6 text-right">
+                    <button onclick="viewCustomerDetails(${customer.id})" class="text-purple-600 text-sm font-bold hover:underline">View Details</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Search customers
+    function searchCustomers() {
+        const searchTerm = document.getElementById('customerSearch').value.toLowerCase();
+        const filtered = allCustomers.filter(customer => 
+            (customer.full_name && customer.full_name.toLowerCase().includes(searchTerm)) ||
+            (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
+            (customer.phone && customer.phone.toLowerCase().includes(searchTerm))
+        );
+        displayCustomers(filtered);
+    }
+    
+    // Filter by status
+    function filterCustomers() {
+        const status = document.getElementById('statusFilter').value;
+        
+        if (status === 'All Status') {
+            displayCustomers(allCustomers);
+        } else if (status === 'active') {
+            const filtered = allCustomers.filter(c => !c.is_blocked);
+            displayCustomers(filtered);
+        } else if (status === 'blocked') {
+            const filtered = allCustomers.filter(c => c.is_blocked);
+            displayCustomers(filtered);
+        }
+    }
+    
+    // View customer details in modal
+    async function viewCustomerDetails(customerId) {
+        try {
+            // Find customer in our loaded data
+            const customer = allCustomers.find(c => c.id === customerId);
+            
+            if (customer) {
+                currentSelectedCustomer = customer;
+                
+                // Fill modal with customer data
+                document.getElementById('modalCustomerName').textContent = customer.full_name || 'N/A';
+                document.getElementById('modalCustomerId').textContent = `CUST-${customer.id}`;
+                document.getElementById('modalCustomerEmail').textContent = customer.email || 'N/A';
+                document.getElementById('modalCustomerPhone').textContent = customer.phone || 'N/A';
+                document.getElementById('modalCustomerOrders').textContent = customer.total_orders || 0;
+                document.getElementById('modalCustomerSpent').textContent = `₹${customer.lifetime_spent || 0}`;
+                document.getElementById('modalCustomerLocation').textContent = 
+                    customer.city ? `${customer.city}, ${customer.state || ''}` : 'Not Provided';
+                
+                // Set status
+                const statusElement = document.getElementById('modalCustomerStatus');
+                statusElement.textContent = customer.is_blocked ? 'blocked' : 'active';
+                statusElement.className = customer.is_blocked ? 
+                    'text-sm font-black uppercase tracking-widest text-red-600' :
+                    'text-sm font-black uppercase tracking-widest text-emerald-600';
+                
+                // Show/hide block/unblock buttons
+                if (customer.is_blocked) {
+                    document.getElementById('blockButton').classList.add('hidden');
+                    document.getElementById('unblockButton').classList.remove('hidden');
+                } else {
+                    document.getElementById('blockButton').classList.remove('hidden');
+                    document.getElementById('unblockButton').classList.add('hidden');
+                }
+                
+                // Show modal
+                document.getElementById('customerModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        } catch (error) {
+            console.error('View customer error:', error);
+            alert('Error loading customer details');
+        }
+    }
+    
+    // Close modal
+    function closeModal() {
+        document.getElementById('customerModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        currentSelectedCustomer = null;
+    }
+    
+    // Block customer
+    async function blockCustomer() {
+        if (!currentSelectedCustomer) return;
+        
+        const reason = prompt('Enter reason for blocking:');
+        if (!reason) return;
+        
+        if (confirm(`Are you sure you want to block ${currentSelectedCustomer.full_name}?`)) {
+            try {
+                // Show loading
+                const blockBtn = document.getElementById('blockButton');
+                const originalText = blockBtn.innerHTML;
+                blockBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Blocking...';
+                blockBtn.disabled = true;
+                
+                // Call API to block customer
+                await apiRequest(`customers/${currentSelectedCustomer.id}/block/`, 'POST', {
+                    reason: reason
+                });
+                
+                // Update local data
+                currentSelectedCustomer.is_blocked = true;
+                
+                // Update UI
+                document.getElementById('modalCustomerStatus').textContent = 'blocked';
+                document.getElementById('modalCustomerStatus').className = 'text-sm font-black uppercase tracking-widest text-red-600';
+                document.getElementById('blockButton').classList.add('hidden');
+                document.getElementById('unblockButton').classList.remove('hidden');
+                
+                // Refresh customer list
+                await loadCustomers();
+                
+                alert('Customer blocked successfully');
+                
+            } catch (error) {
+                console.error('Block customer error:', error);
+                alert('Error blocking customer');
+            } finally {
+                // Reset button
+                const blockBtn = document.getElementById('blockButton');
+                blockBtn.innerHTML = '<i class="fas fa-user-slash"></i> Block User';
+                blockBtn.disabled = false;
+            }
+        }
+    }
+    
+    // Unblock customer
+    async function unblockCustomer() {
+        if (!currentSelectedCustomer) return;
+        
+        if (confirm(`Are you sure you want to unblock ${currentSelectedCustomer.full_name}?`)) {
+            try {
+                // Show loading
+                const unblockBtn = document.getElementById('unblockButton');
+                const originalText = unblockBtn.innerHTML;
+                unblockBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Unblocking...';
+                unblockBtn.disabled = true;
+                
+                // Call API to unblock customer
+                await apiRequest(`customers/${currentSelectedCustomer.id}/unblock/`, 'POST');
+                
+                // Update local data
+                currentSelectedCustomer.is_blocked = false;
+                
+                // Update UI
+                document.getElementById('modalCustomerStatus').textContent = 'active';
+                document.getElementById('modalCustomerStatus').className = 'text-sm font-black uppercase tracking-widest text-emerald-600';
+                document.getElementById('unblockButton').classList.add('hidden');
+                document.getElementById('blockButton').classList.remove('hidden');
+                
+                // Refresh customer list
+                await loadCustomers();
+                
+                alert('Customer unblocked successfully');
+                
+            } catch (error) {
+                console.error('Unblock customer error:', error);
+                alert('Error unblocking customer');
+            } finally {
+                // Reset button
+                const unblockBtn = document.getElementById('unblockButton');
+                unblockBtn.innerHTML = '<i class="fas fa-user-check"></i> Unblock User';
+                unblockBtn.disabled = false;
+            }
+        }
+    }
+    
+    // View customer history (placeholder function)
+    function viewCustomerHistory() {
+        if (currentSelectedCustomer) {
+            alert(`Viewing order history for ${currentSelectedCustomer.full_name}\n\nThis feature will show all orders, prescriptions, and activity logs for this customer.`);
+            // In future, you can redirect to a customer history page
+            // window.location.href = `/admin/customers/${currentSelectedCustomer.id}/history/`;
+        }
+    }
+    
+    // apiRequest() is already defined in base_admin.html (session-auth aware,
+    // sends CSRF token, uses relative API_BASE_URL). This page used to redefine
+    // its own broken copy here (always sent "Authorization: Bearer null" since
+    // no JWT token is ever set in localStorage under session login, which made
+    // every request 401 before it could reach session auth) — removed so the
+    // shared, working function from base_admin.html is used instead.
+</script>
+
+<style>
+    .animate-in {
+        animation: animate-in 0.3s ease-out;
+    }
+    
+    @keyframes animate-in {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .fade-in {
+        animation: fade-in 0.3s ease-out;
+    }
+    
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .zoom-in {
+        animation: zoom-in 0.3s ease-out;
+    }
+    
+    @keyframes zoom-in {
+        from { transform: scale(0.9); }
+        to { transform: scale(1); }
+    }
+</style>
+{% endblock %}

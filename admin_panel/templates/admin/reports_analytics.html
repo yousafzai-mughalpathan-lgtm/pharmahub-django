@@ -1,0 +1,163 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Reports & Analytics | PharmaHub Admin{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm font-medium">Complete control and monitoring of PharmaHub platform</p>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-blue-500 uppercase tracking-widest leading-none mb-2">Platform Growth</p>
+            <h3 class="text-3xl font-extrabold text-blue-900">{{ platform_growth }}</h3>
+            <p class="text-xs text-blue-400 font-medium tracking-wide">new customers vs last month</p>
+        </div>
+        <div class="p-4 bg-blue-500 text-white rounded-2xl shadow-lg shadow-blue-100">
+            <i class="fas fa-chart-line text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-purple-50 p-6 rounded-[2rem] border border-purple-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-purple-500 uppercase tracking-widest leading-none mb-2">Order Rate</p>
+            <h3 class="text-3xl font-extrabold text-purple-900">{{ order_rate }}</h3>
+            <p class="text-xs text-purple-400 font-medium tracking-wide">Average daily (30d)</p>
+        </div>
+        <div class="p-4 bg-purple-500 text-white rounded-2xl shadow-lg shadow-purple-100">
+            <i class="fas fa-shopping-cart text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-pink-50 p-6 rounded-[2rem] border border-pink-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-pink-500 uppercase tracking-widest leading-none mb-2">Customer Retention</p>
+            <h3 class="text-3xl font-extrabold text-pink-900">{{ customer_retention }}</h3>
+            <p class="text-xs text-pink-400 font-medium tracking-wide">Repeat customers (30d)</p>
+        </div>
+        <div class="p-4 bg-pink-500 text-white rounded-2xl shadow-lg shadow-pink-100">
+            <i class="fas fa-users text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-teal-50 p-6 rounded-[2rem] border border-teal-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-teal-500 uppercase tracking-widest leading-none mb-2">Avg Order Value</p>
+            <h3 class="text-3xl font-extrabold text-teal-900">PKR {{ avg_order_value }}</h3>
+            <p class="text-xs text-teal-400 font-medium tracking-wide">Per transaction (30d)</p>
+        </div>
+        <div class="p-4 bg-teal-500 text-white rounded-2xl shadow-lg shadow-teal-100">
+            <i class="fas fa-money-bill text-2xl"></i>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+    <div class="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
+                    <i class="fas fa-capsules text-sm"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Top Selling Medicines</h2>
+            </div>
+            <a href="{% url 'admin_panel:export_reports_csv' %}" class="text-sm font-bold text-gray-500 hover:text-purple-600 transition-all">Export Report</a>
+        </div>
+
+        <div class="space-y-5">
+            {% for med in top_medicines %}
+            <div class="flex items-center gap-4 bg-white border border-gray-50 rounded-2xl p-4 shadow-sm group hover:border-purple-200 transition-all">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-sm border border-purple-200">
+                    {{ forloop.counter }}
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-bold text-gray-800 mb-1">{{ med.name }}</p>
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div class="bg-purple-500 h-2 rounded-full" style="width: {{ med.pct }}%;"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 font-medium mt-1">{{ med.units_sold }} units sold</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-bold text-purple-700">PKR {{ med.revenue|floatformat:0 }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-sm text-gray-400 font-medium">No medicine sales recorded yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 mr-3">
+                    <i class="fas fa-map-marker-alt text-sm"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">City-wise Demand Analysis</h2>
+            </div>
+        </div>
+
+        <div class="space-y-5">
+            {% for city in city_demand %}
+            <div class="flex items-center gap-4 bg-white border border-gray-50 rounded-2xl p-4 shadow-sm group hover:border-pink-200 transition-all">
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-1">
+                        <p class="text-sm font-bold text-gray-800">{{ city.city }}</p>
+                        <p class="text-sm font-bold text-purple-700">PKR {{ city.revenue|floatformat:0 }}</p>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div class="bg-purple-500 h-2 rounded-full" style="width: {{ city.pct }}%;"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <p class="text-xs text-gray-400 font-medium">{{ city.order_count }} orders</p>
+                        <p class="text-xs font-bold {% if city.is_up %}text-emerald-500{% else %}text-red-500{% endif %}">{{ city.change_pct }}</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-sm text-gray-400 font-medium">No city-level order data yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 mb-10">
+    <div class="flex items-center mb-6">
+        <div class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 mr-3">
+            <i class="fas fa-file-alt text-sm"></i>
+        </div>
+        <h2 class="text-xl font-bold text-gray-800 tracking-tight">Generate Custom Reports</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <a href="{% url 'admin_panel:export_reports_csv' %}" class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 shadow-sm flex flex-col items-center justify-center text-center group hover:bg-blue-100 transition-all cursor-pointer">
+            <div class="w-12 h-12 bg-blue-500 text-white rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-blue-100">
+                <i class="fas fa-calendar-alt text-xl"></i>
+            </div>
+            <p class="text-sm font-bold text-blue-900 mb-1">Monthly Sales</p>
+            <p class="text-xs text-blue-500 font-medium">Download CSV report</p>
+        </a>
+        <a href="{% url 'admin_panel:payments_revenue' %}" class="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 shadow-sm flex flex-col items-center justify-center text-center group hover:bg-emerald-100 transition-all cursor-pointer">
+            <div class="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-emerald-100">
+                <i class="fas fa-clinic-medical text-xl"></i>
+            </div>
+            <p class="text-sm font-bold text-emerald-900 mb-1">Pharmacy Performance</p>
+            <p class="text-xs text-emerald-500 font-medium">View top earners</p>
+        </a>
+        <a href="{% url 'admin_panel:customer_management' %}" class="bg-pink-50 p-6 rounded-[2rem] border border-pink-100 shadow-sm flex flex-col items-center justify-center text-center group hover:bg-pink-100 transition-all cursor-pointer">
+            <div class="w-12 h-12 bg-pink-500 text-white rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-pink-100">
+                <i class="fas fa-users text-xl"></i>
+            </div>
+            <p class="text-sm font-bold text-pink-900 mb-1">Customer Insights</p>
+            <p class="text-xs text-pink-500 font-medium">Behavior analysis</p>
+        </a>
+        <a href="{% url 'admin_panel:export_reports_csv' %}" class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 shadow-sm flex flex-col items-center justify-center text-center group hover:bg-orange-100 transition-all cursor-pointer">
+            <div class="w-12 h-12 bg-orange-500 text-white rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-orange-100">
+                <i class="fas fa-chart-bar text-xl"></i>
+            </div>
+            <p class="text-sm font-bold text-orange-900 mb-1">Medicine Trends</p>
+            <p class="text-xs text-orange-500 font-medium">Download CSV report</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

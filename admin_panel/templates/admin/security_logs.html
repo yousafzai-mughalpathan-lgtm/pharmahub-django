@@ -1,0 +1,197 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Security & Logs | PharmaHub Admin{% endblock %}
+{% block page_title %}Security & Logs{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm font-medium">Monitor system security, access logs, and administrative actions</p>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm flex items-start justify-between transition-all hover:shadow-md">
+        <div>
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Logins</p>
+            <h3 class="text-3xl font-black text-gray-800">{{ total_logins }}</h3>
+            <p class="text-[10px] font-bold text-emerald-500 mt-1">Last 24 hours</p>
+        </div>
+        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user-check text-xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm flex items-start justify-between transition-all hover:shadow-md">
+        <div>
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Failed Attempts</p>
+            <h3 class="text-3xl font-black text-rose-600">{{ failed_attempts }}</h3>
+            <p class="text-[10px] font-bold text-rose-400 mt-1">Last 24 hours</p>
+        </div>
+        <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user-shield text-xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm flex items-start justify-between transition-all hover:shadow-md">
+        <div>
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Suspicious Activity</p>
+            <h3 class="text-3xl font-black text-amber-600">{{ suspicious_count }}</h3>
+            <p class="text-[10px] font-bold text-amber-500 mt-1">Requires review</p>
+        </div>
+        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-exclamation-triangle text-xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm flex items-start justify-between transition-all hover:shadow-md">
+        <div>
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Admin Actions</p>
+            <h3 class="text-3xl font-black text-indigo-600">{{ admin_actions_count }}</h3>
+            <p class="text-[10px] font-bold text-indigo-400 mt-1">This week</p>
+        </div>
+        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user-cog text-xl"></i>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden mb-8">
+    <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-800 tracking-tight">Login Activity Log</h2>
+        <a href="{% url 'admin_panel:export_security_logs_csv' %}" class="px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all flex items-center gap-2">
+            <i class="fas fa-file-export"></i> Export Logs
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-gray-400 text-[11px] font-bold uppercase tracking-widest border-b border-gray-50 bg-gray-50/50">
+                    <th class="px-8 py-5">User</th>
+                    <th class="px-8 py-5">Type</th>
+                    <th class="px-8 py-5">Action</th>
+                    <th class="px-8 py-5">IP Address</th>
+                    <th class="px-8 py-5">Time</th>
+                    <th class="px-8 py-5 text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for log in login_logs %}
+                <tr class="hover:bg-gray-50/50 transition-all">
+                    <td class="px-8 py-6 text-sm font-bold text-gray-800">
+                        {% if log.user.pharmacy.name %}{{ log.user.pharmacy.name }}
+                        {% elif log.user %}{{ log.user.get_full_name|default:log.user.email }}
+                        {% else %}{{ log.email_attempted|default:"Unknown" }}{% endif %}
+                    </td>
+                    <td class="px-8 py-6 text-xs font-medium text-gray-500">
+                        {% if log.user %}{{ log.user.get_role_display|default:log.user.role|default:"—"|capfirst }}{% else %}Unknown{% endif %}
+                    </td>
+                    <td class="px-8 py-6 text-xs font-medium text-gray-600">
+                        {% if log.status == 'SUCCESS' %}Login Success{% elif log.status == 'FAILED' %}Login Failed{% else %}Login Blocked{% endif %}
+                    </td>
+                    <td class="px-8 py-6 text-xs font-mono text-gray-500">{{ log.ip_address }}</td>
+                    <td class="px-8 py-6 text-xs font-bold text-gray-400">{{ log.created_at|date:"Y-m-d h:i A" }}</td>
+                    <td class="px-8 py-6 text-center">
+                        {% if log.status == 'SUCCESS' %}
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase">success</span>
+                        {% elif log.status == 'FAILED' %}
+                        <span class="px-3 py-1 bg-rose-100 text-rose-600 text-[10px] font-black rounded-full uppercase">failed</span>
+                        {% else %}
+                        <span class="px-3 py-1 bg-gray-200 text-gray-600 text-[10px] font-black rounded-full uppercase">blocked</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-8 py-10 text-center text-sm text-gray-400 font-medium">No login activity recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="px-8 py-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            Showing {{ login_logs.start_index }} to {{ login_logs.end_index }} of {{ login_logs.paginator.count }} entries
+        </p>
+        <div class="flex gap-2">
+            {% if login_logs.has_previous %}
+            <a href="?page={{ login_logs.previous_page_number }}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-teal-600 transition-all shadow-sm">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </a>
+            {% else %}
+            <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-200 shadow-sm">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </span>
+            {% endif %}
+
+            {% for num in login_logs.paginator.page_range %}
+                {% if num == login_logs.number %}
+                <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-teal-600 text-white font-bold text-xs shadow-lg shadow-teal-100">{{ num }}</span>
+                {% elif num > login_logs.number|add:"-3" and num < login_logs.number|add:"3" %}
+                <a href="?page={{ num }}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-600 font-bold text-xs hover:bg-gray-100 transition-all shadow-sm">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if login_logs.has_next %}
+            <a href="?page={{ login_logs.next_page_number }}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-teal-600 transition-all shadow-sm">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% else %}
+            <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-200 shadow-sm">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-[1.5rem] border border-gray-100 shadow-lg p-6 mb-8">
+    <div class="flex items-center gap-2 mb-6">
+        <i class="fas fa-bell text-red-600"></i>
+        <h2 class="text-lg font-extrabold text-slate-800">Suspicious Activity Detected</h2>
+    </div>
+    <div class="space-y-4">
+        {% for item in suspicious_activity %}
+        <div class="p-5 rounded-2xl border-2 {% if item.severity == 'High' %}border-red-100 bg-red-50/30{% else %}border-orange-100 bg-orange-50/30{% endif %} flex justify-between items-start">
+            <div class="space-y-2">
+                <span class="px-3 py-0.5 {% if item.severity == 'High' %}bg-red-200 text-red-700{% else %}bg-orange-200 text-orange-700{% endif %} rounded-full text-[10px] font-black uppercase tracking-widest">{{ item.severity }}</span>
+                <h3 class="text-md font-bold text-slate-800">{{ item.title }}</h3>
+                <div class="text-sm space-y-1">
+                    <p class="text-gray-500"><span class="font-bold">User:</span> {{ item.user }}</p>
+                    <p class="text-gray-500"><span class="font-bold">IP:</span> {{ item.ip }}</p>
+                    <p class="text-gray-500"><span class="font-bold">Time:</span> {{ item.time|date:"Y-m-d h:i A" }}</p>
+                    <p class="text-gray-500"><span class="font-bold">Detail:</span> {{ item.detail }}</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-gray-400 font-medium">No suspicious activity detected right now.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="bg-white rounded-[1.5rem] border border-gray-100 shadow-lg overflow-hidden mb-8">
+    <div class="p-6 bg-indigo-50/30 border-b border-indigo-100 flex items-center gap-3">
+        <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xs">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <h2 class="text-lg font-extrabold text-slate-800">Admin Audit Log</h2>
+    </div>
+
+    <div class="p-6 space-y-4">
+        {% for log in admin_audit_log %}
+        <div class="p-4 rounded-xl border border-blue-100 bg-blue-50/20 flex justify-between items-center transition-all hover:bg-blue-50/40">
+            <div>
+                <h4 class="text-sm font-bold text-slate-800">{{ log.get_action_display }}</h4>
+                <p class="text-[11px] text-gray-500 mt-0.5">
+                    <span class="font-medium text-gray-600">By:</span> {% if log.admin %}{{ log.admin.get_full_name|default:log.admin.email }}{% else %}System{% endif %} |
+                    <span class="font-medium text-gray-600 ml-1">Target:</span> {{ log.description|default:log.target_model|default:"—" }}
+                </p>
+            </div>
+            <span class="text-[11px] font-bold text-gray-400">{{ log.created_at|date:"Y-m-d h:i A" }}</span>
+        </div>
+        {% empty %}
+        <p class="text-sm text-gray-400 font-medium">No admin activity recorded yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

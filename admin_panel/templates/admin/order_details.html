@@ -1,0 +1,89 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Order Details | PharmaHub Admin{% endblock %}
+{% block page_title %}Order Details{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8">
+  <div class="flex items-center justify-between mb-6 gap-4">
+    <div>
+      <h3 class="text-xl font-extrabold text-gray-900">Order #{{ order.order_id }}</h3>
+      <p class="text-sm text-gray-500 mt-1">Created: {{ order.created_at }}</p>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% url 'admin_panel:orders_monitoring' %}" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50">Back</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-gray-50 rounded-2xl border border-gray-100 p-6">
+      <h4 class="text-sm font-black text-gray-800 uppercase tracking-wide mb-4">Customer & Pharmacy</h4>
+      <div class="space-y-2 text-sm text-gray-700">
+        <p><span class="font-bold">Customer:</span> {{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</p>
+        <p><span class="font-bold">Customer Phone:</span> {{ order.customer.phone }}</p>
+        <p><span class="font-bold">Customer Email:</span> {{ order.customer.user.email }}</p>
+        <p class="break-all"><span class="font-bold">Delivery Address:</span> {{ order.delivery_address }}</p>
+        <div class="mt-4 pt-4 border-t border-gray-200">
+          <p><span class="font-bold">Pharmacy:</span> {{ order.pharmacy.name }}</p>
+          <p><span class="font-bold">Pharmacy License:</span> {{ order.pharmacy.license_number }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 rounded-2xl border border-gray-100 p-6">
+      <h4 class="text-sm font-black text-gray-800 uppercase tracking-wide mb-4">Payment & Status</h4>
+      <div class="space-y-2 text-sm text-gray-700">
+        <p><span class="font-bold">Order Status:</span> {{ order.status }}</p>
+        <p><span class="font-bold">Total Amount:</span> ₹{{ order.total_amount }}</p>
+        {% if order.payment %}
+          <p><span class="font-bold">Payment Status:</span> {{ order.payment.status }}</p>
+          <p><span class="font-bold">Transaction ID:</span> {{ order.payment.transaction_id }}</p>
+        {% else %}
+          <p class="text-gray-500">Payment not found for this order.</p>
+        {% endif %}
+      </div>
+
+      <div class="mt-6">
+        <h4 class="text-sm font-black text-gray-800 uppercase tracking-wide mb-3">Order Notes</h4>
+        <p class="text-sm text-gray-700 break-all">{{ order.notes|default:"-" }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+      <h4 class="text-sm font-black text-gray-800 uppercase tracking-wide">Items</h4>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medicine</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Line Total</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for item in items %}
+            <tr>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.medicine.name }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ item.quantity }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">₹{{ item.price }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">₹{{ item.quantity|floatformat:0|add:0|floatformat:0|default:"0"|safe }}
+                {# Line total is computed in template-safe way below #}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">No items found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

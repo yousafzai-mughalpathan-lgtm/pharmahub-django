@@ -1,0 +1,16 @@
+
+        /* Yahan woh saari CSS classes aayengi */
+        .tab-active { /* Customer (Teal) */ background-color: #0d9488 !important; color: white !important; } 
+        .tab-inactive { color: #374151 !important; background-color: white !important; } 
+        .tab-inactive:hover { background-color: #f3f4f6 !important; } 
+        
+        .form-fade-enter { opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease-out, transform 0.3s ease-out; } 
+        .form-fade-active { opacity: 1; transform: translateY(0); transition: opacity 0.3s ease-in, transform 0.3s ease-in; } 
+        
+        .tab-pharmacy-active { background-color: #f97316 !important; /* Orange */ color: white !important; } 
+        .tab-rider-active { background-color: #3b82f6 !important; /* Blue */ color: white !important; }
+        
+        /* Aur Register page ke liye yeh do classes: */
+        .info-fade-enter { opacity: 0; transform: translateX(-10px); transition: opacity 0.4s ease-out, transform 0.4s ease-out; }
+        .info-fade-active { opacity: 1; transform: translateX(0); transition: opacity 0.4s ease-in, transform 0.4s ease-in; }
+        .tab-customer-active { background-color: #0d9488 !important; color: white !important; } 

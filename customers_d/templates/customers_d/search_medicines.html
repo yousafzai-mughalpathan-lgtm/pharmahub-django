@@ -1,0 +1,399 @@
+{% extends "customers_d/customer_dashboard.html" %}
+
+{% block title %}Search Medicines - PharmaHub{% endblock %}
+
+{% block extra_css %}
+    <style>
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .quantity-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #f1f5f9;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .quantity-input {
+      width: 40px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 2px;
+    }
+    .cart-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #0d9488;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      display: none;
+    }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div id="cartNotification" class="cart-notification">
+  <span id="notificationMessage"></span>
+</div>
+
+
+  
+ 
+  <!-- Status Message -->
+  <p id="uploadStatus" class="text-sm mt-4 hidden"></p>
+</div>
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+  <h2 class="text-xl font-medium text-gray-800 mb-4">Search Medicines</h2>
+  <div class="mb-6">
+    <div class="flex items-center bg-white border rounded-lg shadow-sm px-3 py-2">
+      <i class="ri-search-line text-gray-500 mr-2"></i>
+      <input 
+        id="searchInput"
+        type="text" 
+        placeholder="Search medicines, brands, or generic names..." 
+        class="w-full outline-none text-gray-700 text-sm"
+      />
+      <button id="searchButton" class="ml-2 bg-teal-600 text-white px-5 py-2 rounded-lg hover:bg-teal-700 transition text-sm">
+        Search
+      </button>
+    </div>
+  </div>
+ 
+
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <select id="priceFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <option value="all">All Prices</option>
+      <option value="below50">Below Rs. 50</option>
+      <option value="50-100">Rs. 50 - Rs. 100</option>
+      <option value="above100">Above Rs. 100</option>
+    </select>
+    <select id="stockFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <option value="all">All Stock</option>
+      <option value="inStock">In Stock</option>
+      <option value="outOfStock">Out of Stock</option>
+    </select>
+    <select id="pharmacyFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <option value="all">All Pharmacies</option>
+      {% for ph in pharmacies %}
+        <option value="{{ ph }}">{{ ph }}</option>
+      {% endfor %}
+    </select>
+    <select id="sortOrder" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <option value="name">Sort by: Name</option>
+      <option value="priceLowToHigh">Price: Low to High</option>
+      <option value="priceHighToLow">Price: High to Low</option>
+    </select>
+  </div>
+    
+  <div id="medicineCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+    {% for medicine in medicines %}
+      <div class="medicine-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col" data-id="{{ medicine.id }}" data-name="{{ medicine.name }}" data-brand="{{ medicine.brand|default:'' }}" data-price="{{ medicine.price }}" data-stock="{{ medicine.stock_quantity }}" data-pharmacy="{{ medicine.pharmacy.name|default:medicine.user.pharmacy.name|default:'Unknown Pharmacy' }}">
+        <div class="w-full h-36 mb-4 bg-gray-50 rounded-md flex items-center justify-center overflow-hidden">
+          <img src="{% if medicine.image %}{{ medicine.image.url }}{% else %}https://placehold.co/200x200/e2e8f0/64748b?text=No+Image{% endif %}" alt="{{ medicine.name }}" class="max-h-full max-w-full object-contain" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/64748b?text=No+Image';">
+        </div>
+        <h3 class="font-semibold text-gray-800 truncate" title="{{ medicine.name }}">{{ medicine.name }}</h3>
+        <p class="text-sm text-gray-500 mb-2 truncate">{{ medicine.brand }}</p>
+        <div class="flex items-center space-x-2">
+          <span class="text-teal-600 font-bold">Rs. {{ medicine.price }}</span>
+        </div>
+        {% if medicine.stock_quantity > 0 %}
+          <span class="text-xs text-green-600 font-medium">{{ medicine.stock_quantity }} in stock</span>
+        {% else %}
+          <span class="text-xs text-red-600 font-medium">Out of stock</span>
+        {% endif %}
+        <p class="text-xs text-gray-500 truncate">{{ medicine.pharmacy.name|default:medicine.user.pharmacy.name|default:'Pharmacy info N/A' }}</p>
+        {% if medicine.expiry_date %}
+          <p class="text-xs text-gray-400">Expires: {{ medicine.expiry_date|date:'m/d/Y' }}</p>
+        {% endif %}
+        <div class="mt-auto pt-2">
+          <div class="quantity-selector">
+            <button class="quantity-btn decrease" {% if medicine.stock_quantity == 0 %}disabled{% endif %}>-</button>
+            <input type="number" class="quantity-input" value="{% if medicine.stock_quantity > 0 %}1{% else %}0{% endif %}" min="{% if medicine.stock_quantity > 0 %}1{% else %}0{% endif %}" max="{{ medicine.stock_quantity }}" {% if medicine.stock_quantity == 0 %}disabled{% endif %}>
+            <button class="quantity-btn increase" {% if medicine.stock_quantity == 0 %}disabled{% endif %}>+</button>
+          </div>
+          {% if medicine.stock_quantity > 0 %}
+            <button class="add-to-cart-btn w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 text-sm">Add to Cart</button>
+          {% else %}
+            <button class="add-to-cart-btn w-full bg-gray-400 text-white py-2 rounded-lg text-sm" disabled>Out of Stock</button>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-full bg-white border rounded-lg p-6 shadow-sm text-center text-gray-700">
+        No medicines available right now. Please check back later or contact your pharmacy.
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      const priceFilter = document.getElementById('priceFilter');
+      const stockFilter = document.getElementById('stockFilter');
+      const pharmacyFilter = document.getElementById('pharmacyFilter');
+      const sortOrder = document.getElementById('sortOrder');
+      const medicineCardsContainer = document.getElementById('medicineCards');
+      const cardsArray = Array.from(document.querySelectorAll('.medicine-card'));
+      
+      const cartNotification = document.getElementById('cartNotification');
+      const notificationMessage = document.getElementById('notificationMessage');
+
+      // --- Quantity Selector Logic ---
+      document.querySelectorAll('.quantity-selector').forEach(selector => {
+        const decreaseBtn = selector.querySelector('.decrease');
+        const increaseBtn = selector.querySelector('.increase');
+        const input = selector.querySelector('.quantity-input');
+        
+        // Initial state
+        const max = parseInt(input.getAttribute('max'));
+        if (max === 0) {
+            decreaseBtn.disabled = true;
+            increaseBtn.disabled = true;
+            input.disabled = true;
+            input.value = 0;
+        }
+
+        decreaseBtn.addEventListener('click', () => {
+          let value = parseInt(input.value);
+          if (value > parseInt(input.min)) {
+            input.value = value - 1;
+          }
+        });
+
+        increaseBtn.addEventListener('click', () => {
+          let value = parseInt(input.value);
+          const max = parseInt(input.getAttribute('max'));
+          if (value < max) {
+            input.value = value + 1;
+          }
+        });
+        
+        input.addEventListener('change', () => {
+          let value = parseInt(input.value);
+          const min = parseInt(input.min);
+          const max = parseInt(input.max);
+          if (isNaN(value) || value < min) {
+            input.value = min;
+          } else if (value > max) {
+            input.value = max;
+          }
+        });
+      });
+      
+      // --- Add to Cart Logic ---
+      document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          if (this.disabled) return;
+
+          const card = this.closest('.medicine-card');
+          const medicineId = card.getAttribute('data-id');
+          const name = card.getAttribute('data-name');
+          const quantityInput = card.querySelector('.quantity-input');
+          const quantity = parseInt(quantityInput.value, 10);
+
+          if (!medicineId || quantity <= 0) return;
+
+          fetch("{% url 'orders:add_to_cart_api' %}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+              medicine_id: medicineId,
+              quantity: quantity,
+              action: 'add'
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              showNotification(`${quantity} ${name} added to cart!`);
+              updateNavbarBadge(data.cart_count);
+            } else if (data && data.conflict === true) {
+              if (confirm(data.message)) {
+                fetch("{% url 'orders:clear_and_add_cart_api' %}", {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                  },
+                  body: JSON.stringify({ medicine_id: medicineId })
+                })
+                .then(res => res.json())
+                .then(clearData => {
+                  if (clearData.success) {
+                    showNotification(clearData.message);
+                    updateNavbarBadge(clearData.cart_count);
+                  } else {
+                    showNotification(clearData.message || 'Unable to clear cart.');
+                  }
+                });
+              }
+            } else {
+              showNotification(data.message || 'Kuch ghalat ho gaya, dobara koshish karein.');
+            }
+          })
+          .catch(() => showNotification('Network error — dobara try karein.'));
+        });
+      });
+
+      function updateNavbarBadge(count) {
+        const globalBadge = document.getElementById('cart-count');
+        if (globalBadge) {
+          globalBadge.textContent = count;
+          globalBadge.classList.toggle('hidden', count === 0);
+        }
+      }
+
+      // Show notification function
+      function showNotification(message) {
+        notificationMessage.textContent = message;
+        cartNotification.style.display = 'block';
+        setTimeout(() => {
+          cartNotification.style.display = 'none';
+        }, 3000);
+      }
+      
+      // --- Filter and Sort Function ---
+      function filterMedicines() {
+        const searchValue = searchInput.value.toLowerCase();
+        const priceValue = priceFilter.value;
+        const stockValue = stockFilter.value;
+        const pharmacyValue = pharmacyFilter.value;
+        const sortValue = sortOrder.value;
+        
+        cardsArray.forEach(card => {
+          const name = card.getAttribute('data-name').toLowerCase();
+          const brand = card.getAttribute('data-brand').toLowerCase();
+          const price = parseFloat(card.getAttribute('data-price'));
+          const stock = parseInt(card.getAttribute('data-stock'));
+          const pharmacy = card.getAttribute('data-pharmacy');
+          
+          // Check search filter
+          let matchesSearch = name.includes(searchValue) || brand.includes(searchValue);
+          
+          // Check price filter
+          let matchesPrice = true;
+          if (priceValue === 'below50') matchesPrice = price < 50;
+          else if (priceValue === '50-100') matchesPrice = price >= 50 && price <= 100;
+          else if (priceValue === 'above100') matchesPrice = price > 100;
+          
+          // Check stock filter
+          let matchesStock = true;
+          if (stockValue === 'inStock') matchesStock = stock > 0;
+          else if (stockValue === 'outOfStock') matchesStock = stock === 0;
+          
+          // Check pharmacy filter
+          let matchesPharmacy = true;
+          if (pharmacyValue !== 'all') matchesPharmacy = pharmacy === pharmacyValue;
+          
+          // Show or hide card based on filters
+          if (matchesSearch && matchesPrice && matchesStock && matchesPharmacy) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        // Sort visible cards
+        const visibleCards = cardsArray.filter(card => card.style.display !== 'none');
+        
+        if (sortValue === 'priceLowToHigh') {
+          visibleCards.sort((a, b) => {
+            return parseFloat(a.getAttribute('data-price')) - parseFloat(b.getAttribute('data-price'));
+          });
+        } else if (sortValue === 'priceHighToLow') {
+          visibleCards.sort((a, b) => {
+            return parseFloat(b.getAttribute('data-price')) - parseFloat(a.getAttribute('data-price'));
+          });
+        }
+        // If sorting by name (default) or other non-numeric attributes, keep original order
+        
+        // Reorder cards in DOM
+        const container = document.getElementById('medicineCards');
+        visibleCards.forEach(card => container.appendChild(card));
+      }
+      
+      // --- Event Listeners for Filters/Search/Sort ---
+      searchButton.addEventListener('click', filterMedicines);
+      searchInput.addEventListener('keyup', filterMedicines);
+      priceFilter.addEventListener('change', filterMedicines);
+      stockFilter.addEventListener('change', filterMedicines);
+      pharmacyFilter.addEventListener('change', filterMedicines);
+      sortOrder.addEventListener('change', filterMedicines);
+      
+      // Initial filter/sort on load
+      filterMedicines();
+    });
+</script>
+
+<script>
+  // --- Prescription Upload Logic ---
+  const prescriptionForm = document.getElementById("prescriptionForm");
+  const prescriptionFile = document.getElementById("prescriptionFile");
+  const uploadStatus = document.getElementById("uploadStatus");
+
+  if (prescriptionForm) {
+    prescriptionForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      const file = prescriptionFile.files[0];
+      if (!file) {
+        uploadStatus.textContent = "Please select a prescription image first.";
+        uploadStatus.className = "text-red-600 text-sm mt-3";
+        uploadStatus.classList.remove("hidden");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("prescription", file);
+
+      try {
+        const response = await fetch("{% url 'customers_d:upload_prescription' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          uploadStatus.textContent = "Prescription sent successfully! Nearby pharmacies will review it.";
+          uploadStatus.className = "text-green-600 text-sm mt-3";
+        } else {
+          uploadStatus.textContent = "Something went wrong. Please try again.";
+          uploadStatus.className = "text-red-600 text-sm mt-3";
+        }
+      } catch (error) {
+        uploadStatus.textContent = "Upload failed. Check your connection.";
+        uploadStatus.className = "text-red-600 text-sm mt-3";
+      }
+
+      uploadStatus.classList.remove("hidden");
+    });
+  }
+</script>
+
+
+{% endblock %}

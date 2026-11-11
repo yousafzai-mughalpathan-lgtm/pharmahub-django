@@ -1,0 +1,258 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Prescription Monitoring | PharmaHub Admin{% endblock %}
+{% block page_title %}Prescription Monitoring{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm font-medium">Complete control and monitoring of PharmaHub platform</p>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-xs font-bold text-rose-500 uppercase tracking-wider">Total Prescriptions</p>
+            <h3 class="text-3xl font-extrabold text-rose-900 mt-1">{{ total_count }}</h3>
+        </div>
+        <div class="p-4 bg-rose-500 text-white rounded-2xl shadow-lg">
+            <i class="fas fa-file-medical text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-xs font-bold text-emerald-500 uppercase tracking-wider">Verified</p>
+            <h3 class="text-3xl font-extrabold text-emerald-900 mt-1">{{ verified_count }}</h3>
+        </div>
+        <div class="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg">
+            <i class="fas fa-user-check text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-xs font-bold text-amber-500 uppercase tracking-wider">Pending Review</p>
+            <h3 class="text-3xl font-extrabold text-amber-900 mt-1">{{ pending_count }}</h3>
+        </div>
+        <div class="p-4 bg-amber-600 text-white rounded-2xl shadow-lg">
+            <i class="fas fa-clock text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-red-50 p-6 rounded-[2rem] border border-red-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-xs font-bold text-red-500 uppercase tracking-wider">Flagged</p>
+            <h3 class="text-3xl font-extrabold text-red-900 mt-1">{{ flagged_count }}</h3>
+        </div>
+        <div class="p-4 bg-red-600 text-white rounded-2xl shadow-lg">
+            <i class="fas fa-flag text-2xl"></i>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden mb-10">
+    <div class="p-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-[#fffafb]">
+        <div class="flex items-center">
+            <div class="w-10 h-10 bg-rose-600 rounded-xl flex items-center justify-center text-white mr-4 shadow-lg shadow-rose-100">
+                <i class="fas fa-info"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">Prescription Monitoring</h2>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <select id="presFilter" class="bg-white border border-gray-200 text-gray-700 py-3 px-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer">
+                <option value="all">All Prescriptions</option>
+                <option value="approved">Verified</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Flagged</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto px-4 pb-4">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-gray-400 text-[11px] font-bold uppercase tracking-widest border-b border-gray-50">
+                    <th class="px-6 py-5">Prescription ID</th>
+                    <th class="px-6 py-5">Customer</th>
+                    <th class="px-6 py-5">Pharmacy</th>
+                    <th class="px-6 py-5 text-center">Status</th>
+                    <th class="px-6 py-5 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody id="presTableBody">
+                {% for p in prescriptions %}
+                <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-all"
+                    data-status="{{ p.status }}"
+                    data-id="{{ p.id }}"
+                    data-customer="{{ p.customer.get_full_name|default:p.customer.username|default:p.customer.email }}"
+                    data-pharmacy="{{ p.pharmacy.pharmacy.name|default:p.pharmacy.get_full_name|default:p.pharmacy.username }}"
+                    data-image="{% if p.prescription_image %}{{ p.prescription_image.url }}{% endif %}"
+                    data-date="{{ p.created_at|date:'n/j/Y, g:i:s A' }}"
+                    data-medicines="{% for item in p.items.all %}{{ item.product.name }} (Qty: {{ item.quantity }}){% if not forloop.last %}, {% endif %}{% endfor %}"
+                    data-reason="{{ p.rejection_reason|default:'' }}">
+                    <td class="px-6 py-6 text-sm font-bold text-gray-800">PRX-{{ p.id }}</td>
+                    <td class="px-6 py-6 text-sm font-medium text-gray-600">{{ p.customer.get_full_name|default:p.customer.username|default:p.customer.email }}</td>
+                    <td class="px-6 py-6 text-sm text-gray-500">{{ p.pharmacy.pharmacy.name|default:p.pharmacy.get_full_name|default:p.pharmacy.username }}</td>
+                    <td class="px-6 py-6 text-center">
+                        {% if p.status == 'approved' %}
+                        <span class="status-badge px-4 py-1.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-600 border border-emerald-200">verified</span>
+                        {% elif p.status == 'rejected' %}
+                        <span class="status-badge px-4 py-1.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-600 border border-red-200">flagged</span>
+                        {% else %}
+                        <span class="status-badge px-4 py-1.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-600 border border-amber-200">pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-6 text-right">
+                        <button onclick="openReviewModal(this)" class="text-rose-500 font-bold text-sm hover:underline">Review</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-10 text-center text-gray-400 font-medium">No prescriptions uploaded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="reviewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-4xl overflow-hidden shadow-2xl">
+
+        <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+            <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 tracking-tight">Prescription Review</h3>
+            <button onclick="closeReviewModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-rose-500 transition-all">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-10 flex flex-col lg:flex-row gap-10">
+            <div class="w-full lg:w-1/3">
+                <p class="text-gray-400 font-bold text-xs uppercase tracking-widest mb-4">Prescription Image</p>
+                <div class="aspect-[3/4] bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-100 flex flex-col items-center justify-center text-gray-300 relative overflow-hidden">
+                    <i id="modalPresPlaceholder" class="fas fa-image text-6xl mb-4"></i>
+                    <p id="modalPresPlaceholderText" class="font-bold text-sm">Prescription</p>
+                    <img id="modalPresImg" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                </div>
+            </div>
+
+            <div class="w-full lg:w-2/3">
+                <div class="bg-[#f0f7ff] rounded-[2rem] p-8 border border-blue-50 relative mb-6">
+                    <i class="far fa-clock absolute top-8 right-8 text-blue-300 text-2xl"></i>
+                    <h4 class="text-blue-900 font-bold text-lg mb-4">Prescription Details</h4>
+                    <div class="space-y-3 text-gray-600 font-medium text-sm">
+                        <p>Customer: <span id="modalCustomer" class="text-gray-900 font-bold ml-2"></span></p>
+                        <p>Pharmacy: <span id="modalPharmacy" class="text-gray-900 font-bold ml-2"></span></p>
+                        <p>Upload Date: <span id="modalDate" class="text-gray-900 font-bold ml-2"></span></p>
+                        <div class="flex items-center">
+                            Status: <div id="modalStatusContainer" class="ml-2"></div>
+                        </div>
+                        <p id="modalReasonWrap" class="hidden">Reason: <span id="modalReason" class="text-gray-900 font-bold ml-2"></span></p>
+                    </div>
+                </div>
+
+                <div class="bg-[#f0fdf4] rounded-[2rem] p-8 border border-emerald-50 mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 bg-emerald-500 text-white rounded-lg flex items-center justify-center shadow-sm">
+                            <i class="fas fa-prescription-bottle text-sm"></i>
+                        </div>
+                        <h4 class="text-emerald-900 font-bold text-lg">Medicines Prescribed</h4>
+                    </div>
+                    <div class="bg-white border border-emerald-100 rounded-2xl p-4 shadow-sm">
+                        <input id="modalMedicines" type="text" value="" placeholder="No linked medicines yet" class="w-full outline-none font-bold text-gray-700 bg-transparent" readonly>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <form id="flagForm" method="POST" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-[#ef4444] hover:bg-red-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-red-100 transition-all">
+                            <i class="fas fa-flag"></i> Flag as Suspicious
+                        </button>
+                    </form>
+                    <form id="verifyForm" method="POST" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-[#10b981] hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-emerald-100 transition-all">
+                            <i class="fas fa-check-circle"></i> Verify as Authentic
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('reviewModal');
+
+    function openReviewModal(btn) {
+        const row = btn.closest('tr');
+        const pID = row.dataset.id;
+        const customer = row.dataset.customer;
+        const pharmacy = row.dataset.pharmacy;
+        const image = row.dataset.image;
+        const date = row.dataset.date;
+        const medicines = row.dataset.medicines;
+        const reason = row.dataset.reason;
+        const statusBadge = row.querySelector('.status-badge').cloneNode(true);
+
+        // Populate Modal Data
+        document.getElementById('modalTitle').innerText = "Prescription Review - PRX-" + pID;
+        document.getElementById('modalCustomer').innerText = customer;
+        document.getElementById('modalPharmacy').innerText = pharmacy;
+        document.getElementById('modalDate').innerText = date;
+        document.getElementById('modalMedicines').value = medicines || '';
+
+        const img = document.getElementById('modalPresImg');
+        const placeholder = document.getElementById('modalPresPlaceholder');
+        const placeholderText = document.getElementById('modalPresPlaceholderText');
+        if (image) {
+            img.src = image;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            placeholderText.classList.add('hidden');
+        } else {
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            placeholderText.classList.remove('hidden');
+        }
+
+        const reasonWrap = document.getElementById('modalReasonWrap');
+        if (reason) {
+            document.getElementById('modalReason').innerText = reason;
+            reasonWrap.classList.remove('hidden');
+        } else {
+            reasonWrap.classList.add('hidden');
+        }
+
+        const container = document.getElementById('modalStatusContainer');
+        container.innerHTML = '';
+        container.appendChild(statusBadge);
+
+        // Point the Verify / Flag forms at this exact prescription
+        document.getElementById('verifyForm').action = `/admin/prescription/${pID}/verify/`;
+        document.getElementById('flagForm').action = `/admin/prescription/${pID}/flag/`;
+
+        // Show Modal
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeReviewModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Close on outside click
+    window.onclick = function(event) {
+        if (event.target == modal) { closeReviewModal(); }
+    }
+
+    // Table Filter Logic
+    document.getElementById('presFilter').addEventListener('change', function(e) {
+        let val = e.target.value;
+        document.querySelectorAll('#presTableBody tr[data-status]').forEach(row => {
+            row.style.display = (val === 'all' || row.dataset.status === val) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,775 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Medicine Control | PharmaHub Admin{% endblock %}
+{% block page_title %}Medicine Control{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm">Complete control and monitoring of PharmaHub platform</p>
+
+<!-- Loading indicator -->
+<div id="medicineLoading" class="text-center py-8">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+    <p class="mt-2 text-gray-500">Loading medicine data...</p>
+</div>
+
+<!-- Main Content (Initially hidden) -->
+<div id="medicineContent" class="hidden">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-emerald-500 uppercase tracking-wider">Total Medicines</p>
+                <h3 id="totalMedicines" class="text-3xl font-extrabold text-emerald-900 mt-1">...</h3>
+            </div>
+            <div class="p-3 bg-emerald-600 text-white rounded-xl shadow-lg">
+                <i class="fas fa-prescription-bottle text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-blue-500 uppercase tracking-wider">Categories</p>
+                <h3 id="totalCategories" class="text-3xl font-extrabold text-blue-900 mt-1">...</h3>
+            </div>
+            <div class="p-3 bg-blue-600 text-white rounded-xl shadow-lg">
+                <i class="fas fa-th-list text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-red-50 p-6 rounded-2xl border border-red-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-red-500 uppercase tracking-wider">Banned Items</p>
+                <h3 id="bannedMedicines" class="text-3xl font-extrabold text-red-900 mt-1">...</h3>
+            </div>
+            <div class="p-3 bg-red-600 text-white rounded-xl shadow-lg">
+                <i class="fas fa-ban text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-amber-500 uppercase tracking-wider">Low Stock (&lt; 20)</p>
+                <h3 id="prescriptionMedicines" class="text-3xl font-extrabold text-amber-900 mt-1">...</h3>
+            </div>
+            <div class="p-3 bg-amber-500 text-white rounded-xl shadow-lg">
+                <i class="fas fa-file-medical text-2xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-list-ul mr-3 text-blue-600"></i> Medicine Categories
+            </h2>
+            <button onclick="openCategoryModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all flex items-center shadow-md">
+                <i class="fas fa-plus mr-2"></i> Add Category
+            </button>
+        </div>
+
+        <div id="categoriesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Categories will be loaded here via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Medicines List Section -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-capsules mr-3 text-purple-600"></i> All Medicines
+            </h2>
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="medicineSearch" placeholder="Search medicines..." 
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all text-sm"
+                           onkeyup="searchMedicines()">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                
+                <select id="categoryFilter" onchange="filterByCategory()" class="bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 transition-all">
+                    <option value="">All Categories</option>
+                    <!-- Categories will be loaded here -->
+                </select>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Image</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Medicine Name</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Brand</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="medicinesTableBody" class="divide-y divide-gray-200">
+                    <!-- Medicines will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Banned Medicines Section -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center mb-8">
+            <i class="fas fa-ban mr-3 text-red-600"></i> Banned Medicines List
+        </h2>
+        <div id="bannedMedicinesContainer" class="space-y-4">
+            <!-- Banned medicines will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Category Modal -->
+<div id="categoryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl scale-95 transition-transform duration-300 mx-4" onclick="event.stopPropagation()">
+        <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-6">Add New Category</h3>
+        
+        <div class="mb-8">
+            <input type="text" id="categoryName" placeholder="Category Name" 
+                   class="w-full px-6 py-4 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-gray-700 placeholder-gray-400">
+            <textarea id="categoryDescription" placeholder="Category Description (Optional)" rows="3"
+                      class="w-full px-6 py-4 mt-4 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-gray-700 placeholder-gray-400"></textarea>
+        </div>
+
+        <div class="flex gap-4">
+            <button onclick="closeCategoryModal()" class="flex-1 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-2xl transition-all">
+                Cancel
+            </button>
+            <button onclick="saveCategory()" id="saveCategoryBtn" class="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 transition-all">
+                Add Category
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Medicine Details Modal -->
+<div id="medicineModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-4xl p-10 shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-8">
+            <div class="flex items-center gap-4">
+                <img id="medicineModalImage" src="" alt="" class="w-16 h-16 rounded-xl object-cover border border-gray-100">
+                <div>
+                    <h3 id="medicineModalTitle" class="text-2xl font-bold text-gray-900"></h3>
+                    <p id="medicineModalGeneric" class="text-gray-500 mt-1"></p>
+                </div>
+            </div>
+            <button onclick="closeMedicineModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column -->
+            <div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                    <div id="medicineModalCategory" class="text-gray-800 font-medium"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Brand</label>
+                    <div id="medicineModalManufacturer" class="text-gray-800 font-medium"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Price</label>
+                    <div id="medicineModalPrice" class="text-2xl font-bold text-blue-600"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Expiry Date</label>
+                    <div id="medicineModalPrescription" class="text-gray-800 font-medium"></div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                    <div id="medicineModalDescription" class="text-gray-700"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Status</label>
+                    <div id="medicineModalStatus" class="text-gray-800 font-medium"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Total Stock Available</label>
+                    <div id="medicineModalStock" class="text-2xl font-bold text-emerald-600"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 pt-8 border-t border-gray-200">
+            <div class="flex gap-4">
+                <button onclick="toggleMedicineBan()" id="banUnbanBtn" class="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl transition-all">
+                    <i class="fas fa-ban mr-2"></i> Ban Medicine
+                </button>
+                <button onclick="editMedicine()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all">
+                    <i class="fas fa-edit mr-2"></i> Edit Medicine
+                </button>
+                <button onclick="deleteMedicine()" class="flex-1 py-4 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-2xl transition-all">
+                    <i class="fas fa-trash mr-2"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let allCategories = [];
+    let allMedicines = [];
+    let currentCategoryId = null;
+    let currentMedicineId = null;
+    
+    // Load all data when page loads
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // Load categories and medicines in parallel
+            await Promise.all([
+                loadCategories(),
+                loadMedicines()
+            ]);
+            
+            // Hide loading, show content
+            document.getElementById('medicineLoading').classList.add('hidden');
+            document.getElementById('medicineContent').classList.remove('hidden');
+            
+            // Update stats
+            updateMedicineStats();
+            
+        } catch (error) {
+            console.error('Initial load error:', error);
+            document.getElementById('medicineLoading').innerHTML = 
+                '<p class="text-red-500">Error loading data. Please check console.</p>';
+        }
+    });
+    
+    // Fetch every page of a paginated DRF endpoint (PAGE_SIZE=10 by default),
+    // so lists aren't silently truncated to just the first page.
+    async function apiRequestAllPages(endpoint) {
+        let page = 1;
+        let results = [];
+        while (true) {
+            const sep = endpoint.includes('?') ? '&' : '?';
+            const data = await apiRequest(`${endpoint}${sep}page=${page}`);
+
+            if (Array.isArray(data)) {
+                // Endpoint isn't paginated at all — just return everything.
+                return data;
+            }
+
+            results = results.concat(data.results || []);
+
+            if (!data.next) break;
+            page += 1;
+        }
+        return results;
+    }
+
+    // Load categories from API
+    async function loadCategories() {
+        try {
+            const data = await apiRequestAllPages('medicine-categories/');
+            allCategories = Array.isArray(data) ? data : data.results || data || [];
+            
+            // Display categories
+            displayCategories();
+            
+            // Populate category filter dropdown
+            populateCategoryFilter();
+            
+        } catch (error) {
+            console.error('Load categories error:', error);
+            throw error;
+        }
+    }
+    
+    // Load medicines from API
+    async function loadMedicines() {
+        try {
+            const data = await apiRequestAllPages('medicines/');
+            allMedicines = Array.isArray(data) ? data : data.results || data || [];
+            
+            // Display medicines
+            displayMedicines(allMedicines);
+            
+            // Display banned medicines
+            displayBannedMedicines();
+            
+        } catch (error) {
+            console.error('Load medicines error:', error);
+            throw error;
+        }
+    }
+    
+    // Display categories in the grid
+    function displayCategories() {
+        const container = document.getElementById('categoriesContainer');
+        
+        if (allCategories.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-4 text-center py-12">
+                    <p class="text-gray-500">No categories found. Add your first category!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        allCategories.forEach(category => {
+            container.innerHTML += `
+                <div class="p-6 rounded-2xl border border-gray-100 bg-gray-50/50 hover:shadow-md transition-all">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                            <i class="fas fa-capsules text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">${category.name}</h4>
+                            <p class="text-xs text-gray-500">${category.medicine_count || 0} medicines</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-4 pt-4 border-t border-gray-100">
+                        <button onclick="editCategoryModal(${category.id})" class="text-blue-600 font-bold text-sm hover:underline">Edit</button>
+                        <button onclick="deleteCategory(${category.id})" class="text-red-500 font-bold text-sm hover:underline">Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    // Display medicines in table
+    function displayMedicines(medicines) {
+        const tbody = document.getElementById('medicinesTableBody');
+        
+        if (medicines.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-6 py-12 text-center">
+                        <p class="text-gray-500">No medicines found</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        medicines.forEach(medicine => {
+            // medicine.category is a plain text field (dashboards.Medicine.category),
+            // NOT a foreign key id — so it is used directly, no lookup against allCategories.
+            const imgSrc = medicine.image ? medicine.image : 'https://placehold.co/80x80/e2e8f0/64748b.png?text=No+Img';
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <img src="${imgSrc}" alt="${medicine.name}" class="w-12 h-12 rounded-lg object-cover border border-gray-100" onerror="this.src='https://placehold.co/80x80/e2e8f0/64748b.png?text=No+Img'">
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-gray-800">${medicine.name}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-block px-3 py-1 text-xs font-bold bg-blue-100 text-blue-600 rounded-full">
+                            ${medicine.category || 'N/A'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700">${medicine.brand || ''}</td>
+                    <td class="px-6 py-4 font-bold text-blue-600">Rs. ${medicine.price}</td>
+                    <td class="px-6 py-4 text-gray-700">${medicine.stock_quantity}</td>
+                    <td class="px-6 py-4">
+                        <span class="${medicine.is_banned ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} text-xs px-3 py-1 rounded-full font-bold">
+                            ${medicine.is_banned ? 'Banned' : 'Active'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="viewMedicineDetails(${medicine.id})" class="text-blue-600 font-bold text-sm hover:underline mr-4">View</button>
+                        <button onclick="editMedicineModal(${medicine.id})" class="text-purple-600 font-bold text-sm hover:underline">Edit</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    
+    // Display banned medicines
+    function displayBannedMedicines() {
+        const container = document.getElementById('bannedMedicinesContainer');
+        const bannedMedicines = allMedicines.filter(medicine => medicine.is_banned);
+        
+        if (bannedMedicines.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-gray-500">No banned medicines</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        bannedMedicines.forEach(medicine => {
+            container.innerHTML += `
+                <div class="bg-red-50/50 border border-red-100 p-6 rounded-2xl flex justify-between items-center transition-all hover:bg-red-50">
+                    <div>
+                        <h4 class="font-bold text-red-900 text-lg">${medicine.name}</h4>
+                        <p class="text-sm text-gray-600 mt-1">Reason: <span class="font-medium">${medicine.ban_reason || 'Safety concerns'}</span></p>
+                        <p class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest font-bold">Brand: ${medicine.brand || 'N/A'}</p>
+                    </div>
+                    <button onclick="unbanMedicine(${medicine.id})" class="text-red-600 font-bold hover:bg-red-100 px-4 py-2 rounded-xl transition-all">
+                        Remove from List
+                    </button>
+                </div>
+            `;
+        });
+    }
+    
+    // Populate category filter dropdown
+    function populateCategoryFilter() {
+        const select = document.getElementById('categoryFilter');
+        
+        // Clear existing options except first one
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+        
+        allCategories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.name;
+            option.textContent = `${category.name} (${category.medicine_count})`;
+            select.appendChild(option);
+        });
+    }
+    
+    // Update medicine statistics
+    function updateMedicineStats() {
+        const total = allMedicines.length;
+        const banned = allMedicines.filter(m => m.is_banned).length;
+        const lowStock = allMedicines.filter(m => (m.stock_quantity || 0) < 20).length;
+        
+        document.getElementById('totalMedicines').textContent = total;
+        document.getElementById('totalCategories').textContent = allCategories.length;
+        document.getElementById('bannedMedicines').textContent = banned;
+        document.getElementById('prescriptionMedicines').textContent = lowStock;
+    }
+    
+    // Search medicines
+    function searchMedicines() {
+        const searchTerm = document.getElementById('medicineSearch').value.toLowerCase();
+        const filtered = allMedicines.filter(medicine => 
+            (medicine.name && medicine.name.toLowerCase().includes(searchTerm)) ||
+            (medicine.brand && medicine.brand.toLowerCase().includes(searchTerm)) ||
+            (medicine.category && medicine.category.toLowerCase().includes(searchTerm))
+        );
+        displayMedicines(filtered);
+    }
+    
+    // Filter by category
+    function filterByCategory() {
+        const categoryId = document.getElementById('categoryFilter').value;
+        
+        if (!categoryId) {
+            displayMedicines(allMedicines);
+        } else {
+            const filtered = allMedicines.filter(medicine => medicine.category == categoryId);
+            displayMedicines(filtered);
+        }
+    }
+    
+    // Category Modal Functions
+    function openCategoryModal(categoryId = null) {
+        currentCategoryId = categoryId;
+        const modal = document.getElementById('categoryModal');
+        const title = document.getElementById('modalTitle');
+        const nameInput = document.getElementById('categoryName');
+        const descInput = document.getElementById('categoryDescription');
+        const saveBtn = document.getElementById('saveCategoryBtn');
+        
+        if (categoryId) {
+            // Edit mode
+            const category = allCategories.find(c => c.id == categoryId);
+            if (category) {
+                title.textContent = 'Edit Category';
+                nameInput.value = category.name;
+                descInput.value = category.description || '';
+                saveBtn.textContent = 'Update Category';
+                saveBtn.onclick = () => saveCategory(categoryId);
+            }
+        } else {
+            // Add mode
+            title.textContent = 'Add New Category';
+            nameInput.value = '';
+            descInput.value = '';
+            saveBtn.textContent = 'Add Category';
+            saveBtn.onclick = () => saveCategory();
+        }
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeCategoryModal() {
+        document.getElementById('categoryModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        currentCategoryId = null;
+    }
+    
+    async function saveCategory(categoryId = null) {
+        const name = document.getElementById('categoryName').value.trim();
+        const description = document.getElementById('categoryDescription').value.trim();
+        
+        if (!name) {
+            alert('Please enter category name');
+            return;
+        }
+        
+        try {
+            const categoryData = {
+                name: name,
+                description: description,
+                is_active: true
+            };
+            
+            let response;
+            
+            if (categoryId) {
+                // Update existing category
+                response = await apiRequest(`medicine-categories/${categoryId}/`, 'PUT', categoryData);
+            } else {
+                // Create new category
+                response = await apiRequest('medicine-categories/', 'POST', categoryData);
+            }
+            
+            // Refresh categories
+            await loadCategories();
+            
+            // Close modal
+            closeCategoryModal();
+            
+            alert(categoryId ? 'Category updated successfully!' : 'Category added successfully!');
+            
+        } catch (error) {
+            console.error('Save category error:', error);
+            alert('Error saving category');
+        }
+    }
+    
+    async function deleteCategory(categoryId) {
+        if (!confirm('Are you sure you want to delete this category? This will not delete the medicines in this category.')) {
+            return;
+        }
+        
+        try {
+            await apiRequest(`medicine-categories/${categoryId}/`, 'DELETE');
+            
+            // Refresh categories
+            await loadCategories();
+            
+            alert('Category deleted successfully!');
+            
+        } catch (error) {
+            console.error('Delete category error:', error);
+            alert('Error deleting category');
+        }
+    }
+    
+    // Edit category modal
+    function editCategoryModal(categoryId) {
+        openCategoryModal(categoryId);
+    }
+    
+    // Medicine Details Modal Functions
+    async function viewMedicineDetails(medicineId) {
+        try {
+            const medicine = allMedicines.find(m => m.id === medicineId);
+            if (!medicine) return;
+            
+            currentMedicineId = medicineId;
+            
+            // medicine.category is a plain text field, used directly (no category id lookup)
+            
+            // Update modal content
+            document.getElementById('medicineModalImage').src = medicine.image ? medicine.image : 'https://placehold.co/120x120/e2e8f0/64748b.png?text=No+Img';
+            document.getElementById('medicineModalTitle').textContent = medicine.name;
+            document.getElementById('medicineModalGeneric').textContent = medicine.brand || '';
+            document.getElementById('medicineModalCategory').textContent = medicine.category || 'N/A';
+            document.getElementById('medicineModalManufacturer').textContent = medicine.brand || 'N/A';
+            document.getElementById('medicineModalPrice').textContent = `Rs. ${medicine.price}`;
+            document.getElementById('medicineModalPrescription').textContent = medicine.expiry_date || 'N/A';
+            document.getElementById('medicineModalDescription').textContent = medicine.description || 'No description';
+            document.getElementById('medicineModalStatus').textContent = 
+                medicine.is_banned ? 'Banned' : 'Active';
+            document.getElementById('medicineModalStock').textContent = medicine.stock_quantity || 0;
+            
+            // Update ban/unban button
+            const banBtn = document.getElementById('banUnbanBtn');
+            if (medicine.is_banned) {
+                banBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Unban Medicine';
+                banBtn.className = 'flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all';
+            } else {
+                banBtn.innerHTML = '<i class="fas fa-ban mr-2"></i> Ban Medicine';
+                banBtn.className = 'flex-1 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl transition-all';
+            }
+            
+            // Show modal
+            document.getElementById('medicineModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+        } catch (error) {
+            console.error('View medicine error:', error);
+            alert('Error loading medicine details');
+        }
+    }
+    
+    function closeMedicineModal() {
+        document.getElementById('medicineModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        currentMedicineId = null;
+    }
+    
+    async function toggleMedicineBan() {
+        if (!currentMedicineId) return;
+        
+        try {
+            const medicine = allMedicines.find(m => m.id === currentMedicineId);
+            if (!medicine) return;
+            
+            if (medicine.is_banned) {
+                // Unban medicine
+                if (!confirm(`Are you sure you want to unban ${medicine.name}?`)) return;
+                
+                await apiRequest(`medicines/${currentMedicineId}/`, 'PATCH', {
+                    is_banned: false,
+                    ban_reason: ''
+                });
+                
+                alert('Medicine unbanned successfully!');
+                
+            } else {
+                // Ban medicine
+                const reason = prompt('Enter reason for banning this medicine:');
+                if (!reason) return;
+                
+                if (!confirm(`Are you sure you want to ban ${medicine.name}?`)) return;
+                
+                await apiRequest(`medicines/${currentMedicineId}/`, 'PATCH', {
+                    is_banned: true,
+                    ban_reason: reason
+                });
+                
+                alert('Medicine banned successfully!');
+            }
+            
+            // Refresh medicines
+            await loadMedicines();
+            updateMedicineStats();
+            
+            // Close modal
+            closeMedicineModal();
+            
+        } catch (error) {
+            console.error('Toggle ban error:', error);
+            alert('Error updating medicine status');
+        }
+    }
+    
+    async function unbanMedicine(medicineId) {
+        if (!confirm('Are you sure you want to unban this medicine?')) return;
+        
+        try {
+            await apiRequest(`medicines/${medicineId}/`, 'PATCH', {
+                is_banned: false,
+                ban_reason: ''
+            });
+            
+            alert('Medicine unbanned successfully!');
+            
+            // Refresh medicines
+            await loadMedicines();
+            updateMedicineStats();
+            
+        } catch (error) {
+            console.error('Unban medicine error:', error);
+            alert('Error unbanning medicine');
+        }
+    }
+    
+    function editMedicine() {
+        if (!currentMedicineId) return;
+        alert(`Edit medicine feature would open here for medicine ID: ${currentMedicineId}`);
+        // In future, you can implement a full edit form
+        // For now, just show an alert
+    }
+    
+    async function deleteMedicine() {
+        if (!currentMedicineId) return;
+        
+        if (!confirm('Are you sure you want to delete this medicine? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            await apiRequest(`medicines/${currentMedicineId}/`, 'DELETE');
+            
+            alert('Medicine deleted successfully!');
+            
+            // Refresh medicines
+            await loadMedicines();
+            updateMedicineStats();
+            
+            // Close modal
+            closeMedicineModal();
+            
+        } catch (error) {
+            console.error('Delete medicine error:', error);
+            alert('Error deleting medicine');
+        }
+    }
+    
+    function editMedicineModal(medicineId) {
+        // For now, just view the medicine
+        viewMedicineDetails(medicineId);
+        // In future, you can implement a separate edit modal
+    }
+    
+    // Modal click outside to close
+    window.onclick = function(event) {
+        const categoryModal = document.getElementById('categoryModal');
+        const medicineModal = document.getElementById('medicineModal');
+        
+        if (event.target == categoryModal) {
+            closeCategoryModal();
+        }
+        if (event.target == medicineModal) {
+            closeMedicineModal();
+        }
+    }
+</script>
+
+<style>
+    .animate-in {
+        animation: animate-in 0.3s ease-out;
+    }
+    
+    @keyframes animate-in {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}

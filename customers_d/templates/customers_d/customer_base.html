@@ -1,0 +1,577 @@
+{% load static %}
+{% block extra_js %}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}PharmaHub{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'pharmacy/images/logoB.png' %}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {},
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
+
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body {
+      transition: background-color 220ms ease, color 220ms ease;
+    }
+    .site-header,
+    .site-nav a,
+    .brand-wrap,
+    .brand-logo,
+    .brand-text {
+      transition: all 220ms ease;
+    }
+    .page-transition {
+      animation: pageFadeIn 220ms ease both;
+      will-change: opacity, transform;
+    }
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    body.is-leaving .page-transition {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 250px;
+      border-right: 1px solid #e5e7eb;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 1000;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 900;
+    }
+    .overlay.show { display: block; }
+    .profile-menu {
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .profile-menu.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    /* Global dark fallback for child pages that still use light utility classes */
+    .dark .theme-content .bg-white { background-color: #1f2937 !important; }
+    .dark .theme-content .bg-gray-50 { background-color: #111827 !important; }
+    .dark .theme-content .bg-gray-100 { background-color: #1f2937 !important; }
+    .dark .theme-content .border-gray-100,
+    .dark .theme-content .border-gray-200,
+    .dark .theme-content .border-gray-300 { border-color: #374151 !important; }
+    .dark .theme-content .text-gray-900,
+    .dark .theme-content .text-gray-800,
+    .dark .theme-content .text-gray-700 { color: #f3f4f6 !important; }
+    .dark .theme-content .text-gray-600,
+    .dark .theme-content .text-gray-500,
+    .dark .theme-content .text-gray-400 { color: #d1d5db !important; }
+    .dark .theme-content input,
+    .dark .theme-content select,
+    .dark .theme-content textarea {
+      background-color: #1f2937 !important;
+      color: #f3f4f6 !important;
+      border-color: #4b5563 !important;
+    }
+    .dark .theme-content input::placeholder,
+    .dark .theme-content textarea::placeholder { color: #9ca3af !important; }
+  </style>
+
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('pharmahub-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+      document.documentElement.classList.toggle('dark', isDark);
+      document.body?.classList?.toggle('dark', isDark);
+    })();
+  </script>
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+
+  <div class="min-h-screen bg-white dark:bg-gray-900 transition-colors flex flex-col justify-between">
+    
+    <header class="site-header bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm border-b border-gray-100 dark:shadow-none sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+
+          <div class="flex items-center space-x-3">
+            <button id="menuToggle" class="text-gray-700 dark:text-gray-200 hover:text-teal-600 focus:outline-none text-2xl -ml-6">
+              <i class="ri-menu-line"></i>
+            </button>
+
+            <a href="{% url 'customers_d:customer_home' %}" class="brand-wrap flex items-center space-x-2">
+              <div class="brand-logo w-10 h-10 rounded-lg flex items-center justify-center">
+                 <img src="{% static 'pharmacy/images/logoB.png' %}" alt="Logo" class="w-full h-full object-cover">
+              </div>
+              <span class="brand-text text-xl font-semibold text-teal-600">PharmaHub</span>
+            </a>
+          </div>
+
+          <nav class="site-nav hidden md:flex items-center space-x-6">
+            {% if request.user.is_authenticated and request.user.role == 'customer' %}
+              <a href="{% url 'customers_d:customer_home' %}" class="inline-flex items-center h-16 border-b-2 {% if request.resolver_match.url_name == 'customer_home' %}border-teal-500 text-teal-600 dark:text-teal-400{% else %}border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600{% endif %}">Home</a>
+              <a href="{% url 'pages:medicine' %}" class="inline-flex items-center h-16 border-b-2 {% if request.resolver_match.url_name == 'medicine' or request.resolver_match.url_name == 'customer_medicine' %}border-teal-500 text-teal-600 dark:text-teal-400{% else %}border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600{% endif %}">Medicines</a>
+              <a href="{% url 'pages:pharmacies' %}" class="inline-flex items-center h-16 border-b-2 {% if request.resolver_match.url_name == 'pharmacies' or request.resolver_match.url_name == 'customer_pharmacies' %}border-teal-500 text-teal-600 dark:text-teal-400{% else %}border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600{% endif %}">Pharmacies</a>
+              <a href="{% url 'customers_d:symptom_checker' %}" class="inline-flex items-center h-16 border-b-2 {% if request.resolver_match.url_name == 'symptom_checker' %}border-teal-500 text-teal-600 dark:text-teal-400{% else %}border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600{% endif %}">Symptom Checker</a>
+              <a href="{% url 'customers_d:notification_c' %}" class="relative inline-flex items-center h-16 border-b-2 {% if request.resolver_match.url_name == 'notification_c' %}border-teal-500 text-teal-600 dark:text-teal-400{% else %}border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600{% endif %}">
+                Notifications
+                {% if customer_unread_count and customer_unread_count > 0 %}
+                    <span class="absolute top-3 -right-3 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+                        {{ customer_unread_count }}
+                    </span>
+                {% endif %}
+              </a>
+              <a href="{% url 'customers_d:customer_dashboard' %}" class="inline-flex items-center h-16 border-b-2 {% if request.resolver_match.url_name == 'customer_dashboard' or request.resolver_match.url_name == 'search_medicines' or request.resolver_match.url_name == 'my_orders' or request.resolver_match.url_name == 'nearby_pharmacies' or request.resolver_match.url_name == 'upload_prescription' %}border-teal-500 text-teal-600 dark:text-teal-400{% else %}border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600{% endif %}">Dashboard</a>
+              <a href="{% url 'orders:view_cart' %}" class="relative inline-flex items-center">
+                  <i class="ri-shopping-cart-2-line text-2xl text-gray-700 dark:text-gray-200"></i>
+                  <span id="cart-count" class="absolute -top-2 -right-2 bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full {% if not global_cart_count %}hidden{% endif %}">
+                      {{ global_cart_count|default:0 }}
+                  </span>
+              </a>
+            {% elif request.user.is_authenticated %}
+              <a href="{% url 'pages:medicine' %}" class="inline-flex items-center h-16 border-b-2 border-transparent text-gray-700 dark:text-gray-200 hover:text-teal-600">Medicines</a>
+              <a href="{% url 'orders:view_cart' %}" class="relative inline-flex items-center">
+                  <i class="ri-shopping-cart-2-line text-2xl text-gray-700 dark:text-gray-200"></i>
+                  <span id="cart-count" class="absolute -top-2 -right-2 bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full {% if not global_cart_count %}hidden{% endif %}">
+                      {{ global_cart_count|default:0 }}
+                  </span>
+              </a>
+            {% else %}
+              <a href="{% url 'pages:about' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">About</a>
+              <a href="{% url 'pages:contact' %}" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Contact</a>
+              <button onclick="redirectToLogin()" class="relative hover:text-teal-600 text-xl text-gray-700 dark:text-gray-200 ml-4">
+                <i class="ri-shopping-cart-line"></i>
+                <span class="absolute -top-2 -right-2 bg-gray-400 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
+              </button>
+            {% endif %}
+          </nav>
+
+          <div class="flex items-center ml-4 space-x-4">
+            <button type="button" aria-label="Toggle dark mode" class="theme-toggle text-2xl text-gray-700 dark:text-gray-200 hover:text-teal-600 focus:outline-none">
+              <i class="theme-icon ri-moon-line"></i>
+            </button>
+            <div class="hidden md:flex items-center space-x-4">
+            {% if request.user.is_authenticated %}
+              <div class="relative">
+                <button id="profileMenuBtn" type="button" class="flex items-center space-x-3">
+                  <img id="topAvatar" src="{% static 'pharmacy/images/profile-icon.png' %}" alt="Profile" onerror="this.src='{% static 'pharmacy/images/profile-icon.png' %}'" class="w-10 h-10 rounded-full border border-gray-300 object-cover focus:outline-none focus:ring-2 focus:ring-teal-500">
+                  <div class="text-left">
+                    <p class="font-semibold text-gray-800 dark:text-gray-100">{{ request.user.first_name|default:request.user.username }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ request.user.get_role_display }}</p>
+                  </div>
+                </button>
+                <div id="profileMenu" class="profile-menu absolute right-0 mt-3 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50">
+                  <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                    <p class="text-base font-semibold text-gray-800 dark:text-gray-100">{{ request.user.first_name|default:request.user.username }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ request.user.get_role_display }}</p>
+                  </div>
+                  <div class="py-1">
+                    <a href="{% url 'authentication:account_settings' %}" class="px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3">
+                      <i class="ri-user-settings-line text-lg text-gray-500 dark:text-gray-300"></i>
+                      <span>Account Settings</span>
+                    </a>
+                    <button id="changeProfileImageBtn" type="button" class="w-full px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-left">
+                      <i class="ri-image-edit-line text-lg text-gray-500 dark:text-gray-300"></i>
+                      <span>Change Profile Image</span>
+                    </button>
+                    <a href="{% url 'authentication:change_password' %}" class="px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3">
+                      <i class="ri-settings-3-line text-lg text-gray-500 dark:text-gray-300"></i>
+                      <span>Change Password</span>
+                    </a>
+                    <a href="{% url 'authentication:logout' %}" class="px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3">
+                      <i class="ri-logout-box-r-line text-lg text-gray-500 dark:text-gray-300"></i>
+                      <span>Sign out</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <a href="{% url 'authentication:login_signup' %}?show=login" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">Login</a>
+              <a href="{% url 'authentication:login_signup' %}?show=signup" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow">Sign Up</a>
+            {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <div id="overlay" class="overlay"></div>
+
+    <div id="sidebar" class="sidebar flex flex-col justify-between bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100">
+      <div>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-xl font-semibold text-teal-600 flex items-center space-x-2">
+            <i class="ri-menu-fill text-teal-600"></i>
+            <span>Menu</span>
+          </h2>
+          <button id="closeSidebar" class="text-gray-700 dark:text-gray-200 hover:text-teal-600">
+            <i class="ri-close-line text-2xl"></i>
+          </button>
+        </div>
+
+        <nav class="flex flex-col p-4 space-y-3 text-gray-700 dark:text-gray-200">
+          {% if request.user.is_authenticated and request.user.role == 'customer' %}
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 pt-1">Main</p>
+            <a href="{% url 'customers_d:customer_home' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-home-4-line text-teal-600"></i><span>Home</span>
+            </a>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 pt-3">Services</p>
+            <a href="{% url 'pages:medicine' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-medicine-bottle-line text-teal-600"></i><span>Medicines</span>
+            </a>
+            <a href="{% url 'pages:pharmacies' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-store-3-line text-teal-600"></i><span>Pharmacies</span>
+            </a>
+            <a href="{% url 'customers_d:symptom_checker' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-stethoscope-line text-teal-600"></i><span>Symptom Checker</span>
+            </a>
+            <a href="{% url 'customers_d:customer_dashboard' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-dashboard-line text-teal-600"></i><span>Dashboard</span>
+            </a>
+            <a href="{% url 'orders:view_cart' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-shopping-cart-line text-teal-600"></i><span>Cart</span>
+            </a>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 pt-3">Support</p>
+          {% else %}
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 pt-1">Information</p>
+            <a href="{% url 'pages:about' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-information-line text-teal-600"></i><span>About</span>
+            </a>
+            <a href="{% url 'pages:contact' %}" class="hover:text-teal-600 flex items-center space-x-2">
+              <i class="ri-phone-line text-teal-600"></i><span>Contact</span>
+            </a>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 pt-3">Support</p>
+          {% endif %}
+          <a href="{% url 'pages:help' %}" class="hover:text-teal-600 flex items-center space-x-2">
+            <i class="ri-question-answer-line text-teal-600"></i><span>Help / FAQs</span>
+          </a>
+          <a href="{% url 'authentication:change_password' %}" class="hover:text-teal-600 flex items-center space-x-2">
+            <i class="ri-lock-password-line text-teal-600"></i><span>Change Password</span>
+          </a>
+          <a href="{% url 'authentication:account_settings' %}" class="hover:text-teal-600 flex items-center space-x-2">
+            <i class="ri-user-settings-line text-teal-600"></i><span>Account Settings</span>
+          </a>
+        </nav>
+      </div>
+
+      <button id="sidebarThemeToggle" aria-label="Toggle dark mode" class="theme-toggle flex items-center justify-between w-full px-4 py-3 border-t border-gray-200 dark:border-gray-700 cursor-pointer">
+        <span class="font-medium flex items-center space-x-2 text-gray-700 dark:text-gray-200">
+          <i class="ri-contrast-2-line text-teal-600"></i>
+          <span>Dark Mode</span>
+        </span>
+        <i class="theme-icon ri-moon-line text-2xl text-gray-700 dark:text-gray-200"></i>
+      </button>
+      
+      <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+        <div class="relative mb-3">
+          <button id="sidebarProfileMenuBtn" type="button" class="w-full flex items-center space-x-3 text-left">
+          {% if request.user.profile_image %}
+            <img id="sidebarAvatar" src="{{ request.user.profile_image.url }}" alt="User Avatar" onerror="this.src='{% static 'pharmacy/images/profile-icon.png' %}'" class="w-10 h-10 rounded-full border border-gray-300 cursor-pointer object-cover" title="Profile menu">
+          {% else %}
+            <img id="sidebarAvatar" src="{% static 'pharmacy/images/profile-icon.png' %}" alt="User Avatar" class="w-10 h-10 rounded-full border border-gray-300 cursor-pointer object-cover" title="Profile menu">
+          {% endif %}
+          <div>
+            <p class="font-semibold text-gray-800 dark:text-gray-100">{{ request.user.first_name|default:request.user.username }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ request.user.get_role_display }}</p>
+          </div>
+          </button>
+          <div id="sidebarProfileMenu" class="profile-menu absolute left-0 bottom-14 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50">
+            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+              <p class="font-semibold text-gray-800 dark:text-gray-100 truncate">{{ request.user.first_name|default:request.user.username }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ request.user.get_role_display }}</p>
+            </div>
+            <div class="py-2">
+              <a href="{% url 'authentication:account_settings' %}" class="px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <i class="ri-user-settings-line"></i>
+                <span>Account Settings</span>
+              </a>
+              <button id="sidebarChangeProfileImageBtn" type="button" class="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <i class="ri-image-edit-line"></i>
+                <span>Change Profile Image</span>
+              </button>
+              <a href="{% url 'authentication:change_password' %}" class="px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <i class="ri-lock-password-line"></i>
+                <span>Change Password</span>
+              </a>
+              <a href="{% url 'authentication:logout' %}" class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2">
+                <i class="ri-logout-circle-line"></i>
+                <span>Sign out</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" class="hidden" />
+      </div>
+    </div>
+
+    <main class="theme-content page-transition flex-grow">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 w-full">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+
+          <div class="col-span-1 md:col-span-2">
+            <div class="flex items-center space-x-3 mb-5">
+              <div class="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+                <i class="ri-capsule-fill text-white text-xl"></i>
+              </div>
+              <span class="font-pacifico text-2xl text-teal-600 font-semibold">PharmaHub</span>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 mb-5 max-w-md leading-relaxed">
+              Your trusted online pharmacy marketplace connecting customers with verified pharmacies and reliable delivery services.
+            </p>
+            <div class="flex space-x-4">
+              <a href="https://www.facebook.com/" class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-200 dark:hover:bg-teal-800 transition"><i class="ri-facebook-fill text-lg"></i></a>
+              <a href="https://x.com/" class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-200 dark:hover:bg-teal-800 transition"><i class="ri-twitter-fill text-lg"></i></a>
+              <a href="https://www.instagram.com/" class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-200 dark:hover:bg-teal-800 transition"><i class="ri-instagram-fill text-lg"></i></a>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-gray-900 dark:text-gray-100 font-semibold mb-5 text-lg">Quick Links</h3>
+            <ul class="space-y-3">
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'customers_d:search_medicines' %}">Browse Medicines</a></li>
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'customers_d:nearby_pharmacies' %}">Find Pharmacies</a></li>
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'authentication:login_signup' %}">Register Pharmacy</a></li>
+
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-gray-900 dark:text-gray-100 font-semibold mb-5 text-lg">Support</h3>
+            <ul class="space-y-3">
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:help' %}">Help Center</a></li>
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:privacy' %}">Privacy Policy</a></li>
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:terms' %}">Terms of Service</a></li>
+              <li><a class="text-gray-600 dark:text-gray-400 hover:text-teal-600 transition" href="{% url 'pages:contact' %}">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 mt-10 pt-6 text-center">
+          <p class="text-gray-500 dark:text-gray-400 text-sm">© 2026 PharmaHub. All rights reserved. Licensed pharmacies only.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl border border-gray-100 dark:border-gray-700">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-teal-100 dark:bg-teal-900 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-user-received-2-line text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Login Required</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">Please login to PharmaHub to order medicines.</p>
+                <div class="flex flex-col gap-3">
+                    <a href="{% url 'authentication:login_signup' %}?show=login&next={{ request.path }}" 
+                       class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-all text-center">
+                        Login Now
+                    </a>
+                    <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-medium text-sm">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+
+  
+
+  <script>
+    // 🎯 GLOBAL BADGE UPDATE FUNCTION (no cart mutations)
+    function loadCartCount() {
+        fetch("{% url 'customers_d:get_cart_count' %}")
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.getElementById('cart-count');
+            if (!badge) return;
+            const cartCount = (data && typeof data.cart_count !== 'undefined') ? data.cart_count : 0;
+            badge.textContent = cartCount;
+            if (parseInt(cartCount) > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        })
+        .catch(() => {
+            // Fail silently to avoid UX disruption
+        });
+    }
+
+    // Modal Global Handlers
+    function closeLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    function redirectToLogin() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menuToggle');
+      const closeSidebar = document.getElementById('closeSidebar');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const themeToggles = document.querySelectorAll('.theme-toggle');
+      const avatarInput = document.getElementById('avatarInput');
+      const topAvatar = document.getElementById('topAvatar');
+      const sidebarAvatar = document.getElementById('sidebarAvatar');
+      const profileMenuBtn = document.getElementById('profileMenuBtn');
+      const profileMenu = document.getElementById('profileMenu');
+      const changeProfileImageBtn = document.getElementById('changeProfileImageBtn');
+      const sidebarProfileMenuBtn = document.getElementById('sidebarProfileMenuBtn');
+      const sidebarProfileMenu = document.getElementById('sidebarProfileMenu');
+      const sidebarChangeProfileImageBtn = document.getElementById('sidebarChangeProfileImageBtn');
+
+      // Hamburger menu toggle
+      if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+          sidebar.classList.add('open');
+          if(overlay) overlay.classList.add('show');
+        });
+      }
+
+      if (closeSidebar) {
+        closeSidebar.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          if(overlay) overlay.classList.remove('show');
+        });
+      }
+
+      if(overlay){
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('show');
+        });
+      }
+
+      function applyTheme(isDark) {
+        document.documentElement.classList.toggle('dark', isDark);
+        document.body.classList.toggle('dark', isDark);
+        localStorage.setItem('pharmahub-theme', isDark ? 'dark' : 'light');
+        updateThemeIcons();
+      }
+
+      function updateThemeIcons() {
+        const isDark = document.documentElement.classList.contains('dark');
+        document.querySelectorAll('.theme-toggle .theme-icon').forEach(icon => {
+          if (isDark) {
+            icon.classList.remove('ri-moon-line');
+            icon.classList.add('ri-sun-line');
+          } else {
+            icon.classList.remove('ri-sun-line');
+            icon.classList.add('ri-moon-line');
+          }
+        });
+      }
+
+      themeToggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const nextDark = !document.documentElement.classList.contains('dark');
+          applyTheme(nextDark);
+        });
+      });
+
+      const savedTheme = localStorage.getItem('pharmahub-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
+      
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'pharmahub-theme') {
+          applyTheme(e.newValue === 'dark');
+        }
+      });
+
+      // Sync cart badge once the page is ready
+      if (typeof loadCartCount === 'function') {
+        try { loadCartCount(); } catch (e) { /* ignore */ }
+      }
+
+      if (profileMenuBtn && profileMenu) {
+        profileMenuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileMenu.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+          if (!profileMenu.contains(e.target) && !profileMenuBtn.contains(e.target)) {
+            profileMenu.classList.remove('open');
+          }
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') profileMenu.classList.remove('open');
+        });
+      }
+      if (changeProfileImageBtn) {
+        changeProfileImageBtn.addEventListener('click', () => {
+          profileMenu && profileMenu.classList.remove('open');
+          avatarInput && avatarInput.click();
+        });
+      }
+      if (sidebarProfileMenuBtn && sidebarProfileMenu) {
+        sidebarProfileMenuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebarProfileMenu.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+          if (!sidebarProfileMenu.contains(e.target) && !sidebarProfileMenuBtn.contains(e.target)) {
+            sidebarProfileMenu.classList.remove('open');
+          }
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') sidebarProfileMenu.classList.remove('open');
+        });
+      }
+      if (sidebarChangeProfileImageBtn) {
+        sidebarChangeProfileImageBtn.addEventListener('click', () => {
+          sidebarProfileMenu && sidebarProfileMenu.classList.remove('open');
+          avatarInput && avatarInput.click();
+        });
+      }
+
+      window.addEventListener('click', (e) => {
+          const modal = document.getElementById('loginModal');
+          if (e.target === modal) closeLoginModal();
+      });
+    });
+  </script>
+</body>
+</html>

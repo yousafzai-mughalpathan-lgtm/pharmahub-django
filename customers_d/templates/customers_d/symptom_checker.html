@@ -1,0 +1,1414 @@
+{% extends "customers_d/customer_dashboard.html" %}
+
+{% block title %}AI Symptom Checker - PharmaHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* =========== MAIN STYLES =========== */
+* {
+    box-sizing: border-box;
+}
+
+/* Card Base Styling */
+.symptom-card {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: 2px solid #e5e7eb;
+    background-color: #ffffff;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    border-radius: 20px;
+    padding: 20px 15px;
+    text-align: center;
+}
+
+/* Hover Effect - Only for unlocked cards */
+.symptom-card:not(.locked):hover {
+    transform: translateY(-6px);
+    border-color: #0d9488;
+    box-shadow: 0 12px 20px -4px rgba(13, 148, 136, 0.15);
+    cursor: pointer;
+}
+
+/* Locked State - When Age/Gender not selected */
+.symptom-card.locked {
+    cursor: not-allowed !important;
+    opacity: 0.5;
+    filter: grayscale(1);
+    background-color: #f8fafc;
+    
+}
+
+/* Selected State */
+.symptom-card.selected {
+    background: linear-gradient(135deg, #f0fdfa 0%, #e6fcf8 100%) !important;
+    border-color: #0d9488 !important;
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(13, 148, 136, 0.2);
+}
+
+/* Max Reached State */
+.symptom-card.max-reached {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+    filter: grayscale(0.5);
+}
+
+/* Cross Icon in Corner */
+.corner-cross {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ef4444;
+    color: white;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    z-index: 10;
+    transition: all 0.2s ease;
+    animation: popIn 0.3s ease-out;
+}
+
+/* Show cross only on selected cards */
+.symptom-card.selected .corner-cross {
+    display: flex;
+}
+
+/* Hover effect on cross */
+.corner-cross:hover {
+    background: #dc2626;
+    transform: scale(1.15);
+}
+
+/* Selection Counter Badge */
+.selection-counter {
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    background: #0d9488;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(13, 148, 136, 0.3);
+    z-index: 10;
+}
+/* =========== DARK THEME SUPPORT =========== */
+.dark .input-field {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #ffffff !important;
+}
+
+.dark .input-field:focus {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2) !important;
+}
+
+.dark .input-field::placeholder {
+    color: #9ca3af !important;
+}
+
+.dark select.input-field option {
+    background-color: #1f2937;
+    color: #ffffff;
+}
+
+.dark #symptom-search {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #ffffff !important;
+}
+
+.dark #symptom-search::placeholder {
+    color: #9ca3af !important;
+}
+
+.dark #symptom-search:focus {
+    border-color: #0d9488 !important;
+}
+
+.dark .group {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+}
+
+.dark .bg-teal-50 {
+    background-color: #134e4a !important;
+}
+
+.dark .text-teal-600 {
+    color: #5eead4 !important;
+}
+
+.dark .border-teal-100 {
+    border-color: #115e59 !important;
+}
+/* Dark theme for progress bar */
+.dark .progress-container {
+    background-color: #374151 !important;  /* gray-700 */
+}
+
+.dark .progress-bar {
+    background: linear-gradient(90deg, #14b8a6, #10b981);  /* teal-500, emerald-500 */
+}
+/* Animations */
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.input-field {
+  width: 100% !important;      /* ← !important add karo */
+  max-width: 100% !important;  /* ← !important add karo */
+  min-width: 0 !important;
+  padding: 10px 10px 10px 42px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  height: 44px;
+  outline: none;
+  background-color: #ffffff;
+  color: #1f2937;
+  display: block;
+  box-sizing: border-box !important;
+}
+.input-field:focus {
+    outline: none;
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+/* Custom Scrollbar */
+#symptoms-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#symptoms-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#symptoms-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+#symptoms-container::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Validation States */
+.input-field.error {
+    border-color: #ef4444;
+    animation: shake 0.5s ease-in-out;
+}
+
+.input-field.success {
+    border-color: #10b981;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Progress Bar */
+.progress-container {
+    width: 100%;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0d9488, #10b981);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #1f2937;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    border-radius: 8px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .symptom-card {
+        min-height: 85px;
+        padding: 15px 10px;
+    }
+    
+    .input-field {
+        padding: 14px 16px 14px 45px;
+        font-size: 14px;
+    }
+}
+
+
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-6xl mx-auto p-4 md:p-8">
+    <!-- HEADER SECTION -->
+    <div class="text-center mb-12 no-print">
+        <h1 class="text-4xl font-black text-gray-800 mb-3">
+            <i class="fas fa-brain text-teal-500 mr-2"></i>
+            Smart AI Symptom Checker
+        </h1>
+        <p class="text-gray-500 text-lg">Get AI-powered health insights in seconds</p>
+    </div>
+
+   <!-- PROGRESS INDICATOR -->
+<div class="mb-8 no-print">
+    <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+        <span>Step 1: Basic Info</span>
+        <span>Step 2: Select Symptoms</span>
+        <span>Step 3: Get Results</span>
+    </div>
+    <div class="progress-container dark:bg-gray-700">
+        <div id="progress-bar" class="progress-bar"></div>
+    </div>
+</div>
+
+    <!-- USER INFO SECTION -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 no-print">
+        <!-- Age Input with validation -->
+        <div class="relative">
+            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                <i class="fas fa-birthday-cake text-teal-500 mr-2"></i>
+                Age
+                <span class="text-red-500 ml-1">*</span>
+            </label>
+            <div class="relative">
+                <i class="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-teal-500 text-lg"></i>
+                <input type="number" id="user-age" min="1" max="120" 
+                       class="input-field" 
+                       placeholder="Enter your age"
+                       oninput="validateAge(this)">
+                <div id="age-error" class="text-red-500 text-xs mt-1 hidden">
+                    Please enter a valid age (1-120)
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender Select with validation -->
+        <div class="relative">
+            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                <i class="fas fa-venus-mars text-teal-500 mr-2"></i>
+                Gender
+                <span class="text-red-500 ml-1">*</span>
+            </label>
+            <div class="relative">
+                <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-teal-500 text-lg"></i>
+                <select id="user-gender" class="input-field appearance-none">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+    <!-- SELECTED SYMPTOMS DISPLAY -->
+    <div class="mb-8 no-print">
+        <div class="flex justify-between items-center mb-4">
+            <label class="block text-sm font-bold text-teal-700">
+                <i class="fas fa-check-circle mr-2"></i>
+                Selected Symptoms
+               <span id="selection-count" class="ml-2 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 text-xs px-2 py-1 rounded-full">0/5</span>
+            </label>
+            <button onclick="clearAllSelections()" class="text-sm text-red-500 hover:text-red-700">
+                <i class="fas fa-trash-alt mr-1"></i> Clear All
+            </button>
+        </div>
+        
+       <div id="selection-display" class="p-5 min-h-[100px] bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/30 dark:to-blue-900/30 border-2 border-dashed border-teal-200 dark:border-teal-800 rounded-2xl">
+    <div class="text-center text-teal-400 dark:text-teal-500 py-8">
+        <i class="fas fa-mouse-pointer text-2xl mb-2"></i>
+        <p class="text-sm">Select symptoms from below to add them here</p>
+        <p class="text-xs mt-1">Maximum 5 symptoms allowed</p>
+    </div>
+</div>
+
+    <!-- SEARCH AND FILTER -->
+<!-- SEARCH AND FILTER -->
+<div class="max-w-4xl mx-auto mb-12 sticky top-4 z-10" style="top: 1rem;">
+    <div class="relative group bg-white dark:bg-gray-800 rounded-[30px] shadow-xl border border-gray-100 dark:border-gray-700 p-2">
+        <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+            <i class="fas fa-search text-teal-500 group-focus-within:scale-110 transition-transform"></i>
+        </div>
+        <input type="text" 
+               id="symptom-search" 
+               onkeyup="filterSymptoms()"
+               placeholder="Please enter age and gender first" 
+               class="w-full pl-16 pr-12 py-6 bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-[30px] shadow-xl focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all outline-none text-lg font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+               disabled>
+        
+        <button id="clear-search" class="absolute right-16 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors hidden">
+            <i class="fas fa-times-circle text-lg"></i>
+        </button>
+        
+        <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
+            <span class="bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 px-4 py-2 rounded-2xl text-xs font-bold border border-teal-100 dark:border-teal-800 uppercase tracking-wider">
+                <span id="symptom-count">132</span> Symptoms Available
+            </span>
+        </div>
+    </div>
+    <p class="text-center text-gray-400 dark:text-gray-500 text-xs mt-4 font-medium italic">
+        Search and select from our medical database or describe your condition for direct Gemini AI guidance.
+    </p>
+</div>
+    <!-- SYMPTOMS GRID -->
+   <!-- SYMPTOMS GRID -->
+<div id="symptoms-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-[500px] overflow-y-auto p-6 mb-10 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm no-print">
+    {% for symptom in all_symptoms %}
+    <div class="symptom-card locked dark:bg-gray-800 dark:border-gray-700" 
+         onclick="toggleSymptom(this, '{{ symptom }}')"
+         onkeydown="handleCardKeydown(event, this, '{{ symptom }}')"
+         data-symptom="{{ symptom }}"
+         title="{{ symptom }}"
+         tabindex="0"
+         role="button"
+         aria-label="Select symptom {{ symptom }}"
+         aria-pressed="false">
+        <!-- Selection Counter (if selected) -->
+        <div class="selection-counter" style="display: none;"></div>
+        
+        <!-- Cross Icon for removal -->
+        <div class="corner-cross">
+            <i class="fas fa-times"></i>
+        </div>
+        
+        <!-- Symptom Name -->
+        <div class="symptom-name text-sm font-bold text-gray-700 dark:text-gray-300 truncate w-full">
+            {{ symptom }}
+        </div>
+        
+        <!-- Symptom Icon (based on category) -->
+        <div class="mt-2 text-teal-500 dark:text-teal-400">
+            {% if "pain" in symptom|lower %}
+                <i class="fas fa-band-aid"></i>
+            {% elif "fever" in symptom|lower %}
+                <i class="fas fa-thermometer-full"></i>
+            {% elif "cough" in symptom|lower %}
+                <i class="fas fa-lungs"></i>
+            {% else %}
+                <i class="fas fa-stethoscope"></i>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+    <!-- ANALYZE BUTTON -->
+    <button id="analyze-btn" onclick="validateAndAnalyze()" 
+            class="w-full py-5 bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-2xl font-black text-xl hover:from-teal-700 hover:to-teal-600 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.01] no-print disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled>
+        <i class="fas fa-robot mr-2"></i> 
+        <span id="analyze-text">ANALYZE WITH AI</span>
+        <span id="analyze-loading" class="hidden">
+            <i class="fas fa-spinner fa-spin mr-2"></i> ANALYZING...
+        </span>
+    </button>
+
+    <!-- RESULTS SECTION -->
+    <div id="ai-results" class="mt-12 mb-20 hidden"></div>
+</div>
+
+<script>
+// =========== CARD KEYBOARD NAVIGATION ===========
+function handleCardKeydown(event, element, symptomName) {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleSymptom(element, symptomName);
+    }
+}
+let selectedSymptoms = [];  // Keep as Array (simpler for your backend)
+let isFormValid = false;
+const MAX_SYMPTOMS = 5;
+function normalizeSymptom(s) {
+    
+    if (!s) return '';
+    // Tamam non-alphanumeric characters (brackets, slashes, dashes) ko underscore se badal dega
+    return s.toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '_') // Special chars -> _
+            .replace(/^_+|_+$/g, '');    // Start/End ke underscores khatam
+}
+// =========== DOM ELEMENTS ===========
+const ageInput = document.getElementById('user-age');
+const genderSelect = document.getElementById('user-gender');
+const analyzeBtn = document.getElementById('analyze-btn');
+const analyzeText = document.getElementById('analyze-text');
+const analyzeLoading = document.getElementById('analyze-loading');
+const progressBar = document.getElementById('progress-bar');
+const selectionCount = document.getElementById('selection-count');
+
+// =========== INITIALIZATION ===========
+document.addEventListener('DOMContentLoaded', function() {
+    validateAge(ageInput);
+    updateCardsState();
+    updateProgressBar();
+    updateAnalyzeButton();
+    updateSymptomCount();
+    
+    // Auto-focus search bar if valid
+    if (ageInput.value > 0 && genderSelect.value) {
+        document.getElementById('symptom-search').focus();
+    }
+    
+    // Clear search button
+    document.getElementById('clear-search').addEventListener('click', function() {
+        document.getElementById('symptom-search').value = '';
+        filterSymptoms();
+        document.getElementById('symptom-search').focus();
+    });
+});
+
+// =========== UPDATE SYMPTOM COUNT ===========
+function updateSymptomCount() {
+    const visibleCards = document.querySelectorAll('#symptoms-container .symptom-card[style*="display: flex"], #symptoms-container .symptom-card:not([style])');
+    document.getElementById('symptom-count').textContent = visibleCards.length;
+}
+
+// =========== AGE VALIDATION ===========
+function validateAge(input) {
+    const age = parseInt(input.value);
+    const errorDiv = document.getElementById('age-error');
+    
+    if (isNaN(age) || input.value.trim() === '') {
+        input.classList.add('error');
+        input.classList.remove('success');
+        errorDiv.textContent = 'Please enter a valid age';
+        errorDiv.classList.remove('hidden');
+        isFormValid = false;
+    } else if (age < 1) {
+        input.classList.add('error');
+        input.classList.remove('success');
+        errorDiv.textContent = 'Age must be at least 1 year';
+        errorDiv.classList.remove('hidden');
+        isFormValid = false;
+    } else if (age > 120) {
+        input.classList.add('error');
+        input.classList.remove('success');
+        errorDiv.textContent = 'Age cannot exceed 120 years';
+        errorDiv.classList.remove('hidden');
+        isFormValid = false;
+    } else {
+        input.classList.remove('error');
+        input.classList.add('success');
+        errorDiv.classList.add('hidden');
+        isFormValid = age > 0 && genderSelect.value !== '';
+        
+        if (selectedSymptoms.length > 0 && isFormValid) {
+            resetSymptomsOnProfileChange();
+            document.getElementById('symptom-search').value = "";
+        }
+    }
+    
+    updateCardsState();
+    updateProgressBar();
+    updateAnalyzeButton();
+}
+
+// =========== GENDER VALIDATION ===========
+genderSelect.addEventListener('change', function() {
+    const gender = this.value;
+    
+    if (gender) {
+        this.classList.remove('error');
+        this.classList.add('success');
+        isFormValid = ageInput.value > 0 && gender !== '';
+    } else {
+        this.classList.add('error');
+        this.classList.remove('success');
+        isFormValid = false;
+    }
+    
+    if (selectedSymptoms.length > 0 && gender) {
+        resetSymptomsOnProfileChange();
+        document.getElementById('symptom-search').value = "";
+    }
+    
+    updateCardsState();
+    updateProgressBar();
+    updateAnalyzeButton();
+});
+
+// =========== UPDATE CARDS STATE ===========
+function updateCardsState() {
+    const age = parseInt(ageInput.value);
+    const gender = genderSelect.value;
+    const isValid = age > 0 && age <= 120 && gender;
+    const cards = document.querySelectorAll('#symptoms-container .symptom-card');
+    const searchInput = document.getElementById('symptom-search');
+    
+    cards.forEach(card => {
+        if (isValid) {
+            card.classList.remove('locked');
+            card.style.cursor = 'pointer';
+            card.title = "Click to select '" + card.querySelector('.symptom-name').textContent + "'";
+        } else {
+            card.classList.add('locked');
+            card.style.cursor = 'not-allowed';
+            card.title = "Please enter age and gender first";
+        }
+    });
+    
+    // Update search input state
+    if (isValid) {
+        searchInput.disabled = false;
+        searchInput.placeholder = "Describe your symptoms here... (e.g., High Fever, Cough)";
+    } else {
+        searchInput.disabled = true;
+        searchInput.placeholder = "Please enter age and gender first";
+        searchInput.value = ""; // Clear any input
+    }
+}
+
+// =========== RESET SYMPTOMS WHEN PROFILE CHANGES ===========
+function resetSymptomsOnProfileChange() {
+    selectedSymptoms = [];
+    const cards = document.querySelectorAll('#symptoms-container .symptom-card');
+    
+    cards.forEach(card => {
+        card.classList.remove('selected');
+        const counter = card.querySelector('.selection-counter');
+        counter.style.display = 'none';
+    });
+
+    renderBadges();
+    updateSelectionCount();
+    updateAnalyzeButton();
+    updateProgressBar();
+
+    showNotification(
+        'Age/Gender changed. Please reselect symptoms.',
+        'warning'
+    );
+}
+
+// =========== SYMPTOM SELECTION LOGIC ===========
+function toggleSymptom(element, symptomName) {
+    // Prevent selection if locked
+    if (element.classList.contains('locked')) {
+        showNotification('Please enter age and gender first!', 'warning');
+        ageInput.focus();
+        return;
+    }
+    
+    const cleanName = normalizeSymptom(symptomName);
+    const selectionIndex = selectedSymptoms.indexOf(cleanName);
+    
+    if (selectionIndex !== -1) {
+        // Remove symptom if already selected
+        removeSymptomFromUI(cleanName, element);
+    } else {
+        // Add symptom if not already selected
+        if (selectedSymptoms.length >= MAX_SYMPTOMS) {
+            showNotification(`Maximum ${MAX_SYMPTOMS} symptoms allowed!`, 'error');
+            return;
+        }
+        addSymptomToUI(cleanName, element, symptomName);
+    }
+    
+    updateSelectionCount();
+    updateProgressBar();
+    updateAnalyzeButton();
+}
+// =========== ADD SYMPTOM TO UI ===========
+function addSymptomToUI(cleanName, element, displayName) {
+    selectedSymptoms.push(cleanName);
+    element.classList.add('selected');
+    updateCardCounters();
+    renderBadges();
+    showNotification(`Added: ${displayName}`, 'success');
+}
+
+// =========== REMOVE SYMPTOM FROM UI ===========
+function removeSymptomFromUI(symptomName, element) {
+    selectedSymptoms = selectedSymptoms.filter(s => s !== symptomName);
+    element.classList.remove('selected');
+    updateCardCounters();
+    renderBadges();
+    showNotification('Symptom removed', 'info');
+}
+
+// =========== REMOVE SYMPTOM FROM BADGE ===========
+function removeSymptom(name, event) {
+    if (event) event.stopPropagation();
+    
+    selectedSymptoms = selectedSymptoms.filter(s => s !== name);
+    updateCardCounters();
+    updateSelectionCount();
+    renderBadges();
+    updateProgressBar();
+    updateAnalyzeButton();
+}
+
+// =========== UPDATE CARD COUNTERS ===========
+function updateCardCounters() {
+    const cards = document.querySelectorAll('#symptoms-container .symptom-card');
+    const isMaxSelected = selectedSymptoms.length >= MAX_SYMPTOMS;
+    
+    cards.forEach(card => {
+        const cardName = normalizeSymptom(card.dataset.symptom);
+        const index = selectedSymptoms.indexOf(cardName);
+        const counter = card.querySelector('.selection-counter');
+
+        if (index !== -1) {
+            counter.textContent = index + 1;
+            counter.style.display = 'flex';
+        } else {
+            counter.style.display = 'none';
+        }
+        
+        // Dim unselected cards when max reached
+        if (isMaxSelected && index === -1 && !card.classList.contains('locked')) {
+            card.classList.add('max-reached');
+            card.title = "Maximum 5 symptoms selected. Remove one to add more.";
+            card.setAttribute('aria-disabled', 'true');
+        } else {
+            card.classList.remove('max-reached');
+            card.setAttribute('aria-disabled', 'false');
+            card.title = card.classList.contains('locked') ? "Please enter age and gender first" : "Click to select '" + card.querySelector('.symptom-name').textContent + "'";
+        }
+        
+        // Update aria-pressed
+        card.setAttribute('aria-pressed', index !== -1 ? 'true' : 'false');
+    });
+}
+
+// =========== RENDER SELECTED SYMPTOMS BADGES ===========
+function renderBadges() {
+    const container = document.getElementById('selection-display');
+    
+    if (selectedSymptoms.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-teal-400 py-8">
+                <i class="fas fa-mouse-pointer text-2xl mb-2"></i>
+                <p class="text-sm">Select symptoms from below to add them here</p>
+                <p class="text-xs mt-1">Maximum ${MAX_SYMPTOMS} symptoms allowed</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = selectedSymptoms.map((s, index) => `
+        <div class="inline-flex items-center bg-gradient-to-r from-teal-600 to-teal-500 text-white px-4 py-3 rounded-full text-sm font-bold mr-3 mb-3 shadow-lg animate-in fade-in zoom-in duration-300" data-symptom="${s}">
+            <span class="bg-white/20 rounded-full px-2 py-1 mr-2 text-xs">${index + 1}</span>
+            ${s.toUpperCase().replace(/_/g, ' ')}
+            <i class="fas fa-times-circle ml-3 cursor-pointer hover:text-red-300 transition-colors" 
+               onclick="removeSymptom('${s}', event)"></i>
+        </div>
+    `).join('');
+}
+
+// =========== CLEAR ALL SELECTIONS ===========
+function clearAllSelections() {
+    if (selectedSymptoms.length === 0) return;
+    
+    if (confirm(`Are you sure you want to clear all ${selectedSymptoms.length} selected symptoms?`)) {
+        selectedSymptoms = [];
+        updateCardCounters();
+        updateSelectionCount();
+        renderBadges();
+        updateProgressBar();
+        updateAnalyzeButton();
+        showNotification('All symptoms cleared', 'info');
+    }
+}
+
+// =========== UPDATE SELECTION COUNT ===========
+function updateSelectionCount() {
+    selectionCount.textContent = `${selectedSymptoms.length}/${MAX_SYMPTOMS}`;
+    
+    if (selectedSymptoms.length === MAX_SYMPTOMS) {
+        selectionCount.className = 'ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-bold';
+    } else if (selectedSymptoms.length > 0) {
+        selectionCount.className = 'ml-2 bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded-full font-bold';
+    } else {
+        selectionCount.className = 'ml-2 bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full';
+    }
+}
+
+// =========== UPDATE PROGRESS BAR ===========
+function updateProgressBar() {
+    let progress = 0;
+    
+    if (ageInput.value > 0 && genderSelect.value) {
+        progress += 40;
+    }
+    
+    if (selectedSymptoms.length > 0) {
+        progress += (selectedSymptoms.length / MAX_SYMPTOMS) * 60;
+    }
+    
+    progressBar.style.width = `${progress}%`;
+}
+
+// =========== UPDATE ANALYZE BUTTON ===========
+function updateAnalyzeButton() {
+    const searchInput = document.getElementById('symptom-search').value.trim();
+    const canAnalyze = isFormValid && (selectedSymptoms.length > 0 || searchInput !== "");
+    
+    analyzeBtn.disabled = !canAnalyze;
+    
+    if (!canAnalyze) {
+        analyzeBtn.title = selectedSymptoms.length === 0 && searchInput === "" ? 
+            "Please select at least one symptom OR describe your condition" : 
+            "Please fill all required fields";
+    } else {
+        analyzeBtn.title = "Click to analyze symptoms with AI";
+    }
+}
+
+// =========== SYMPTOM SEARCH FILTER ===========
+function filterSymptoms() {
+    const searchTerm = document.getElementById('symptom-search').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('#symptoms-container .symptom-card');
+    const clearBtn = document.getElementById('clear-search');
+    let visibleCount = 0;
+
+    // Show/hide clear button
+    if (searchTerm) {
+        clearBtn.classList.remove('hidden');
+    } else {
+        clearBtn.classList.add('hidden');
+    }
+
+    cards.forEach(card => {
+        const symptomName = card.querySelector('.symptom-name').textContent.toLowerCase();
+        if (searchTerm === "" || symptomName.includes(searchTerm)) {
+            card.style.display = 'flex';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show "No symptoms found" if no matches
+    const container = document.getElementById('symptoms-container');
+    let noResultsMsg = container.querySelector('.no-results');
+    
+    if (visibleCount === 0 && searchTerm !== "") {
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.className = 'no-results text-center py-12 text-gray-400';
+            noResultsMsg.innerHTML = `
+                <i class="fas fa-search text-4xl mb-4 text-gray-300"></i>
+                <p class="text-lg font-medium">No symptoms found</p>
+                <p class="text-sm">Try a different search term or continue searching with API</p>
+            `;
+            container.appendChild(noResultsMsg);
+        }
+        noResultsMsg.style.display = 'block';
+    } else {
+        if (noResultsMsg) {
+            noResultsMsg.style.display = 'none';
+        }
+    }
+
+    document.getElementById('symptom-count').textContent = visibleCount;
+    updateAnalyzeButton();
+}
+
+// =========== VALIDATE AND ANALYZE ===========
+function validateAndAnalyze() {
+    if (!isFormValid) {
+        showNotification('Please fill all required fields correctly!', 'error');
+        return;
+    }
+    
+    const searchInput = document.getElementById('symptom-search').value.trim();
+    
+    if (selectedSymptoms.length === 0 && searchInput === "") {
+        showNotification('Please select at least one symptom OR describe your condition in the search box!', 'error');
+        return;
+    }
+    
+    analyzeWithAI();
+}
+
+// =========== AI ANALYSIS FUNCTION ===========
+async function analyzeWithAI() {
+    analyzeText.classList.add('hidden');
+    analyzeLoading.classList.remove('hidden');
+    analyzeBtn.disabled = true;
+    
+    // Show loading skeleton
+    const resultsDiv = document.getElementById('ai-results');
+    resultsDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="bg-gray-200 h-64 rounded-3xl mb-6"></div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-gray-200 h-48 rounded-3xl"></div>
+                <div class="bg-gray-200 h-48 rounded-3xl"></div>
+            </div>
+        </div>
+    `;
+    resultsDiv.classList.remove('hidden');
+    
+    // Rate limiting: Add 2 second delay to prevent rapid requests
+    showNotification('Analyzing symptoms... (Rate limited for demo)', 'info');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+        let searchInput = document.getElementById('symptom-search').value.trim();
+        
+        // Agar card select ho chuka hai, to search term ko ignore karein
+        if (selectedSymptoms.length > 0) {
+            searchInput = ""; 
+        }
+        
+        // ✅ YEH LINE FIX KAREN: symptomsToSend ki jagah selectedSymptoms use karein
+        let formattedSymptoms = [];
+        let mode = "ml";
+
+        // ✅ PRIORITIZE FREE TEXT SEARCH → ALWAYS GEMINI
+        if (searchInput !== "") {
+            // GEMINI MODE → free text search
+            formattedSymptoms = [];
+            mode = "search";
+            showNotification(`Analyzing your description: "${searchInput}"`, 'info');
+        } else if (selectedSymptoms.length > 0) {
+            // ML MODE → sirf normalized symptoms
+            formattedSymptoms = selectedSymptoms.map(s => normalizeSymptom(s));
+            mode = "ml";
+        } else {
+            showNotification('Please select symptoms or describe your condition!', 'error');
+            throw new Error('No symptoms provided');
+        }
+        
+        console.log('Sending to server:', {
+            symptoms: formattedSymptoms,
+            mode: mode,
+            search_term: searchInput
+        });
+        
+        const response = await fetch("{% url 'customers_d:predict_symptom' %}", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "X-CSRFToken": getCSRFToken() 
+            },
+            body: JSON.stringify({ 
+                symptoms: formattedSymptoms,
+                age: ageInput.value, 
+                gender: genderSelect.value,
+                search_term: searchInput,
+                mode: mode // ✅ "ml" ya "search"
+            })
+        });
+
+        const data = await response.json();
+        console.log('Response from server:', data);
+        
+        if (data.status === 'success') {
+            showResults(data);
+        } else {
+            showNotification('Analysis failed: ' + data.message, 'error');
+        }
+    } catch (err) {
+        console.error('Analysis error:', err);
+        
+        // Show error with retry
+        const resultsDiv = document.getElementById('ai-results');
+        resultsDiv.innerHTML = `
+            <div class="bg-red-50 border-2 border-red-200 p-8 rounded-[40px] text-center shadow-lg">
+                <div class="w-16 h-16 bg-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-white text-2xl"></i>
+                </div>
+                <h3 class="text-red-800 font-black uppercase text-xl mb-2">Connection Error</h3>
+                <p class="text-red-700 leading-relaxed mb-6">Unable to connect to AI service. Please check your internet connection and try again.</p>
+                <button onclick="analyzeWithAI()" class="bg-red-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-red-700 transition-all shadow-lg">
+                    <i class="fas fa-redo mr-2"></i> Retry Analysis
+                </button>
+            </div>
+        `;
+        resultsDiv.classList.remove('hidden');
+        
+        showNotification('Connection failed. Please try again.', 'error');
+    } finally {
+        analyzeText.classList.remove('hidden');
+        analyzeLoading.classList.add('hidden');
+        analyzeBtn.disabled = false;
+    }
+}
+
+// =========== IMPROVED MEDICINE DISPLAY FUNCTION ===========
+const getMedicinesHTML = (prediction) => {
+    if (!prediction.otc_allowed) {
+        return `
+            <div class="bg-red-50 p-8 rounded-[40px] border-2 border-dashed border-red-200 text-center">
+                <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                <h5 class="text-red-800 font-black uppercase text-sm mb-2">Prescription Required</h5>
+                <p class="text-red-600 text-[10px] leading-relaxed mb-6">This condition requires a professional clinical diagnosis. Please consult a doctor.</p>
+                <button onclick="window.location.href='{% url "customers_d:upload_prescription" %}'" 
+                        class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-[10px] hover:bg-red-700 transition">
+                    UPLOAD DOCTOR'S NOTE
+                </button>
+            </div>`;
+    }
+
+    // FIX: otc_allowed true hone ke bawajood agar koi real in-stock medicine
+    // match nahi hui (medicines array empty), to panel bilkul khaali reh jata
+    // tha — na koi message, na koi button. Ab clear fallback dikhega.
+    if (!prediction.medicines || prediction.medicines.length === 0) {
+        return `
+            <div class="bg-yellow-50 p-8 rounded-[40px] border-2 border-dashed border-yellow-200 text-center">
+                <i class="fas fa-box-open text-yellow-500 text-3xl mb-4"></i>
+                <h5 class="text-yellow-800 font-black uppercase text-sm mb-2">No Matching Medicine In Stock</h5>
+                <p class="text-yellow-700 text-[10px] leading-relaxed mb-6">Iss condition ki koi exact-match medicine abhi kisi verified pharmacy ke stock mein nahi mili. Nearby pharmacies check kar lein.</p>
+                <button onclick="window.location.href='{% url "customers_d:nearby_pharmacies" %}'" 
+                        class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold text-[10px] hover:bg-teal-700 transition">
+                    <i class="fas fa-map-marker-alt mr-1"></i> FIND PHARMACIES
+                </button>
+            </div>`;
+    }
+    
+    const userAge = parseInt(document.getElementById('user-age').value) || 25;
+    
+    return prediction.medicines.map((med, i) => {
+        let safetyWarning = '';
+        
+        if (userAge < 12) {
+            safetyWarning = `<div class="mt-2 bg-yellow-50 p-2 rounded-lg text-[10px] text-yellow-800 border border-yellow-200">
+                ⚠️ Pediatric consultation recommended for this dose.
+            </div>`;
+        } else if (userAge > 60) {
+            safetyWarning = `<div class="mt-2 bg-blue-50 p-2 rounded-lg text-[10px] text-blue-800 border border-blue-200">
+                👴 Geriatric adjustment may be needed.
+            </div>`;
+        }
+        
+        return `
+        <div class="bg-white p-5 rounded-3xl shadow-sm border-2 ${i === 0 ? 'border-teal-500' : 'border-gray-50'} hover:shadow-md transition mb-3">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <h5 class="font-black text-gray-800 text-lg uppercase">${med.name}</h5>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-green-100 text-green-600">OTC</span>
+                    </div>
+                    <p class="text-teal-600 font-bold text-xs mt-2 uppercase">FORMULA: ${med.formula || med.generic_formula || 'Not specified'}</p>
+                    ${safetyWarning}
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-black text-gray-900 leading-none">Rs. ${med.price}</div>
+                    ${med.available && med.id ? `
+                        <button onclick="addToCart('${med.id}')" class="mt-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-teal-600 transition">ADD TO CART</button>
+                    ` : `
+                        <div class="mt-2 bg-yellow-50 text-yellow-800 border border-yellow-200 px-4 py-2 rounded-xl text-[10px] font-bold">
+                            Available: Not Available
+                        </div>
+                    `}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+};
+
+// =========== PRECAUTIONS DISPLAY ===========
+// =========== GEMINI GUIDANCE CARDS (structured, not a wall of text) ===========
+const getGeminiGuidanceHTML = (g) => {
+    if (!g) return '';
+    const items = [
+        { icon: 'fa-heart-pulse', label: 'General Guidance', text: g.general_guidance, color: 'yellow' },
+        { icon: 'fa-user-doctor', label: 'When to Consult a Doctor', text: g.when_to_consult, color: 'blue' },
+        { icon: 'fa-triangle-exclamation', label: 'Emergency Signs', text: g.emergency_signs, color: 'red' },
+    ].filter(i => i.text);
+
+    return `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left mt-2">
+        ${items.map(i => `
+            <div class="bg-white/70 border border-${i.color}-200 rounded-2xl p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas ${i.icon} text-${i.color}-500"></i>
+                    <span class="text-[10px] font-black uppercase tracking-wide text-${i.color}-700">${i.label}</span>
+                </div>
+                <p class="text-gray-700 text-sm leading-snug">${i.text}</p>
+            </div>`).join('')}
+    </div>`;
+};
+
+// =========== AI EXPLANATION (short bullets, not a paragraph) ===========
+const getAiExplanationHTML = (exp) => {
+    if (!exp || (!exp.meaning && (!exp.precautions || exp.precautions.length === 0))) return '';
+    const precautionsHTML = (exp.precautions && exp.precautions.length)
+        ? `<ul class="mt-2 space-y-1">${exp.precautions.map(p => `<li class="flex items-start gap-2 text-xs"><i class="fas fa-check text-white/70 mt-0.5"></i><span>${p}</span></li>`).join('')}</ul>`
+        : '';
+    return `
+        <div class="mt-6 p-5 bg-white/10 rounded-2xl border border-white/20 text-sm text-left">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-magic"></i>
+                <span class="font-black uppercase text-[10px] tracking-wide">AI Explanation</span>
+            </div>
+            ${exp.meaning ? `<p class="font-medium leading-relaxed">${exp.meaning}</p>` : ''}
+            ${precautionsHTML}
+            ${exp.consult_doctor ? `<p class="mt-3 text-xs italic opacity-90"><i class="fas fa-user-doctor mr-1"></i>${exp.consult_doctor}</p>` : ''}
+        </div>`;
+};
+
+const getPrecautionsHTML = (precautions) => {
+    if (!precautions || precautions.length === 0) {
+        return '<p class="text-gray-500 text-sm italic">No specific precautions available.</p>';
+    }
+    
+    return precautions.map(p => `
+        <div class="flex items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm mb-2">
+            <i class="fas fa-check-circle text-teal-500 mr-3"></i>
+            <span class="text-gray-700 font-bold text-sm">${p}</span>
+        </div>`).join('');
+};
+
+// =========== SUMMARY CARDS ===========
+const getSummaryHTML = (predictions) => {
+    return predictions.slice(0, 3).map((p, index) => `
+        <div class="bg-white p-6 rounded-3xl border-2 ${index === 0 ? 'border-teal-500 shadow-lg' : 'border-gray-100'} transition-all relative">
+            <div class="flex justify-between items-start mb-4">
+                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${p.risk === 'High' ? 'bg-red-100 text-red-600' : p.risk === 'Medium' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600'}">
+                    ${p.risk} RISK
+                </span>
+                <span class="text-teal-600 font-black text-xl">${p.confidence}%</span>
+            </div>
+            <h3 class="text-lg font-black text-gray-800 uppercase mb-1">${p.disease}</h3>
+            ${index === 0 ? '<div class="absolute -top-3 -right-3 bg-teal-500 text-white text-[8px] font-bold px-3 py-1 rounded-full shadow-md">PRIMARY</div>' : ''}
+        </div>`).join('');
+};
+
+// =========== RESET ANALYSIS ===========
+function resetAnalysis() {
+    // Clear selections
+    selectedSymptoms = [];
+    updateCardCounters();
+    updateSelectionCount();
+    renderBadges();
+    updateProgressBar();
+    updateAnalyzeButton();
+    
+    // Clear search
+    document.getElementById('symptom-search').value = '';
+    filterSymptoms();
+    
+    // Hide results
+    document.getElementById('ai-results').classList.add('hidden');
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    showNotification('Ready for new analysis!', 'info');
+}
+function showResults(data) {
+    const resultsDiv = document.getElementById('ai-results');
+    resultsDiv.innerHTML = '';
+    resultsDiv.classList.remove('hidden');
+
+    const disclaimerHTML = `
+        <div class="mt-10 p-6 bg-red-50 border border-red-100 rounded-[30px] text-[11px] text-red-600 italic text-center shadow-inner fade-in-up">
+            <i class="fas fa-exclamation-triangle mr-2"></i> ${data.disclaimer || "Medical Disclaimer: This AI-generated analysis is for informational purposes only. Always consult a qualified healthcare provider for diagnosis and treatment."}
+        </div>
+    `;
+
+    // CASE 1: GEMINI FALLBACK
+    if (data.source === "gemini" || data.source === "gemini_strict") {
+        resultsDiv.innerHTML = `
+            <div class="bg-yellow-50 border-2 border-yellow-200 p-8 rounded-[40px] text-center shadow-lg fade-in-up">
+                <div class="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-robot text-white text-2xl"></i>
+                </div>
+                <h3 class="text-yellow-800 font-black uppercase text-xl mb-2">AI Health Guidance</h3>
+                <div class="inline-block bg-yellow-200/50 px-4 py-1 rounded-full text-[10px] font-bold text-yellow-800 uppercase mb-4">
+                    AI-Powered Analysis
+                </div>
+                <div class="mb-6">${getGeminiGuidanceHTML(data.fallback_explanation)}</div>
+                
+                <!-- REMOVED "Book Doctor" button - kept only 2 buttons -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+                    <button onclick="window.location.href='{% url "customers_d:nearby_pharmacies" %}'" 
+                            class="bg-teal-600 text-white px-4 py-3 rounded-xl font-bold text-xs hover:bg-teal-700 transition">
+                        <i class="fas fa-map-marker-alt mr-2"></i> Find Pharmacies
+                    </button>
+                    <button onclick="window.location.href='{% url "customers_d:upload_prescription" %}'" 
+                            class="bg-blue-600 text-white px-4 py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition">
+                        <i class="fas fa-file-medical mr-2"></i> Upload Prescription
+                    </button>
+                </div>
+            </div>
+            ${disclaimerHTML}
+            
+            <div class="text-center mt-8">
+                <button onclick="resetAnalysis()" class="bg-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-teal-700 transition-all shadow-lg hover:shadow-xl">
+                    <i class="fas fa-redo mr-2"></i> Start New Analysis
+                </button>
+            </div>
+        `;
+    } 
+    // CASE 2: ML MODEL SUCCESS
+    else if (data.source === "ml" && data.predictions && data.predictions.length > 0) {
+        const main = data.predictions[0];
+        const age = document.getElementById('user-age').value;
+        const gender = document.getElementById('user-gender').value;
+
+        resultsDiv.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 fade-in-up">
+                ${getSummaryHTML(data.predictions)}
+            </div>
+            
+            <div class="bg-white rounded-[45px] shadow-2xl border border-gray-50 overflow-hidden fade-in-up">
+                <div class="bg-gradient-to-r from-teal-600 to-teal-500 p-10 text-white text-center relative">
+                    <h2 class="text-5xl font-black mt-2 tracking-tight uppercase">${main.disease}</h2>
+                    <div class="mt-4 inline-block bg-white/10 px-6 py-2 rounded-full border border-white/20">
+                        <span class="text-[10px] font-bold uppercase opacity-70">Generic Formula:</span>
+                        <span class="ml-2 font-black tracking-widest text-xs">${main.generic_formula || 'Not specified'}</span>
+                    </div>
+                    ${main.emergency ? `
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl mb-4 flex items-start gap-3">
+                          <span class="text-red-500 text-2xl">🚨</span>
+                          <div>
+                            <p class="font-bold text-red-700">Emergency Alert</p>
+                            <p class="text-red-600 text-sm">Yeh symptoms serious ho sakte hain — foran kisi doctor ya hospital se rabta karein.</p>
+                          </div>
+                        </div>
+                    ` : ''}
+
+                    ${getAiExplanationHTML(main.ai_explanation)}
+                </div>
+                
+                <div class="p-8 md:p-14 grid md:grid-cols-2 gap-12">
+                    <div>
+                        <h4 class="text-teal-600 text-xs font-black mb-4 uppercase tracking-[3px]">Condition Overview</h4>
+                        <p class="text-gray-700 leading-relaxed text-lg font-medium mb-8">${main.description || 'No description available.'}</p>
+                        
+                        <h4 class="text-teal-600 text-xs font-black mb-4 uppercase tracking-[3px]">Recommended Precautions</h4>
+                        <div class="space-y-2 mb-8">
+                            ${getPrecautionsHTML(main.precautions)}
+                        </div>
+
+                        <button onclick="window.location.href=\`/customer_dashboard/download-report/${encodeURIComponent(main.disease)}/?age=${encodeURIComponent(age)}&gender=${encodeURIComponent(gender)}\`"
+                            class="bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-lg">
+                            <i class="fas fa-file-pdf mr-2"></i> DOWNLOAD CLINICAL REPORT
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 p-10 rounded-[40px]">
+                         <h4 class="text-gray-900 text-xs font-black mb-6 uppercase tracking-[3px]">Suggested Treatment</h4>
+                         <div class="medicine-list">
+                            ${getMedicinesHTML(main)}
+                         </div>
+                    </div>
+                </div>
+            </div>
+            ${disclaimerHTML}
+            
+            <div class="text-center mt-8">
+                <button onclick="resetAnalysis()" class="bg-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-teal-700 transition-all shadow-lg hover:shadow-xl">
+                    <i class="fas fa-redo mr-2"></i> Start New Analysis
+                </button>
+            </div>
+        `;
+    }
+
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showNotification('Analysis completed successfully!', 'success');
+}
+
+// =========== ADD TO CART ===========
+function addToCart(productId) {
+    fetch("{% url 'customers_d:add_to_cart' %}", {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json", 
+            "X-CSRFToken": getCSRFToken() 
+        },
+        body: JSON.stringify({ 
+            product_id: productId, 
+            quantity: 1 
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            showNotification(data.message, 'success');
+            // FIX: navbar badge ka real id 'cart-count' hai ('cart-count-nav' exist hi nahi karta
+            // customer_base.html mein), isliye add hone ke baad navbar update nahi ho raha tha.
+            // customer_base.html ka global loadCartCount() use karo jo already sahi id update karta hai.
+            if (typeof loadCartCount === 'function') {
+                loadCartCount();
+            }
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        showNotification('Failed to add to cart', 'error');
+    });
+}
+
+// =========== CSRF TOKEN HELPER ===========
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 10) === ('csrftoken' + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue || "{{ csrf_token }}";
+}
+
+// =========== NOTIFICATION SYSTEM ===========
+function showNotification(message, type = 'info') {
+    const existing = document.querySelector('.custom-notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = `custom-notification fixed top-6 right-6 px-6 py-4 rounded-xl shadow-xl z-50 transform translate-x-full animate-slide-in`;
+    
+    const colors = {
+        success: 'bg-green-500 text-white',
+        error: 'bg-red-500 text-white',
+        warning: 'bg-yellow-500 text-white',
+        info: 'bg-blue-500 text-white'
+    };
+    
+    notification.className += ` ${colors[type]}`;
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-${getIcon(type)} mr-3"></i>
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 opacity-80 hover:opacity-100">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+function getIcon(type) {
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    return icons[type] || 'info-circle';
+}
+
+// =========== KEYBOARD SHORTCUTS ===========
+document.addEventListener('keydown', function(e) {
+    // Ctrl + Enter to analyze
+    if (e.ctrlKey && e.key === 'Enter') {
+        if (!analyzeBtn.disabled) {
+            validateAndAnalyze();
+        }
+    }
+    
+    // Escape to clear search
+    if (e.key === 'Escape') {
+        const search = document.getElementById('symptom-search');
+        if (search.value) {
+            search.value = '';
+            filterSymptoms();
+        }
+    }
+    
+    // Enter in search box to analyze
+    if (e.key === 'Enter' && e.target.id === 'symptom-search' && !analyzeBtn.disabled) {
+        validateAndAnalyze();
+    }
+});
+
+// Add Enter key listener to search box
+document.getElementById('symptom-search').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !analyzeBtn.disabled) {
+        validateAndAnalyze();
+    }
+});
+
+// Add notification animation styles
+const style = document.createElement('style');
+style.textContent = `
+@keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out forwards;
+}
+.fade-in-up {
+    animation: fadeInSlide 0.5s ease-out forwards;
+}
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

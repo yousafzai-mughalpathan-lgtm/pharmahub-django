@@ -1,0 +1,208 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Help Center - PharmaHub{% endblock %}
+
+{% block content %}
+<style>
+    .faq-active .faq-answer { display: block; }
+    .faq-active i.arrow-icon { transform: rotate(180deg); transition: transform 0.3s ease; }
+    .category-btn.active { border-color: #0d9488; background-color: #f0fdfa; }
+    .dark .category-btn.active { border-color: #2dd4bf; background-color: #134e4a; }
+</style>
+
+<div class="bg-gray-50 dark:bg-gray-900 min-h-screen py-16">
+    <div class="max-w-5xl mx-auto px-6">
+        
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4"> How can we <span class="text-teal-600">help you?</span></h1>
+            <p class="text-gray-600 dark:text-gray-400 text-lg mb-8">Search for questions or browse categories below.</p>
+            
+            <div class="max-w-2xl mx-auto relative">
+                <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                <input type="text" id="faqSearch" placeholder="Type your question (e.g. prescription, tracking)..." 
+                    class="w-full pl-12 pr-6 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition dark:text-white">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+            <button onclick="filterCategory('all', this)" class="category-btn p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center hover:shadow-md transition group active">
+                <div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="ri-apps-line text-2xl text-teal-600"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 dark:text-white">All Topics</h3>
+            </button>
+
+            <button onclick="filterCategory('account', this)" class="category-btn p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center hover:shadow-md transition group">
+                <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="ri-user-settings-line text-2xl text-blue-600"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 dark:text-white">Account</h3>
+            </button>
+
+            <button onclick="filterCategory('orders', this)" class="category-btn p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center hover:shadow-md transition group">
+                <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="ri-shopping-bag-line text-2xl text-orange-600"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 dark:text-white">Orders</h3>
+            </button>
+
+            <button onclick="filterCategory('pharmacy', this)" class="category-btn p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center hover:shadow-md transition group">
+                <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="ri-hospital-line text-2xl text-purple-600"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 dark:text-white">Pharmacy</h3>
+            </button>
+        </div>
+
+        <div class="max-w-3xl mx-auto">
+            <h2 id="currentCategoryTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">Frequently Asked Questions</h2>
+            
+            <div id="faqList" class="space-y-4">
+                <div class="faq-item bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-category="account">
+                    <button class="w-full flex items-center justify-between p-5 text-left font-semibold text-gray-800 dark:text-white hover:bg-gray-50 transition">
+                        <span>Can I use PharmaHub without an account?</span>
+                        <i class="ri-arrow-down-s-line text-2xl text-teal-600 arrow-icon"></i>
+                    </button>
+                    <div class="faq-answer hidden p-5 pt-0 text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700">
+                        As a <strong>Visitor</strong>, you can browse medicines. However, to place orders or upload prescriptions, you must register as a <strong>Customer</strong>.
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-category="orders">
+                    <button class="w-full flex items-center justify-between p-5 text-left font-semibold text-gray-800 dark:text-white hover:bg-gray-50 transition">
+                        <span>How does the prescription verification work?</span>
+                        <i class="ri-arrow-down-s-line text-2xl text-teal-600 arrow-icon"></i>
+                    </button>
+                    <div class="faq-answer hidden p-5 pt-0 text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700">
+                        Once you upload a prescription, a verified <strong>Pharmacist</strong> reviews it. Your order status will update to 'Approved' only after their verification.
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-category="orders">
+                    <button class="w-full flex items-center justify-between p-5 text-left font-semibold text-gray-800 dark:text-white hover:bg-gray-50 transition">
+                        <span>Is order tracking available in real-time?</span>
+                        <i class="ri-arrow-down-s-line text-2xl text-teal-600 arrow-icon"></i>
+                    </button>
+                    <div class="faq-answer hidden p-5 pt-0 text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700">
+                        Yes! PharmaHub uses <strong>Order Status Synchronization</strong>. You can see live updates (Processing, Dispatched, Delivered) on your dashboard.
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-category="pharmacy">
+                    <button class="w-full flex items-center justify-between p-5 text-left font-semibold text-gray-800 dark:text-white hover:bg-gray-50 transition">
+                        <span>How do pharmacists join the platform?</span>
+                        <i class="ri-arrow-down-s-line text-2xl text-teal-600 arrow-icon"></i>
+                    </button>
+                    <div class="faq-answer hidden p-5 pt-0 text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700">
+                        Pharmacists must upload a valid license during registration. The <strong>Admin</strong> verifies these documents before giving dashboard access.
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-category="all">
+                    <button class="w-full flex items-center justify-between p-5 text-left font-semibold text-gray-800 dark:text-white hover:bg-gray-50 transition">
+                        <span>What is the AI Symptom Checker?</span>
+                        <i class="ri-arrow-down-s-line text-2xl text-teal-600 arrow-icon"></i>
+                    </button>
+                    <div class="faq-answer hidden p-5 pt-0 text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700">
+                        It suggests OTC medicines based on your symptoms. Note: This is for guidance and not a replacement for a doctor's advice.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-20 bg-teal-600 rounded-3xl p-10 text-center text-white shadow-xl">
+    <h2 class="text-3xl font-bold mb-4">Still have questions?</h2>
+    <p class="text-teal-100 mb-8 text-lg">If you cannot find an answer in our FAQs, you can always contact our support team.</p>
+    <a href="{% url 'pages:contact' %}" class="inline-block bg-white text-teal-600 px-10 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition-all transform hover:scale-105 shadow-lg">
+        <i class="ri-customer-service-2-fill mr-2"></i> Contact Us Now
+    </a>
+</div>
+
+<script>
+    // 1. Accordion Logic (Q&A Toggle)
+    document.querySelectorAll('.faq-item button').forEach(button => {
+        button.addEventListener('click', () => {
+            const parent = button.closest('.faq-item');
+            const answer = parent.querySelector('.faq-answer');
+            const isActive = parent.classList.contains('faq-active');
+            
+            // Close all open items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('faq-active');
+                const ans = item.querySelector('.faq-answer');
+                if (ans) ans.classList.add('hidden');
+            });
+
+            // Toggle current item
+            if (!isActive) {
+                parent.classList.add('faq-active');
+                answer.classList.remove('hidden');
+            }
+        });
+    });
+
+    // 2. Refined Search Logic (Strict Question Search)
+    function applyPharmaFilters() {
+        const searchInput = document.getElementById('faqSearch');
+        const filter = searchInput.value.toLowerCase().trim();
+        
+        const activeBtn = document.querySelector('.category-btn.active');
+        const activeCategory = activeBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+        
+        const items = document.querySelectorAll('.faq-item');
+        let foundCount = 0;
+
+        items.forEach(item => {
+            // Sirf Question Title (span) ko target karna hai
+            const questionText = item.querySelector('span').textContent.toLowerCase();
+            const itemCategory = item.getAttribute('data-category');
+
+            // Logic: Agar aap chahte hain ke "w" se sirf "What" aaye "How" nahi, 
+            // toh hum check karenge ke kya koi bhi word filter se START ho raha hai.
+            const words = questionText.split(" ");
+            const matchesSearch = words.some(word => word.startsWith(filter));
+            
+            const matchesCategory = (activeCategory === 'all' || itemCategory === activeCategory);
+
+            if (matchesSearch && matchesCategory) {
+                item.style.display = "block";
+                foundCount++;
+                if (filter.length > 0) {
+                    item.style.borderLeft = "4px solid #0d9488";
+                } else {
+                    item.style.borderLeft = "none";
+                }
+            } else {
+                item.style.display = "none";
+            }
+        });
+
+        // Search Status update
+        let statusMsg = document.getElementById('searchStatus');
+        if (!statusMsg) {
+            statusMsg = document.createElement('div');
+            statusMsg.id = 'searchStatus';
+            statusMsg.className = 'mt-3 text-sm font-medium text-teal-600 text-center';
+            searchInput.parentNode.appendChild(statusMsg);
+        }
+
+        if (filter.length > 0) {
+            statusMsg.textContent = `Found ${foundCount} results for "${filter}"`;
+            statusMsg.style.display = "block";
+        } else {
+            statusMsg.style.display = "none";
+        }
+    }
+
+    function filterCategory(category, btn) {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyPharmaFilters();
+    }
+
+    document.getElementById('faqSearch').addEventListener('input', applyPharmaFilters);
+</script>
+{% endblock %}

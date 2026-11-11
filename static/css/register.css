@@ -1,0 +1,74 @@
+    #bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* video stretch na ho */
+  z-index: -1;       /* sab content ke neeche rahe */
+  animation: fadeIn 2s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45); /* slightly dark */
+  z-index: 0;
+}
+   /* ADD THIS: Static Image Fallback for browsers/devices that block video */
+    @supports not (mix-blend-mode: normal) {
+        body {
+            /* Replace 'videos/fallback.jpg' with a static image you create from the video */
+            background-image: url("{% static 'images/video_fallback.jpg' %}");
+            background-size: cover;
+            background-position: center;
+        }
+        body::before {
+            /* Reduce overlay opacity since it's just an image */
+            background: rgba(0, 0, 0, 0.2);
+        }
+    }
+.bg-white {
+  backdrop-filter: blur(5px);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+
+body::before {
+  z-index: 0;
+}
+
+.main-content, .card, .text {
+  position: relative;
+  z-index: 1;
+}
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 120vh;
+        }
+        .symbol-icon {
+            font-family: 'Google Symbols';
+            font-size: 24px;
+            vertical-align: -6px;
+            margin-right: 8px;
+            display: inline-block;
+        }
+        /* THEME CHANGE: Tab active color set to Teal-600 */
+        .tab-active {
+            color: #0D9488; /* teal-600 */
+            border-bottom-width: 2px;
+            border-bottom-color: #0D9488;
+        }
+        .tab-inactive {
+            color: #6B7280; /* gray-500 */
+            border-bottom-width: 2px;
+            border-bottom-color: transparent;
+        }

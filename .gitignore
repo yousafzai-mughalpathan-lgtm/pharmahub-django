@@ -1,0 +1,29 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+cert
+cert.*
+
+# Python / virtual environments
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+stable_env/
+
+# Django
+db.sqlite3
+*.log
+logs/
+staticfiles/
+media/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

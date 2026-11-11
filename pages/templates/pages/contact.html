@@ -1,0 +1,175 @@
+{% extends base_template %} 
+{% load static %}
+{% block title %}Contact Us - PharmaHub{% endblock %}
+{% block content %}
+<style>
+  .dark .contact-page .contact-hero { background: linear-gradient(135deg, #0f172a, #1f2937) !important; }
+  .dark .contact-page .contact-card {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+  }
+  .dark .contact-page .contact-help { background-color: #111827 !important; border: 1px solid #374151 !important; }
+  .dark .contact-page .contact-card p,
+  .dark .contact-page label,
+  .dark .contact-page #charCount { color: #d1d5db !important; }
+
+/* contact.html ke style block mein ye add karein */
+.messages-container, .alert, .message-item { 
+    display: none !important; 
+}
+
+</style>
+
+<div class="contact-page">
+    <section class="contact-hero py-20 bg-gradient-to-br from-teal-50 to-blue-50 flex-1">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h1 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Contact <span class="text-teal-600">Us</span></h1>
+          <p class="text-lg text-gray-600 max-w-2xl mx-auto italic">"We're here to help you live healthier. Whether you have a question about an order or want to partner with us, we'd love to hear from you."</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+          <a href="tel:+9118001234567" class="contact-card text-center p-8 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer">
+            <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-6">
+              <i class="ri-phone-line text-teal-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Call Us</h3>
+            <p class="text-gray-600 mb-2">Customer Support</p>
+            <p class="text-teal-600 font-semibold">+91 1800-123-4567</p>
+            <p class="text-sm text-gray-500 mt-2">24/7 Available</p>
+          </a>
+          <a href="mailto:support@pharmahub.com" class="contact-card text-center p-8 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <i class="ri-mail-line text-blue-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Email Us</h3>
+            <p class="text-gray-600 mb-2">General Inquiries</p>
+            <p class="text-blue-600 font-semibold">support@pharmahub.com</p>
+            <p class="text-sm text-gray-500 mt-2">Response within 2 hours</p>
+          </a>
+          <a href="https://maps.google.com/?q=Gujranwala,Pakistan" target="_blank" class="contact-card text-center p-8 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-6">
+              <i class="ri-map-pin-line text-orange-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Visit Us</h3>
+            <p class="text-gray-600 mb-2">Headquarters</p>
+            <p class="text-orange-600 font-semibold">Gujranwala, Pakistan</p>
+            <p class="text-sm text-gray-500 mt-2">Mon-Fri 9AM-6PM</p>
+          </a>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <!-- Contact Form -->
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+            <p class="text-base text-gray-600 mb-8">Fill out the form below and we'll get back to you as soon as possible. For urgent matters, please call our support line.</p>
+            <form method="post" class="space-y-6">
+              {% csrf_token %}
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <input type="text" name="name" required class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="John Doe">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input type="email" name="email" required class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="john@example.com">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <select name="subject" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+                  <option value="general">General Inquiry</option>
+                  <option value="support">Technical Support</option>
+                  <option value="order">Order Related</option>
+                  <option value="partnership">Pharmacy Partnership</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="flex justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Message</label>
+                  <span id="charCount" class="text-xs text-gray-500">0 / 500</span>
+                </div>
+                <textarea name="message" id="contactMessage" rows="5" required maxlength="500" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="How can we help you today?"></textarea>
+              </div>
+
+              <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-teal-200/50 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-2">
+                <span>Send Message</span>
+                <i class="ri-send-plane-fill text-lg"></i>
+              </button>
+            </form>
+          </div>
+
+<div class="space-y-8">
+            <div class="contact-card bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <h3 class="text-2xl font-bold text-gray-900 mb-8">Contact Information</h3>
+              <div class="space-y-6">
+                
+                <div class="flex items-start space-x-4">
+                  <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center shrink-0">
+                    <i class="ri-map-pin-2-fill text-teal-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white">Our Location</h4>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Gov.+Graduate+College+(W)+Satellite+Town+Gujranwala" 
+                       target="_blank" 
+                       class="text-gray-600 hover:text-teal-600 transition-all duration-300 block">
+                       Gov. Graduate College (W) Satellite Town Gujranwala.
+                    </a>
+                  </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                  <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
+                    <i class="ri-mail-fill text-orange-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white">Email Us</h4>
+<a href="mailto:official.pharmahub01@gmail.com" 
+   onclick="copyEmail(event)"
+   class="text-gray-600 hover:text-orange-600 transition-all duration-300 block" 
+   title="Click to send email or copy">
+   official.pharmahub01@gmail.com
+</a>
+                  </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                  <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                    <i class="ri-phone-fill text-blue-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white">Call Support</h4>
+                    <a href="tel:+923001234567" 
+                       class="text-gray-600 hover:text-blue-600 transition-all duration-300 block">
+                       +92 300 1234567
+                    </a>
+                    <p class="text-sm text-teal-600 font-medium">Mon - Sat, 9:00 AM to 6:00 PM</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="contact-help mt-10 p-6 bg-teal-50 rounded-xl border border-teal-100">
+                <div class="flex items-center space-x-4 mb-4">
+                  <div class="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center text-white">
+                    <i class="ri-question-line text-2xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-900">Quick Answer?</h4>
+                    <p class="text-sm text-gray-600">Check our Help Center first.</p>
+                  </div>
+                </div>
+                <a href="{% url 'pages:help' %}" class="block text-center bg-white text-teal-600 border border-teal-600 font-semibold py-2 rounded-lg hover:bg-teal-600 hover:text-white transition-colors">
+                  View FAQs
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+
+ {% block extra_js %}
+<script src="{% static 'js/contact.js' %}"></script>
+{% endblock extra_js %}
+{% endblock content %}

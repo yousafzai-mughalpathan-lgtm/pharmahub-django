@@ -1,0 +1,204 @@
+{% extends "customers_d/customer_dashboard.html" %}
+
+{% block title %}Nearby Pharmacies - PharmaHub{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 18rem; border-radius: 12px; }
+    .pharmacy-card { transition: all 0.3s ease; }
+    .pharmacy-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+  </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+  <div class="mb-6">
+    <h1 class="text-2xl font-black text-gray-900 dark:text-white">Nearby Pharmacies</h1>
+    <p class="text-gray-500 text-sm mt-1">Pharmacies will be sorted according to your dropdown selection. </p>
+  </div>
+
+  <div id="locationStatus" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm hidden">
+    📍Sorting based on your selected option...
+  </div>
+  <div id="locationError" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-700 text-sm hidden">
+    ⚠️ Location access off —— pharmacies are being shown alphabetically.
+  </div>
+
+  <div class="mb-4 flex items-center gap-3">
+    <label for="cityFilter" class="text-sm font-semibold text-gray-600 dark:text-gray-300">Filter by city:</label>
+    <select id="cityFilter" class="border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-white px-4 py-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+      <option value="">All Cities</option>
+      {% for c in available_cities %}
+      <option value="{{ c }}">{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="map" class="w-full shadow mb-6 z-0"></div>
+
+  <div id="pharmacyCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for pharmacy in pharmacies %}
+      <div class="pharmacy-card bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-5 shadow-sm"
+           data-name="{{ pharmacy.name }}"
+           data-city="{{ pharmacy.city|default:'' }}"
+           data-address="{{ pharmacy.address|default:'Address available at pharmacy' }}"
+           data-lat="{{ pharmacy.latitude|default:'' }}"
+           data-lng="{{ pharmacy.longitude|default:'' }}"
+           data-phone="{{ pharmacy.phone|default:'' }}">
+
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ pharmacy.name }}</h3>
+            <p class="text-xs text-teal-600 font-semibold mt-0.5">✅ Verified</p>
+          </div>
+          <span class="distance-badge text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full font-bold hidden"></span>
+        </div>
+
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">📍 {{ pharmacy.address|default:"Address map pe dekhen" }}</p>
+
+        {% if pharmacy.phone %}
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">📞 {{ pharmacy.phone }}</p>
+        {% endif %}
+
+        <div class="flex gap-2 mt-4">
+          {% if pharmacy.latitude and pharmacy.longitude %}
+            <a href="https://www.google.com/maps?q={{ pharmacy.latitude }},{{ pharmacy.longitude }}"
+               target="_blank"
+               class="flex-1 text-center text-xs bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-xl font-bold transition">
+              🗺️ Directions
+            </a>
+          {% endif %}
+          {% if pharmacy.phone %}
+            <a href="tel:{{ pharmacy.phone }}"
+               class="flex-1 text-center text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 rounded-xl font-bold transition">
+              📞 Call
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-3 text-center py-16 text-gray-400">
+        <p class="text-4xl mb-3">🏥</p>
+        <p class="font-semibold">Abhi koi verified pharmacy available nahi</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{{ pharmacies_json|json_script:"pharmacy-data" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const pharmacyData = JSON.parse(document.getElementById('pharmacy-data').textContent);
+
+  // OpenStreetMap (no API key)
+  const map = L.map('map').setView([30.3753, 69.3451], 6); // Pakistan center
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Markers (only where lat/lng exist) — keyed by pharmacy id so the
+  // city filter can show/hide the matching marker along with its card.
+  const markersById = {};
+  pharmacyData.forEach(ph => {
+    if (ph.latitude && ph.longitude) {
+      markersById[ph.id] = L.marker([ph.latitude, ph.longitude])
+        .addTo(map)
+        .bindPopup(`<b>${ph.name}</b><br>${ph.address || ''}`);
+    }
+  });
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  const statusEl = document.getElementById('locationStatus');
+  const errorEl = document.getElementById('locationError');
+  const container = document.getElementById('pharmacyCards');
+  const cityFilterEl = document.getElementById('cityFilter');
+
+  // Sort alphabetically by default
+  const cards = Array.from(container.querySelectorAll('.pharmacy-card'));
+  cards.sort((a,b)=>a.dataset.name.toLowerCase().localeCompare(b.dataset.name.toLowerCase()));
+  cards.forEach(card => container.appendChild(card));
+
+  function applyCityFilter() {
+    const selectedCity = cityFilterEl.value;
+    const cardNodes = Array.from(container.querySelectorAll('.pharmacy-card'));
+
+    cardNodes.forEach(card => {
+      const matches = !selectedCity || card.dataset.city === selectedCity;
+      card.classList.toggle('hidden', !matches);
+    });
+
+    // Keep map markers in sync with the visible cards
+    pharmacyData.forEach(ph => {
+      const marker = markersById[ph.id];
+      if (!marker) return;
+      const matches = !selectedCity || ph.city === selectedCity;
+      if (matches) {
+        if (!map.hasLayer(marker)) marker.addTo(map);
+      } else if (map.hasLayer(marker)) {
+        map.removeLayer(marker);
+      }
+    });
+  }
+
+  cityFilterEl.addEventListener('change', applyCityFilter);
+
+  if (navigator.geolocation) {
+    statusEl.classList.remove('hidden');
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        statusEl.classList.add('hidden');
+
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        // User marker
+        const userMarker = L.marker([userLat, userLng]).addTo(map);
+        userMarker.bindPopup('Aap yahan hain').openPopup();
+        map.setView([userLat, userLng], 12);
+
+        // Cards sort by distance
+        const cardNodes = Array.from(container.querySelectorAll('.pharmacy-card'));
+
+        cardNodes.forEach(card => {
+          const lat = parseFloat(card.dataset.lat);
+          const lng = parseFloat(card.dataset.lng);
+
+          if (!isNaN(lat) && !isNaN(lng)) {
+            const dist = haversineKm(userLat, userLng, lat, lng);
+            card.dataset.dist = dist;
+
+            const badge = card.querySelector('.distance-badge');
+            badge.classList.remove('hidden');
+            badge.textContent = dist < 1 ? `${(dist*1000).toFixed(0)}m` : `${dist.toFixed(1)} km`;
+          } else {
+            card.dataset.dist = 9999;
+          }
+        });
+
+        cardNodes.sort((a,b)=>parseFloat(a.dataset.dist)-parseFloat(b.dataset.dist));
+        cardNodes.forEach(card => container.appendChild(card));
+      },
+      () => {
+        statusEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+      },
+      { timeout: 8000 }
+    );
+  } else {
+    errorEl.classList.remove('hidden');
+  }
+</script>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

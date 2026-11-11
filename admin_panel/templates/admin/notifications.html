@@ -1,0 +1,653 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Notifications | PharmaHub Admin{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm font-medium">Manage and monitor system-wide alerts and messages</p>
+
+<!-- Loading indicator -->
+<div id="notificationsLoading" class="text-center py-8">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+    <p class="mt-2 text-gray-500">Loading notifications...</p>
+</div>
+
+<!-- Main Content (Initially hidden) -->
+<div id="notificationsContent" class="hidden">
+    <!-- Send Notification Form -->
+    <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 mb-8">
+        <div class="flex items-center mb-8">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white mr-4 shadow-lg shadow-indigo-100">
+                <i class="fas fa-paper-plane text-sm"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 tracking-tight">Send Platform Notification</h2>
+        </div>
+
+        <form id="notificationForm" class="space-y-8 max-w-4xl" onsubmit="sendNotification(event)">
+            <!-- Loading indicator for form submission -->
+            <div id="formLoading" class="hidden text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-indigo-500"></div>
+                <p class="mt-2 text-gray-500">Sending notification...</p>
+            </div>
+            
+            <div class="space-y-3">
+                <label class="text-sm font-bold text-gray-700 ml-1">Recipients</label>
+                <div class="relative">
+                    <select id="recipientSelect" name="recipient_type" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-200 appearance-none">
+                        <option value="all">All Users (Customers + Pharmacies)</option>
+                        <option value="customers">All Customers Only</option>
+                        <option value="pharmacies">All Pharmacies Only</option>
+                        <option value="verified_pharmacies">Verified Pharmacies Only</option>
+                        <option value="pending">Pending Approval Pharmacies</option>
+                        <option value="specific">Specific User</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-4 top-5 text-gray-400 pointer-events-none"></i>
+                </div>
+
+                <div id="specificFilter" class="hidden animate-in fade-in slide-in-from-top-2">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-4 text-gray-400"></i>
+                        <input type="text" id="specificUserSearch" placeholder="Search user by name, email or ID..." 
+                               class="w-full bg-indigo-50/50 border border-indigo-100 rounded-2xl p-3.5 pl-12 text-sm font-medium outline-none">
+                        <div id="userSearchResults" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-60 overflow-y-auto"></div>
+                    </div>
+                    <input type="hidden" id="specificUserId">
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-sm font-bold text-gray-700 ml-1 block">Notification Type</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="notification_type" value="announcement" class="hidden peer" checked>
+                        <div class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-gray-100 bg-white transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 group-hover:border-blue-200">
+                            <i class="fas fa-bell text-2xl mb-3 text-blue-500"></i>
+                            <span class="text-sm font-bold text-blue-600">Announcement</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="notification_type" value="warning" class="hidden peer">
+                        <div class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-gray-100 bg-white transition-all peer-checked:border-amber-500 peer-checked:bg-amber-50 group-hover:border-amber-200">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-3 text-amber-500"></i>
+                            <span class="text-sm font-bold text-amber-700">Warning</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="notification_type" value="policy" class="hidden peer">
+                        <div class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-gray-100 bg-white transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 group-hover:border-purple-200">
+                            <i class="fas fa-file-alt text-2xl mb-3 text-purple-500"></i>
+                            <span class="text-sm font-bold text-purple-600">Policy Update</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="notification_type" value="maintenance" class="hidden peer">
+                        <div class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-gray-100 bg-white transition-all peer-checked:border-orange-500 peer-checked:bg-orange-50 group-hover:border-orange-200">
+                            <i class="fas fa-tools text-2xl mb-3 text-orange-500"></i>
+                            <span class="text-sm font-bold text-orange-600">Maintenance</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-sm font-bold text-gray-700 ml-1 block">Message Title</label>
+                <div class="relative">
+                    <i class="fas fa-heading absolute left-4 top-4.5 text-gray-400 mt-1"></i>
+                    <input type="text" id="notificationTitle" name="title" placeholder="Enter notification heading..." 
+                           class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 pl-12 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-200 transition-all focus:bg-white" required>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-sm font-bold text-gray-700 ml-1 block">Message Content</label>
+                <div class="relative">
+                    <textarea id="messageArea" name="message" rows="5" maxlength="500" 
+                              placeholder="Type your detailed message here..." 
+                              class="w-full bg-gray-50 border border-gray-100 rounded-[2rem] p-6 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-200 transition-all focus:bg-white" required></textarea>
+                    
+                    <div class="flex justify-between items-center mt-3 px-2">
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" id="isUrgent" name="is_urgent" class="w-5 h-5 rounded-lg text-rose-500 border-gray-200 focus:ring-rose-200 transition-all cursor-pointer">
+                            <span class="ml-3 text-xs font-bold text-rose-600 group-hover:text-rose-700 transition-colors">Mark as Urgent (Priority Highlight)</span>
+                        </label>
+                        <div class="bg-gray-100 px-3 py-1 rounded-full">
+                            <p class="text-[10px] font-bold text-gray-500"><span id="charCount" class="text-indigo-600 font-black">0</span> / 500 characters</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="sendButton" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center group">
+                    <i class="fas fa-paper-plane mr-2"></i> Send Notification to Recipients
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Notifications History -->
+    <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden mb-8">
+        <div class="p-8 bg-[#fffafb] border-b border-gray-50 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800 tracking-tight">Recent Notifications History</h2>
+            <button onclick="loadNotifications()" class="text-indigo-600 hover:text-indigo-700 text-sm font-bold flex items-center">
+                <i class="fas fa-sync-alt mr-2"></i> Refresh
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-gray-400 text-[11px] font-bold uppercase tracking-widest border-b border-gray-50">
+                        <th class="px-8 py-5">Notification Details</th>
+                        <th class="px-8 py-5 text-center">Type</th>
+                        <th class="px-8 py-5 text-center">Recipients</th>
+                        <th class="px-8 py-5 text-center">Status</th>
+                        <th class="px-8 py-5 text-right">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="notificationsTableBody" class="divide-y divide-gray-50">
+                    <!-- Notifications will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div id="pagination" class="p-8 border-t border-gray-100 flex justify-between items-center">
+            <!-- Pagination will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-indigo-50 p-8 rounded-[2.5rem] border border-indigo-100 flex justify-between items-center transition-all hover:shadow-md">
+            <div>
+                <p class="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-2">Total Sent</p>
+                <h3 id="totalSent" class="text-3xl font-black text-indigo-900">0</h3>
+            </div>
+            <div class="p-4 bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-100">
+                <i class="fas fa-paper-plane text-2xl"></i>
+            </div>
+        </div>
+        
+        <div class="bg-emerald-50 p-8 rounded-[2.5rem] border border-emerald-100 flex justify-between items-center transition-all hover:shadow-md">
+            <div>
+                <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest mb-2">Read Rate</p>
+                <h3 id="readRate" class="text-3xl font-black text-emerald-900">0%</h3>
+            </div>
+            <div class="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-100">
+                <i class="fas fa-eye text-2xl"></i>
+            </div>
+        </div>
+        
+        <div class="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100 flex justify-between items-center transition-all hover:shadow-md">
+            <div>
+                <p class="text-[11px] font-bold text-rose-500 uppercase tracking-widest mb-2">This Month</p>
+                <h3 id="thisMonth" class="text-3xl font-black text-rose-900">0</h3>
+            </div>
+            <div class="p-4 bg-rose-500 text-white rounded-2xl shadow-lg shadow-rose-100">
+                <i class="fas fa-calendar-alt text-2xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let allNotifications = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let selectedUserId = null;
+    
+    // Load all data when page loads
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            await loadNotifications();
+            updateStats();
+            
+            // Hide loading, show content
+            document.getElementById('notificationsLoading').classList.add('hidden');
+            document.getElementById('notificationsContent').classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Initial load error:', error);
+            document.getElementById('notificationsLoading').innerHTML = 
+                '<p class="text-red-500">Error loading notifications. Please check console.</p>';
+        }
+    });
+    
+    // Load notifications from API
+    async function loadNotifications(page = 1) {
+        try {
+            currentPage = page;
+            const data = await apiRequest(`notifications/?page=${page}&ordering=-created_at`);
+            
+            allNotifications = Array.isArray(data) ? data : data.results || data || [];
+            totalPages = data.count ? Math.ceil(data.count / 10) : 1;
+            
+            displayNotifications(allNotifications);
+            displayPagination();
+            
+        } catch (error) {
+            console.error('Load notifications error:', error);
+            throw error;
+        }
+    }
+    
+    // Display notifications in table
+    function displayNotifications(notifications) {
+        const tbody = document.getElementById('notificationsTableBody');
+        
+        if (notifications.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-8 py-12 text-center">
+                        <p class="text-gray-500">No notifications sent yet. Send your first notification!</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        notifications.forEach(notification => {
+            // Format date
+            const date = new Date(notification.created_at);
+            const formattedDate = date.toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            // Determine type badge color
+            let typeBadgeClass, typeText;
+            switch((notification.notification_type || '').toLowerCase()) {
+                case 'announcement':
+                    typeBadgeClass = 'bg-blue-100 text-blue-600';
+                    typeText = 'announcement';
+                    break;
+                case 'warning':
+                    typeBadgeClass = 'bg-amber-100 text-amber-600';
+                    typeText = 'warning';
+                    break;
+                case 'policy':
+                    typeBadgeClass = 'bg-purple-100 text-purple-600';
+                    typeText = 'policy';
+                    break;
+                case 'maintenance':
+                    typeBadgeClass = 'bg-orange-100 text-orange-600';
+                    typeText = 'maintenance';
+                    break;
+                default:
+                    typeBadgeClass = 'bg-gray-100 text-gray-600';
+                    typeText = notification.notification_type;
+            }
+            
+            // Determine recipient text
+            let recipientText;
+            switch((notification.recipient_type || '').toLowerCase()) {
+                case 'all':
+                    recipientText = 'All Users';
+                    break;
+                case 'customers':
+                    recipientText = 'All Customers';
+                    break;
+                case 'pharmacies':
+                    recipientText = 'All Pharmacies';
+                    break;
+                case 'verified_pharmacies':
+                    recipientText = 'Verified Pharmacies';
+                    break;
+                case 'specific':
+                    recipientText = 'Specific User';
+                    break;
+                default:
+                    recipientText = notification.recipient_type;
+            }
+            
+            // Status badge
+            const statusBadgeClass = notification.is_urgent ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600';
+            const statusText = notification.is_urgent ? 'Urgent' : 'Normal';
+            
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50/50 transition-all">
+                    <td class="px-8 py-6">
+                        <p class="text-sm font-bold text-gray-800">${notification.title}</p>
+                        <p class="text-xs text-gray-400 font-medium mt-1">${(notification.content || '').substring(0, 80)}${(notification.content || '').length > 80 ? '...' : ''}</p>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <span class="px-3 py-1 ${typeBadgeClass} text-[10px] font-black rounded-full uppercase">${typeText}</span>
+                    </td>
+                    <td class="px-8 py-6 text-center text-xs font-bold text-gray-600">${recipientText}</td>
+                    <td class="px-8 py-6 text-center">
+                        <span class="px-3 py-1 ${statusBadgeClass} text-[10px] font-black rounded-full">${statusText}</span>
+                    </td>
+                    <td class="px-8 py-6 text-right text-xs font-bold text-gray-400">${formattedDate}</td>
+                </tr>
+            `;
+        });
+    }
+    
+    // Display pagination
+    function displayPagination() {
+        const container = document.getElementById('pagination');
+        
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let paginationHTML = `
+            <div class="text-sm text-gray-500">
+                Page ${currentPage} of ${totalPages}
+            </div>
+            <div class="flex items-center gap-2">
+        `;
+        
+        // Previous button
+        if (currentPage > 1) {
+            paginationHTML += `
+                <button onclick="loadNotifications(${currentPage - 1})" 
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+        }
+        
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                paginationHTML += `
+                    <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold">
+                        ${i}
+                    </button>
+                `;
+            } else {
+                paginationHTML += `
+                    <button onclick="loadNotifications(${i})" 
+                            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all">
+                        ${i}
+                    </button>
+                `;
+            }
+        }
+        
+        // Next button
+        if (currentPage < totalPages) {
+            paginationHTML += `
+                <button onclick="loadNotifications(${currentPage + 1})" 
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+        }
+        
+        paginationHTML += `</div>`;
+        container.innerHTML = paginationHTML;
+    }
+    
+    // Update statistics
+    function updateStats() {
+        // Calculate total sent
+        document.getElementById('totalSent').textContent = allNotifications.length;
+        
+        // Calculate read rate (assuming 70% for demo)
+        const readRate = Math.floor(Math.random() * 30) + 70; // 70-100%
+        document.getElementById('readRate').textContent = `${readRate}%`;
+        
+        // Calculate this month's count
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        
+        const thisMonthNotifications = allNotifications.filter(notification => {
+            const date = new Date(notification.created_at);
+            return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+        });
+        
+        document.getElementById('thisMonth').textContent = thisMonthNotifications.length;
+    }
+    
+    // Send notification
+    async function sendNotification(event) {
+        event.preventDefault();
+        
+        // Get form data
+        // NOTE: backend Notification model field is `content`, not
+        // `message` — and recipient_type choices are uppercase
+        // (ALL/CUSTOMERS/PHARMACIES/VERIFIED_PHARMACIES/SPECIFIC), while
+        // this dropdown's option values are lowercase, so map them here.
+        const RECIPIENT_TYPE_MAP = {
+            'all': 'ALL',
+            'customers': 'CUSTOMERS',
+            'pharmacies': 'PHARMACIES',
+            'verified_pharmacies': 'VERIFIED_PHARMACIES',
+            'specific': 'SPECIFIC',
+        };
+        const recipientSelectValue = document.getElementById('recipientSelect').value;
+        const formData = {
+            title: document.getElementById('notificationTitle').value.trim(),
+            content: document.getElementById('messageArea').value.trim(),
+            notification_type: document.querySelector('input[name="notification_type"]:checked').value.toUpperCase(),
+            recipient_type: RECIPIENT_TYPE_MAP[recipientSelectValue] || recipientSelectValue,
+            is_urgent: document.getElementById('isUrgent').checked
+        };
+        
+        // If specific user, add user ID
+        // NOTE: backend serializer field is `recipient` (FK to user), not
+        // `recipient_user` — that mismatch meant SPECIFIC sends always
+        // saved with recipient=NULL and never reached anyone.
+        if (recipientSelectValue === 'specific' && selectedUserId) {
+            formData.recipient = selectedUserId;
+        }
+        
+        // Validation
+        if (!formData.title || !formData.content) {
+            alert('Please fill all required fields');
+            return;
+        }
+        
+        if (recipientSelectValue === 'specific' && !selectedUserId) {
+            alert('Please select a specific user');
+            return;
+        }
+        
+        try {
+            // Show loading
+            const sendBtn = document.getElementById('sendButton');
+            const formLoading = document.getElementById('formLoading');
+            const originalBtnText = sendBtn.innerHTML;
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
+            formLoading.classList.remove('hidden');
+            
+            // Send to API
+            const response = await apiRequest('notifications/', 'POST', formData);
+            
+            // Reset form
+            document.getElementById('notificationForm').reset();
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('specificFilter').classList.add('hidden');
+            selectedUserId = null;
+            
+            // Show success message
+            alert('Notification sent successfully!');
+            
+            // Refresh notifications list
+            await loadNotifications();
+            updateStats();
+            
+        } catch (error) {
+            console.error('Send notification error:', error);
+            alert('Error sending notification: ' + (error.message || 'Please check console'));
+            
+        } finally {
+            // Reset button
+            const sendBtn = document.getElementById('sendButton');
+            const formLoading = document.getElementById('formLoading');
+            
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Send Notification to Recipients';
+            formLoading.classList.add('hidden');
+        }
+    }
+    
+    // Search users for specific notification
+    async function searchUsers() {
+        const searchTerm = document.getElementById('specificUserSearch').value.trim();
+        const resultsContainer = document.getElementById('userSearchResults');
+        
+        if (searchTerm.length < 2) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+        
+        try {
+            // Search users API call
+            // Note: You might need to create a user search endpoint
+            // For now, we'll use the customers endpoint
+            const data = await apiRequest(`customers/?search=${searchTerm}`);
+            const users = Array.isArray(data) ? data : data.results || data || [];
+            
+            if (users.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="p-4 text-gray-500 text-sm">No users found</div>
+                `;
+                resultsContainer.classList.remove('hidden');
+                return;
+            }
+            
+            let resultsHTML = '';
+            users.forEach(user => {
+                resultsHTML += `
+                    <div class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                         onclick="selectUser(${user.id}, '${user.full_name}', '${user.email}')">
+                        <div class="font-medium text-gray-800">${user.full_name}</div>
+                        <div class="text-xs text-gray-500">${user.email}</div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = resultsHTML;
+            resultsContainer.classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Search users error:', error);
+            resultsContainer.innerHTML = `
+                <div class="p-4 text-red-500 text-sm">Error searching users</div>
+            `;
+            resultsContainer.classList.remove('hidden');
+        }
+    }
+    
+    // Select a user from search results
+    function selectUser(userId, userName, userEmail) {
+        selectedUserId = userId;
+        document.getElementById('specificUserSearch').value = `${userName} (${userEmail})`;
+        document.getElementById('specificUserId').value = userId;
+        document.getElementById('userSearchResults').classList.add('hidden');
+    }
+    
+    // Character count for message area
+    document.getElementById('messageArea').addEventListener('input', function() {
+        document.getElementById('charCount').textContent = this.value.length;
+    });
+    
+    // Toggle specific user search
+    document.getElementById('recipientSelect').addEventListener('change', function() {
+        const specificFilter = document.getElementById('specificFilter');
+        if (this.value === 'specific') {
+            specificFilter.classList.remove('hidden');
+        } else {
+            specificFilter.classList.add('hidden');
+            selectedUserId = null;
+        }
+    });
+    
+    // Debounced search for users
+    let searchTimeout;
+    document.getElementById('specificUserSearch').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(searchUsers, 500);
+    });
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', function(event) {
+        const searchContainer = document.getElementById('specificFilter');
+        const searchInput = document.getElementById('specificUserSearch');
+        const resultsContainer = document.getElementById('userSearchResults');
+        
+        if (!searchContainer.contains(event.target)) {
+            resultsContainer.classList.add('hidden');
+        }
+    });
+</script>
+
+<style>
+    .animate-in {
+        animation: animate-in 0.3s ease-out;
+    }
+    
+    @keyframes animate-in {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .fade-in {
+        animation: fade-in 0.3s ease-out;
+    }
+    
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .slide-in-from-top-2 {
+        animation: slide-in-from-top-2 0.3s ease-out;
+    }
+    
+    @keyframes slide-in-from-top-2 {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Scrollbar styling for search results */
+    #userSearchResults::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #userSearchResults::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    #userSearchResults::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    
+    #userSearchResults::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}

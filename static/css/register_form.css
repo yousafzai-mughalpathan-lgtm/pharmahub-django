@@ -1,0 +1,13 @@
+ body {
+            font-family: 'Inter', sans-serif;
+        }
+      
+        /* Custom styles for the reCAPTCHA box look */
+        .recaptcha-box {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }

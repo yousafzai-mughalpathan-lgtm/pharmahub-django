@@ -1,0 +1,66 @@
+{% extends 'pharmacy/base.html' %}
+{% block title %}Privacy Policy - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 dark:bg-gray-900 min-h-screen py-16 px-4 sm:px-6 lg:px-8 font-sans">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl tracking-tight">
+                Privacy <span class="text-teal-600">Policy</span>
+            </h1>
+            <p class="mt-6 text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl mx-auto">
+                At PharmaHub, we are committed to protecting your privacy and ensuring the highest level of security for your medical records and personal data.
+            </p>
+        </div>
+
+        <div class="space-y-8">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                    <span class="w-2 h-8 bg-teal-500 rounded-full mr-3"></span>
+                    Information Collection & Use
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    We collect essential information to process your healthcare orders, including your name, contact details, and delivery address. This data is collected during account registration and the checkout process to ensure a seamless connection between customers and local pharmacies.
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                    <span class="w-2 h-8 bg-teal-500 rounded-full mr-3"></span>
+                    Prescription & Health Data
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    As a dedicated healthcare platform, we treat your prescriptions with maximum confidentiality. Uploaded documents are encrypted and only accessible to authorized licensed pharmacists for order verification purposes.
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                    <span class="w-2 h-8 bg-teal-500 rounded-full mr-3"></span>
+                    Data Sharing Disclosure
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    PharmaHub does not sell, trade, or rent your personal identification information to third parties. We only share necessary delivery details with our partner pharmacies to facilitate your medicine fulfillment.
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                    <span class="w-2 h-8 bg-teal-500 rounded-full mr-3"></span>
+                    Data Security Protocols
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    We implement industry-standard security measures, including SSL encryption and secure database management, to protect your sensitive information from unauthorized access or disclosure.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center text-gray-500 dark:text-gray-400">
+            <p>If you have any questions regarding this Privacy Policy, please contact us at:</p>
+            <a href="{% url 'pages:contact' %}" class="inline-block mt-4 px-6 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-all shadow-md">
+                Contact Support Team
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

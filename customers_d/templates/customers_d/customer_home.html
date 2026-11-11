@@ -1,0 +1,372 @@
+{% extends 'customers_d/customer_base.html' %}
+{% load static %}
+{% block title %}Home - PharmaHub{% endblock %}
+{% block content %}
+
+<!-- Hero Section -->
+<section class="relative min-h-screen flex items-center bg-gray-50 dark:bg-gray-900 overflow-hidden">
+  <div class="absolute inset-0">
+    <img src="{% static 'pharmacy/images/p1.png' %}" alt="Background" class="w-full h-full object-cover blur-sm" />
+    <div class="absolute inset-0 bg-white/40 dark:bg-black/50"></div>
+  </div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+    <div>
+      <h1 class="text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-snug">
+        Your Health, <span class="text-teal-600">Delivered</span>
+      </h1>
+      <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+        Find medicines from verified pharmacies near you. Fast delivery and expert care.
+      </p>
+
+      <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl p-3 flex items-center space-x-3">
+        <i class="ri-search-line text-gray-400 dark:text-gray-500 text-xl"></i>
+        <input type="text" placeholder="Search medicines, brands, or condition"
+          class="flex-1 focus:outline-none text-gray-700 dark:text-gray-200 dark:bg-gray-800" />
+        <button class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg">Search</button>
+      </div>
+
+      <div class="mt-6 flex space-x-4">
+        <a href="#" class="bg-orange-500 text-white px-5 py-3 rounded-lg hover:bg-orange-600">Upload Prescription</a>
+        <a href="{% url 'pages:medicine' %}" class="bg-teal-600 text-white px-5 py-3 rounded-lg hover:bg-teal-800">Browse Medicines</a>
+      </div>
+    </div>
+
+    <div class="flex justify-center">
+      <img src="{% static 'pharmacy/images/s1.jpeg' %}" alt="Doctor" class="w-3/4 rounded-2xl shadow-lg" />
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose Section -->
+<section class="py-16 bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Why Choose PharmaHub?</h2>
+    <p class="mt-2 text-gray-600 dark:text-gray-400">We make healthcare accessible, affordable, and reliable.</p>
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6">
+        <i class="ri-capsule-fill text-teal-600 text-3xl"></i>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Verified Medicines</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Licensed pharmacies only.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6">
+        <i class="ri-truck-line text-teal-600 text-3xl"></i>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Fast Delivery</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">30 minutes to 2 hours delivery.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6">
+        <i class="ri-shield-check-line text-teal-600 text-3xl"></i>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Secure & Safe</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Your data stays protected.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- How It Works -->
+<section class="bg-teal-50 dark:bg-gray-800/60 py-16">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+    <h2 id="howTitle" class="text-3xl font-bold text-gray-900 dark:text-gray-100 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      How PharmaHub Works
+    </h2>
+    <p id="howText" class="mt-2 text-gray-600 dark:text-gray-400 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      Get your medicines delivered in just 4 simple steps. Safe, secure, and convenient healthcare at your fingertips.
+    </p>
+    
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <!-- Step 1 -->
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <img src="{% static 'pharmacy/images/phone1.jpg' %}" class="mx-auto rounded-lg" />
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Search Medicine</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Search for your required medicines or upload prescription to find available options.</p>
+      </div>
+      <!-- Step 2 -->
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <img src="{% static 'pharmacy/images/pharm.jpg' %}" class="mx-auto rounded-lg" />
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Choose Pharmacy</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Select from verified pharmacies near you based on price, ratings, and delivery time.</p>
+      </div>
+      <!-- Step 3 -->
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <img src="{% static 'pharmacy/images/cart.jpg' %}" class="mx-auto rounded-lg" />
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Place Order</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Add medicines to cart, apply discounts, and choose your preferred payment method.</p>
+      </div>
+      <!-- Step 4 -->
+      <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6 opacity-0 -translate-x-10 transition-all duration-1000 ease-out howStep">
+        <img src="{% static 'pharmacy/images/delivery.jpg' %}" class="mx-auto rounded-lg" />
+        <h3 class="mt-4 font-semibold text-gray-900 dark:text-gray-100 text-lg">Fast Delivery</h3>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">Track your order in real-time and receive medicines at your doorstep safely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Famous Medicines Section -->
+<section class="py-16 bg-gray-50 dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center mb-10">
+      Famous Medicines
+    </h2>
+
+    <!-- Swiper Container -->
+    <div class="swiper mySwiper">
+      <div class="swiper-wrapper">
+        
+        <!-- Medicine Slide 1 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <img src="{% static 'pharmacy/images/s1 (4).jpeg' %}" class="w-full h-49  object-contain mx-auto" alt="Panadol">
+          <div class="p-4 text-center">
+            <h3 class="mt-2 font-semibold text-gray-900 dark:text-gray-100 text-lg">Vitamin D33</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Fever & Pain Relief</p>
+          </div>
+        </div>
+
+        <!-- Medicine Slide 2 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <img src="{% static 'pharmacy/images/cet1.jpeg' %}" class="w-full h-49  object-contain mx-auto" alt="Cetirizn">
+          <div class="p-4 text-center">
+            <h3 class="mt-2 font-semibold text-gray-900 dark:text-gray-100 text-lg">Cetirizn</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Broad Spectrum Antibiotic</p>
+          </div>
+        </div>
+
+        <!-- Medicine Slide 3 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <img src="{% static 'pharmacy/images/s3.jpeg' %}" class="w-full h-49  object-contain mx-auto" alt="Ibuifen">
+          <div class="p-4 text-center">
+            <h3 class="mt-2 font-semibold text-gray-900 dark:text-gray-100 text-lg">Ibuifen</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Pain & Inflammation</p>
+          </div>
+        </div>
+
+        <!-- Medicine Slide 4 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <img src="{% static 'pharmacy/images/i3.jpeg' %}" class="w-full h-49  object-contain mx-auto" alt="Omeprazoole">
+          <div class="p-4 text-center">
+            <h3 class="mt-2 font-semibold text-gray-900 dark:text-gray-100 text-lg">Omeprazoole</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Headache & Fever Relief</p>
+          </div>
+        </div>
+
+        <!-- Medicine Slide 5 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <img src="{% static 'pharmacy/images/i2.jpeg' %}" class="w-full h-49  object-contain mx-auto" alt="Amoxiicillin">
+          <div class="p-4 text-center">
+            <h3 class="mt-2 font-semibold text-gray-900 dark:text-gray-100 text-lg">Amoxiicillin</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Stomach Infections</p>
+          </div>
+        </div>
+
+        <!-- Medicine Slide 6 -->
+        <div class="swiper-slide bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <img src="{% static 'pharmacy/images/i1.jpeg' %}" class="w-full h-49  object-contain mx-auto" alt="Metformin">
+          <div class="p-4 text-center">
+            <h3 class="mt-2 font-semibold text-gray-900 dark:text-gray-100 text-lg">Metformin</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Kids Fever & Pain Relief</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+<!--trusted section -->
+<section class="bg-teal-600 dark:bg-gray-900 py-16 text-white">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+    <h2 id="trustTitle" class="text-3xl font-bold opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      Trusted by Thousands
+    </h2>
+    <p id="trustText" class="mt-2 opacity-0 translate-y-6 transition-all duration-1000 ease-out">
+      Join our growing community of satisfied customers who trust PharmaHub for their healthcare needs.
+    </p>
+    
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="10000">0</h3>
+        <p class="mt-2">Happy Customers</p>
+      </div>
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="500">0</h3>
+        <p class="mt-2">Verified Pharmacies</p>
+      </div>
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="50000">0</h3>
+        <p class="mt-2">Medicines Available</p>
+      </div>
+      <div class="opacity-0 translate-y-6 transition-all duration-1000 ease-out trustItem">
+        <h3 class="text-4xl font-bold counter" data-target="98">0</h3>
+        <p class="mt-2">Customer Satisfaction</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-orange-500 dark:bg-gray-950 py-16 text-center text-white relative">
+  <div class="max-w-4xl mx-auto px-6 lg:px-8">
+    <h2 id="ctaTitle" class="text-3xl font-bold transition-all duration-1000 ease-out">
+      Ready to Get Started?
+    </h2>
+    <p id="ctaText" class="mt-2 transition-all duration-1000 ease-out">
+      Join thousands of customers and pharmacy owners who trust PharmaHub.
+    </p>
+    <div id="ctaBtns" class="mt-6 flex flex-wrap justify-center gap-4 transition-all duration-1000 ease-out">
+      <a href="#" class="bg-slate-50 text-orange-700 hover:bg-orange-50 dark:bg-slate-100 dark:text-orange-700 dark:hover:bg-slate-200 px-5 py-3 rounded-lg font-semibold">Register as Customer</a>
+      <a href="#" class="bg-black/20 hover:bg-black/30 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100 text-white px-5 py-3 rounded-lg font-semibold">Register Your Pharmacy</a>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto text-center">
+      <h2 class="text-3xl md:text-4xl font-extrabold text-teal-700 dark:text-teal-300 mb-4">
+        Watch How PharmaHub Works!
+      </h2>
+      <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+        View our quick video guide and see how easy it is to order your essential medicines in just 60 seconds.
+      </p>
+    </div>
+
+    <div class="max-w-5xl mx-auto shadow-2xl rounded-xl overflow-hidden border-4 border-teal-500 hover:border-teal-600 transition duration-300 bg-black">
+      <div class="relative" style="padding-bottom:56.25%; height:0;">
+        <iframe
+          class="absolute top-0 left-0 w-full h-full"
+          src="https://www.youtube.com/embed/YOUR_DEMO_VIDEO_ID"
+          title="PharmaHub Demo Video - Simple Guide"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+
+    <div class="mt-10 text-center">
+      <a href="#" class="inline-flex items-center bg-yellow-400 hover:bg-yellow-300 text-teal-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3.707 5.707a1 1 0 00-1.414-1.414L8 10.586l.707.707a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L10 10.586l-2.293-2.293a1 1 0 00-1.414 1.414L8 12.414l-2.293-2.293a1 1 0 00-1.414 1.414L8 12.414z" clip-rule="evenodd"></path></svg>
+        Start Using PharmaHub Now!
+      </a>
+    </div>
+  </div>
+</section>
+   
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  const ctaTitleEl = document.querySelector("#ctaTitle");
+  const ctaObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelector("#ctaTitle").classList.remove("opacity-0","translate-y-6");
+        document.querySelector("#ctaText").classList.remove("opacity-0","translate-y-6");
+        document.querySelector("#ctaBtns").classList.remove("opacity-0","scale-90");
+        document.querySelectorAll(".ctaItem").forEach((el, i) => {
+          setTimeout(() => el.classList.remove("opacity-0","scale-90"), i * 300);
+        });
+        ctaObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  if (ctaTitleEl) ctaObserver.observe(ctaTitleEl);
+</script>
+
+<script>
+  const trustTitleEl = document.querySelector("#trustTitle");
+  const trustObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll("#trustTitle, #trustText, .trustItem").forEach((el, i) => {
+          setTimeout(() => el.classList.remove("opacity-0", "translate-y-6"), i * 200);
+        });
+        document.querySelectorAll(".counter").forEach(counter => {
+          const target = +counter.dataset.target;
+          let count = 0;
+          const step = Math.ceil(target / 100);
+          const update = () => {
+            count += step;
+            if (count > target) count = target;
+            counter.textContent = count.toLocaleString() + (target >= 1000 ? "+" : "%");
+            if (count < target) requestAnimationFrame(update);
+          };
+          update();
+        });
+        trustObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  if (trustTitleEl) trustObserver.observe(trustTitleEl);
+</script>
+
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const left = document.getElementById("leftContent");
+    const right = document.getElementById("rightContent");
+    if (left && right) {
+      setTimeout(() => {
+        left.classList.remove("opacity-0", "-translate-x-10");
+        right.classList.remove("opacity-0", "translate-x-10");
+      }, 200);
+    }
+  });
+</script>
+
+<script>
+  const whyTitleEl = document.querySelector("#whyTitle");
+  const whyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelector("#whyTitle").classList.remove("opacity-0", "translate-y-6");
+        document.querySelector("#whyText").classList.remove("opacity-0", "translate-y-6");
+        document.querySelectorAll(".cardAnim").forEach((el, i) => {
+          setTimeout(() => el.classList.remove("opacity-0", "translate-y-10"), i * 300);
+        });
+        whyObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  if (whyTitleEl) whyObserver.observe(whyTitleEl);
+</script>
+
+<script>
+  const howTitleEl = document.querySelector("#howTitle");
+  const howObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelector("#howTitle").classList.remove("opacity-0", "translate-y-6");
+        document.querySelector("#howText").classList.remove("opacity-0", "translate-y-6");
+        document.querySelectorAll(".howStep").forEach((step, i) => {
+          setTimeout(() => step.classList.remove("opacity-0", "-translate-x-10"), i * 300);
+        });
+        howObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  if (howTitleEl) howObserver.observe(howTitleEl);
+</script>
+
+<script>
+  const footerEl = document.querySelector("#footer");
+  const footerObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll("#footer, .footerItem").forEach((el, i) => {
+          setTimeout(() => el.classList.remove("opacity-0", "translate-y-6"), i * 200);
+        });
+        footerObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.2 });
+  if (footerEl) footerObserver.observe(footerEl);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+<script>
+  var swiper = new Swiper(".mySwiper", {
+    slidesPerView: 3,
+    spaceBetween: 24,
+    loop: true,
+    autoplay: { delay: 1500, disableOnInteraction: false },
+    breakpoints: { 640:{slidesPerView:1},768:{slidesPerView:2},1024:{slidesPerView:3} }
+  });
+</script>
+{% endblock %}

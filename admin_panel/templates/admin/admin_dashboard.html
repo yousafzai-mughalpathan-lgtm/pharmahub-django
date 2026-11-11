@@ -1,0 +1,346 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard | PharmaHub Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm">Complete control and monitoring of PharmaHub platform</p>
+
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-sm">
+            <i class="fas fa-gauge-high"></i>
+        </div>
+        <div>
+            <p class="text-sm font-semibold text-teal-900">Admin Control Center</p>
+            <p id="dashboardLastUpdated" class="text-xs text-gray-500">Last updated: not yet</p>
+        </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'admin_panel:pharmacy_verification' %}" class="px-4 py-2 text-xs font-bold rounded-xl bg-teal-600 text-white shadow-sm hover:bg-teal-700 transition">Review Pharmacies</a>
+        <a href="{% url 'admin_panel:orders_monitoring' %}" class="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition">Track Orders</a>
+        <a href="{% url 'admin_panel:notifications' %}" class="px-4 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white shadow-sm hover:bg-orange-600 transition">Send Alert</a>
+        <button id="dashboardRefresh" type="button" class="px-4 py-2 text-xs font-bold rounded-xl bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition">Refresh</button>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div class="p-4 rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Verification Queue</p>
+        <div class="flex items-center justify-between mt-2">
+            <p class="text-2xl font-extrabold text-gray-900" id="queueCount">{{ pending_pharmacies|default:0 }}</p>
+            <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg">Pending</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Pharmacies and pharmacists waiting approval.</p>
+    </div>
+
+    <div class="p-4 rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Fulfillment Speed</p>
+        <div class="flex items-center justify-between mt-2">
+            <p class="text-2xl font-extrabold text-gray-900" id="avgFulfillment">0</p>
+            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">Avg hours</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Target under 24 hours.</p>
+    </div>
+
+    <div class="p-4 rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Risk Flags</p>
+        <div class="flex items-center justify-between mt-2">
+            <p class="text-2xl font-extrabold text-gray-900" id="riskFlags">0</p>
+            <span class="text-xs font-bold text-yellow-600 bg-yellow-50 px-2 py-1 rounded-lg">Watch</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Suspicious prescriptions or accounts.</p>
+    </div>
+
+    <div class="p-4 rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Support Load</p>
+        <div class="flex items-center justify-between mt-2">
+            <p class="text-2xl font-extrabold text-gray-900" id="supportTickets">0</p>
+            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">Open</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Customer support requests today.</p>
+    </div>
+</div>
+<div id="loadingIndicator" class="hidden text-center py-4">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+    <p class="mt-2 text-gray-500">Loading dashboard data...</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+    <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden group">
+        <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-blue-600 text-white rounded-xl shadow-md">
+                <i class="fas fa-hospital text-lg"></i>
+            </div>
+            <span class="text-blue-600 text-xs font-bold bg-blue-100 px-2 py-1 rounded-lg">+12%</span>
+        </div>
+        <p class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Total Pharmacies</p>
+        <h3 id="totalPharmacies" class="text-3xl font-extrabold text-blue-900">{{ total_pharmacies|default:0 }}</h3>
+    </div>
+
+    <div class="bg-green-50 p-5 rounded-2xl border border-green-100 shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-green-600 text-white rounded-xl shadow-md">
+                <i class="fas fa-check-shield text-lg"></i>
+            </div>
+            <span class="text-green-600 text-xs font-bold bg-green-100 px-2 py-1 rounded-lg">+8%</span>
+        </div>
+        <p class="text-[11px] font-bold text-green-400 uppercase tracking-wider">Verified Pharmacies</p>
+       <h3 id="verifiedPharmacies" class="text-3xl font-extrabold text-green-900">{{ verified_pharmacies|default:0 }}</h3>
+    </div>
+
+    <div class="bg-red-50 p-5 rounded-2xl border border-red-100 shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-red-500 text-white rounded-xl shadow-md">
+                <i class="fas fa-clock text-lg"></i>
+            </div>
+            <span class="text-red-600 text-xs font-bold bg-red-100 px-2 py-1 rounded-lg">-2</span>
+        </div>
+        <p class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Pending Approvals</p>
+        <h3 id="pendingPharmacies" class="text-3xl font-extrabold text-red-900">{{ pending_pharmacies|default:0 }}</h3>
+    </div>
+
+    <div class="bg-purple-50 p-5 rounded-2xl border border-purple-100 shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-purple-600 text-white rounded-xl shadow-md">
+                <i class="fas fa-users text-lg"></i>
+            </div>
+            <span class="text-purple-600 text-xs font-bold bg-purple-100 px-2 py-1 rounded-lg">+234</span>
+        </div>
+        <p class="text-[11px] font-bold text-purple-400 uppercase tracking-wider">Total Customers</p>
+        <h3 id="totalCustomers" class="text-3xl font-extrabold text-purple-900">{{ total_customers|default:0 }}</h3>
+    </div>
+
+    <div class="bg-orange-50 p-5 rounded-2xl border border-orange-100 shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-orange-500 text-white rounded-xl shadow-md">
+                <i class="fas fa-shopping-bag text-lg"></i>
+            </div>
+            <span class="text-orange-600 text-xs font-bold bg-orange-100 px-2 py-1 rounded-lg">+156</span>
+        </div>
+        <p class="text-[11px] font-bold text-orange-400 uppercase tracking-wider">Total Orders</p>
+       <h3 id="totalOrders" class="text-3xl font-extrabold text-orange-900">{{ total_orders|default:0 }}</h3>
+    </div>
+
+    <div class="bg-teal-50 p-5 rounded-2xl border border-teal-100 shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-teal-600 text-white rounded-xl shadow-md">
+                <i class="fas fa-wallet text-lg"></i>
+            </div>
+            <span class="text-teal-600 text-xs font-bold bg-teal-100 px-2 py-1 rounded-lg">+18%</span>
+        </div>
+        <p class="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Platform Revenue</p>
+        <h3 id="totalRevenue" class="text-3xl font-extrabold text-teal-900">Rs {{ total_revenue|default:0|floatformat:0 }}</h3>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-teal-900 flex items-center gap-2">
+                <i class="fas fa-chart-line text-teal-500"></i> Monthly Sales Overview
+            </h3>
+            <select class="bg-gray-50 border-none text-xs font-bold text-gray-500 rounded-lg px-3 py-1.5 outline-none">
+                <option>Year 2025</option>
+                <option>Year 2024</option>
+            </select>
+        </div>
+        <div class="h-[300px]">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <div id="cityDistribution" class="space-y-5">
+    <div class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <p class="mt-2 text-gray-500">Loading city data...</p>
+    </div>
+</div>
+
+    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <h3 class="font-bold text-teal-900 flex items-center gap-2 mb-6">
+            <i class="fas fa-bell-exclamation text-red-500"></i> System Alerts
+        </h3>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100 group hover:bg-red-100 transition-all cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-200">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <p class="text-sm font-bold text-red-900">5 pharmacies pending verification</p>
+                </div>
+                <span class="text-xs font-bold text-red-500 underline">View</span>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-2xl border border-yellow-100 group hover:bg-yellow-100 transition-all cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-yellow-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-yellow-200">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <p class="text-sm font-bold text-yellow-900">3 suspicious prescription uploads</p>
+                </div>
+                <span class="text-xs font-bold text-yellow-500 underline">View</span>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-2xl border border-blue-100 group hover:bg-blue-100 transition-all cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <p class="text-sm font-bold text-blue-900">12 new pharmacy registrations today</p>
+                </div>
+                <span class="text-xs font-bold text-blue-500 underline">View</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <h3 class="font-bold text-teal-900 flex items-center gap-2 mb-6">
+            <i class="fas fa-history text-purple-500"></i> Recent Activity
+        </h3>
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-800">Pharmacy Approved</p>
+                        <p class="text-xs text-gray-500">MedCare Pharmacy - Mumbai</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold text-gray-400">5 mins ago</span>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-800">New Registration</p>
+                        <p class="text-xs text-gray-500">HealthPlus Pharmacy - Delhi</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold text-gray-400">12 mins ago</span>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-800">Order Completed</p>
+                        <p class="text-xs text-gray-500">Order #ORD-8921 - Rs 2,450</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold text-gray-400">23 mins ago</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+    // Sales Overview Chart Initialization
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    // ... existing chart code ...
+    
+    // NEW: Dashboard Data Load Function
+    async function loadDashboardData() {
+        try {
+            // Show loading
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            
+            // API se data fetch karein
+            const data = await apiRequest('dashboard/stats/');
+            
+            // Update cards
+            document.getElementById('totalPharmacies').textContent = data.pharmacies.total;
+            document.getElementById('verifiedPharmacies').textContent = data.pharmacies.verified;
+            document.getElementById('pendingPharmacies').textContent = data.pharmacies.pending;
+            document.getElementById('totalCustomers').textContent = data.customers.total;
+            document.getElementById('totalOrders').textContent = data.orders.total;
+            document.getElementById('totalRevenue').textContent = 'Rs ' + data.revenue.total.toLocaleString();
+
+            // Secondary metrics (fallback to 0 if not provided)
+            document.getElementById('queueCount').textContent = (data.queue && data.queue.total) || data.pharmacies.pending || 0;
+            document.getElementById('avgFulfillment').textContent = (data.fulfillment && data.fulfillment.avg_hours) || 0;
+            document.getElementById('riskFlags').textContent = (data.risk && data.risk.flags) || 0;
+            document.getElementById('supportTickets').textContent = (data.support && data.support.open) || 0;
+            
+            // Update city distribution
+            updateCityDistribution(data.city_distribution);
+            setLastUpdated('just now');
+            
+            // Hide loading
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            
+        } catch (error) {
+            console.error('Dashboard load error:', error);
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            setLastUpdated('failed');
+        }
+    }
+    
+    // City distribution update function
+    function updateCityDistribution(cities) {
+        const container = document.getElementById('cityDistribution');
+        container.innerHTML = '';
+
+        if (!cities || !cities.length) {
+            container.innerHTML = '<p class="text-sm text-gray-500">No city data available.</p>';
+            return;
+        }
+        
+        cities.forEach(city => {
+            const percentage = (city.count / cities[0].count) * 100;
+            const cityName = city.city || city.location || 'Unknown';
+            const colorClass = getColorForCity(cityName);
+            
+            container.innerHTML += `
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs font-bold uppercase tracking-tighter">
+                        <span class="text-gray-600">${cityName}</span>
+                        <span class="text-teal-700">${percentage.toFixed(0)}%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div class="${colorClass} h-full rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    function getColorForCity(city) {
+        const colors = {
+            'Mumbai': 'bg-blue-500',
+            'Delhi': 'bg-green-500',
+            'Bangalore': 'bg-purple-500',
+            'Hyderabad': 'bg-orange-500',
+            'default': 'bg-teal-500'
+        };
+        return colors[city] || colors.default;
+    }
+
+    function setLastUpdated(label) {
+        const el = document.getElementById('dashboardLastUpdated');
+        if (!el) return;
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        el.textContent = 'Last updated: ' + label + ' at ' + time;
+    }
+    
+    // Page load par data load karein
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardData();
+        const refreshBtn = document.getElementById('dashboardRefresh');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadDashboardData);
+        }
+    });
+</script>
+{% endblock %}

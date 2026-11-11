@@ -1,0 +1,156 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Medicines - PharmaHub{% endblock %}
+
+{% block content %}
+<!-- TEST AMNA 123 -->
+<style>
+  .dark .medicine-page .medicine-hero::before { content: ""; position: absolute; inset: 0; background: rgba(2, 6, 23, 0.45); }
+  .dark .medicine-page .medicine-search { background-color: #1f2937 !important; border: 1px solid #374151 !important; }
+  .dark .medicine-page .medicine-search input { background-color: #111827 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
+  .dark .medicine-page .medicine-search input::placeholder { color: #9ca3af !important; }
+</style>
+
+<div class="medicine-page">
+<section class="medicine-hero relative bg-cover bg-center py-16" style="background-image: url('{% static 'pharmacy/images/pharm.jpg' %}');">
+    <div class="absolute inset-0 bg-teal-700 bg-opacity-70"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-extrabold text-white mb-4 drop-shadow-lg">Browse Medicines</h1>
+        <p class="text-xl text-teal-100 mb-8">Find quality medicines from verified pharmacies</p>
+        
+        <div class="medicine-search max-w-2xl mx-auto bg-white rounded-xl p-4 shadow-lg border border-transparent">
+            <form class="flex flex-col sm:flex-row gap-4" id="searchForm">
+                <div class="flex-1 relative">
+                    <i class="ri-search-line absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+                    <input type="text" id="searchInput" autocomplete="off" placeholder="Search by name, brand..." class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm" />
+                </div>
+                <button type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium shadow transition-colors">Search</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <aside class="lg:w-1/4">
+            <div class="bg-white rounded-xl p-6 sticky top-24 shadow-md border border-gray-100">
+                <h3 class="font-semibold text-gray-900 mb-4 text-xl border-b pb-2">Filters</h3>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-3">Category</label>
+                        <div class="space-y-2" id="categoryFilters">
+                            <label class="flex items-center cursor-pointer"><input type="radio" name="category" checked value="all" class="w-4 h-4 text-teal-600"> <span class="ml-2">All Categories</span></label>
+                            {% for cat in categories %}
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="category" value="{{ cat }}" class="w-4 h-4 text-teal-600"> <span class="ml-2">{{ cat }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="lg:w-3/4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800" id="medicineCount">Loading...</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8" id="medicineGrid"></div>
+        </section>
+    </div>
+</main>
+</div>
+{% endblock %}
+
+
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const loginSignupUrl = "{% url 'authentication:login_signup' %}";
+        const isAuthenticated = "{{ request.user.is_authenticated|yesno:'true,false' }}" === 'true';
+
+        const medicines = [
+            {% for med in medicines %}
+            {
+                id: "{{ med.id }}",
+                name: "{{ med.name|escapejs }}",
+                brand: "{{ med.brand|escapejs }}",
+                category: "{{ med.category|escapejs }}",
+                price: Number("{{ med.price|default:'0' }}"),
+                pharmacyName: "{{ med.pharmacy.name|default:'General Pharmacy'|escapejs }}",
+                pharmacyId: "{{ med.pharmacy.id|default:'' }}",
+                image: "{% if med.image %}{{ med.image.url }}{% else %}{% static 'pharmacy/images/p1.png' %}{% endif %}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        function forceRender() {
+            const grid = document.getElementById('medicineGrid');
+            const countHeader = document.getElementById('medicineCount');
+            if (!grid) { setTimeout(forceRender, 50); return; }
+
+            if (medicines.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 font-medium">No medicines found in database.</div>`;
+                if (countHeader) countHeader.textContent = `0 medicines found`;
+                return;
+            }
+
+            grid.innerHTML = medicines.map(med => {
+                const safePharmacyName = (med.pharmacyName || "").replace(/'/g, "\\'");
+                const buttonClickAction = !isAuthenticated
+                    ? `alert('Please login to purchase.'); window.location.href='${loginSignupUrl}';`
+                    : `if(confirm('Redirecting to ${safePharmacyName}. Proceed?')) { window.location.href='/pages/pharmacy/shop/${med.pharmacyId}/'; }`;
+
+                return `
+                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col" style="display: flex !important;">
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center border-b border-gray-100 dark:border-gray-800">
+                            <img src="${med.image}" class="w-full h-40 object-contain" alt="${med.name}">
+                        </div>
+                        <div class="p-5 flex-grow">
+                            <div class="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase mb-1 tracking-wider">${med.category}</div>
+                            <h3 class="font-bold text-gray-900 dark:text-white text-lg leading-snug mb-1">${med.name}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Sold by: <span class="font-semibold text-teal-600 dark:text-teal-400">${med.pharmacyName}</span></p>
+                            <div class="flex items-center justify-between mt-auto">
+                                <span class="text-xl font-black text-teal-700 dark:text-teal-400">RS ${med.price}</span>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0 mt-auto">
+                            <button onclick="${buttonClickAction}"
+                                    class="w-full ${isAuthenticated ? 'bg-teal-600 hover:bg-teal-700' : 'bg-gray-500 hover:bg-gray-600'} text-white py-3 rounded-lg font-bold transition-colors shadow-sm">
+                                ${isAuthenticated ? 'View Pharmacy & Buy' : 'Login to Buy'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (countHeader) countHeader.textContent = `${medicines.length} medicines found`;
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.oninput = (e) => {
+                    const val = e.target.value.toLowerCase();
+                    const cards = document.querySelectorAll('#medicineGrid > div');
+                    medicines.forEach((m, idx) => {
+                        const match = m.name.toLowerCase().includes(val) || m.brand.toLowerCase().includes(val);
+                        if (cards[idx]) cards[idx].style.display = match ? 'flex' : 'none';
+                    });
+                };
+            }
+
+            document.querySelectorAll('input[name="category"]').forEach(radio => {
+                radio.onchange = (e) => {
+                    const selectedCat = e.target.value;
+                    const cards = document.querySelectorAll('#medicineGrid > div');
+                    medicines.forEach((m, idx) => {
+                        const match = selectedCat === 'all' || m.category === selectedCat;
+                        if (cards[idx]) cards[idx].style.display = match ? 'flex' : 'none';
+                    });
+                };
+            });
+        }
+
+        forceRender();
+    });
+</script>
+{% endblock %}

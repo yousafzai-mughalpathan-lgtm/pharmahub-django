@@ -1,0 +1,269 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ pharmacy.name }} - Shop Inventory{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<div class="container mx-auto px-4 py-8 max-w-7xl medicine-page">
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8 border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-6">
+            {% if pharmacy.logo %}
+                <img src="{{ pharmacy.logo.url }}" alt="Pharmacy Logo" class="w-24 h-24 rounded-full object-cover border-4 border-teal-50 shadow-inner">
+            {% else %}
+                <div class="w-24 h-24 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-600 dark:text-teal-300 text-3xl font-extrabold shadow-inner">
+                    {{ pharmacy.name|slice:":1" }}
+                </div>
+            {% endif %}
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">{{ pharmacy.name }}</h1>
+                <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-300">
+                    <span class="flex items-center gap-1"><i class="ri-map-pin-line text-teal-600 font-bold"></i> {{ pharmacy.address }}, {{ pharmacy.city }}</span>
+                    <span class="flex items-center gap-1"><i class="ri-phone-line text-teal-600 font-bold"></i> {{ pharmacy.phone }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 px-5 py-3 rounded-xl text-center min-w-[150px]">
+            <span class="text-sm font-extrabold flex items-center justify-center gap-1">
+                <span class="h-2 w-2 rounded-full bg-teal-500 inline-block animate-pulse"></span> Active Partner
+            </span>
+        </div>
+    </div>
+
+    <div class="bg-amber-50 dark:bg-amber-950 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm mb-8">
+        <h4 class="text-sm font-bold text-amber-800 dark:text-amber-200">Important Order Policy:</h4>
+        <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">
+            To guarantee coordinated shipping rates, you can only checkout items from **one single pharmacy at a time**.
+        </p>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 mb-8 border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="relative w-full sm:max-w-md">
+            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+            <input type="text" id="shopSearchInput" 
+                   class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-teal-500 transition" 
+                   placeholder="Type to search medicines instantly...">
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+        <i class="ri-capsule-line text-teal-600 text-2xl"></i> Available Stock
+    </h2>
+
+    {% if medicines %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="medicineGrid">
+            {% for med in medicines %}
+                <div class="medicine-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition duration-200 flex flex-col justify-between"
+                     data-name="{{ med.name|lower }}" 
+                     data-brand="{{ med.brand|lower }}" 
+                     data-category="{{ med.category|lower }}">
+                    
+                    <div>
+                        <div class="h-44 bg-gray-50 dark:bg-gray-900 relative border-b border-gray-100 dark:border-gray-700">
+                            {% if med.image %}
+                                <img src="{{ med.image.url }}" alt="{{ med.name }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 p-4">
+                                    <i class="ri-pills-2-fill text-5xl mb-2 text-teal-100"></i>
+                                    <span class="text-xs font-semibold">No Image Provided</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="p-5">
+                            <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-1">{{ med.name }}</h3>
+                            <p class="text-xs text-gray-400 font-medium mb-3">Brand: {{ med.brand }}</p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 pt-0">
+                        <div class="flex justify-between items-center mb-4 bg-gray-50 dark:bg-gray-900 p-2.5 rounded-lg">
+                            <span class="text-xl font-black text-teal-600">Rs. {{ med.price }}</span>
+                            <span class="text-xs font-semibold">Qty: {{ med.stock_quantity }}</span>
+                        </div>
+
+                        {% if med.stock_quantity > 0 %}
+                            <button onclick="handleCartSubmission('{{ med.id }}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition">
+                                <i class="ri-shopping-cart-2-line"></i> Add to Cart
+                            </button>
+                        {% else %}
+                            <button disabled class="w-full bg-gray-100 text-gray-400 py-3 rounded-lg font-bold text-sm cursor-not-allowed">
+                                Out of Stock
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<div id="authRequiredModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center transform scale-95 transition-transform duration-300">
+        <div class="w-16 h-16 bg-teal-100 dark:bg-teal-950 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="ri-user-shared-line text-3xl text-teal-600 dark:text-teal-400"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Authentication Required</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">You are currently browsing as a visitor. Please log in or create an account to start managing your shopping cart.</p>
+        
+        <div class="flex flex-col gap-3">
+            <a href="{% url 'authentication:login_signup' %}?next={{ request.path }}"
+               class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl shadow transition duration-150">
+                Login / Sign Up
+            </a>
+            <button onclick="closeAuthModal()" 
+                    class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2.5 px-4 rounded-xl transition duration-150">
+                Browse as Guest
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Pass authentication status safely from Django backend to JavaScript
+const userIsAuthenticated = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+
+/**
+ * Validates authentication profile before forwarding to Orders App Cart Engine
+ */
+function handleCartSubmission(medicineId) {
+    if (!userIsAuthenticated) {
+        // Show popup modal immediately if user is a visitor
+        const modal = document.getElementById('authRequiredModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        return;
+    }
+    
+    // If authenticated (Customer/Pharmacist), execute real-time AJAX process
+    executeAddToCart(medicineId);
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authRequiredModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+/**
+ * Communicates with 'orders:add_to_cart_api' seamlessly via Fetch
+ */
+function executeAddToCart(medicineId) {
+    fetch("{% url 'orders:add_to_cart_api' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            "medicine_id": medicineId,
+            "quantity": 1,
+            "action": "increase"
+        })
+    })
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        // Agar dynamic response ka object sahi se load ho gaya hai
+        if (data && data.success === true) {
+            alert("Added! Item updated in your shopping cart successfully.");
+            syncAndRefreshBadges(data.cart_count);
+        } 
+        // 🎯 LOGIC: Agar doosri pharmacy ka conflict ho
+        else if (data && data.conflict === true) {
+            // Yahan hum bilkul safe text extract kar rahe hain taake object print na ho
+            let msgText = String(data.message);
+            if (confirm(msgText)) {
+                executeClearAndAddNew(medicineId);
+            }
+        } else {
+            let errorText = data && data.message ? String(data.message) : "Could not process operation.";
+            alert("Notice: " + errorText);
+        }
+    })
+    .catch(err => {
+        console.error("Cart Request Error:", err);
+        alert("Connection Error: Unable to sync with order management app.");
+    });
+}
+
+/**
+ * Dynamic API call to reset the cart if user confirms the pharmacy shift
+ */
+/**
+ * Dynamic API call to reset the cart if user confirms the pharmacy shift
+ */
+function executeClearAndAddNew(medicineId) {
+    fetch("{% url 'orders:clear_and_add_cart_api' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            "medicine_id": medicineId
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data && data.success === true) {
+            alert("Cart reset successfully! Naye pharmacy ki medicine add ho chuki hai.");
+            syncAndRefreshBadges(data.cart_count);
+            
+            // 🌟 ADD THIS LINE: Page ko auto-reload karein taake UI bilkul fresh ho jaye
+            location.reload(); 
+            
+        } else {
+            let errMsg = data && data.message ? String(data.message) : "Unknown error occurred.";
+            alert("Error: " + errMsg);
+        }
+    })
+    .catch(err => {
+        console.error("Clear cart error:", err);
+        alert("Connection Error: Unable to reset cart.");
+    });
+}
+
+/**
+ * Universal helper to sync badges across layouts and triggers base function
+ */
+function syncAndRefreshBadges(count) {
+    const badge = document.getElementById('cart-count');
+    if (badge) {
+        badge.innerText = count;
+        if (count > 0) {
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+    // Base layout loader calling safely
+    if (typeof loadCartCount === 'function') {
+        try {
+            loadCartCount();
+        } catch(e) {
+            console.log("Navbar sync bypass");
+        }
+    }
+}
+
+// Live local search logic code execution block
+document.getElementById('shopSearchInput').addEventListener('input', function() {
+    const query = this.value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.medicine-card');
+    
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const brand = card.getAttribute('data-brand');
+        if (name.includes(query) || brand.includes(query)) {
+            card.style.setProperty('display', 'flex', 'important');
+        } else {
+            card.style.setProperty('display', 'none', 'important');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends 'pharmacy/base.html' %} 
+{% load static %} 
+
+{% block title %}My Shopping Cart - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 flex-grow font-['Inter']"> 
+    <h1 class="text-2xl font-bold mb-6 text-gray-800 border-l-4 border-ph-teal pl-3">🛒 My Shopping Cart</h1> 
+    
+    <div id="cart-with-items-view" class="hidden lg:flex gap-6"> 
+        <div class="flex-grow bg-white p-5 shadow-xl rounded-lg border border-gray-100"> 
+            <h2 class="text-lg font-bold mb-4 pb-3 border-b border-gray-200">Items in Cart (<span id="item-count-in-list">0</span>)</h2> 
+            <div id="cart-items-list" class="space-y-4"> </div>
+            
+            <div class="mt-5 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <a href="{% url 'pharmacy:medicines' %}" class="bg-ph-teal text-white hover:bg-ph-teal-dark font-bold py-2 px-3 rounded text-sm transition duration-200 flex items-center space-x-2"> <i class="ri-arrow-left-line"></i>
+                    <span>Continue Shopping</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="lg:w-1/3">
+            <div class="bg-white p-5 shadow-xl rounded-lg sticky top-16 border border-gray-100"> 
+                <h2 class="text-lg font-bold mb-4 pb-3 border-b border-gray-200">Order Summary</h2> 
+                <div class="space-y-3 text-gray-700 text-sm"> 
+                    <div class="flex justify-between"><span>Items Subtotal:</span><span id="subtotal" class="font-semibold">PKR 0.00</span></div>
+                    <div class="flex justify-between"><span>Shipping Charges:</span><span id="shipping-cost" class="font-semibold text-red-500">PKR 250.00</span></div>
+                    <div class="flex justify-between text-lg font-bold pt-4 border-t mt-4">
+                        <span>Total Payable:</span>
+                        <span id="total-amount" class="text-ph-teal">PKR 250.00</span>
+                    </div>
+                </div>
+                <a href="{% url 'pharmacy:delivery_information' %}" 
+                    id="proceed-to-checkout-btn" 
+                    class="block mt-6 w-full bg-ph-teal text-white hover:bg-ph-teal-dark font-bold py-3 rounded transition duration-200 text-center text-base shadow-lg disabled-link">
+                    Proceed to Checkout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="empty-cart-view" class="flex flex-col items-center justify-center py-20 bg-white shadow-xl rounded-lg border border-gray-100"> 
+        <i class="ri-shopping-cart-2-line text-6xl text-gray-400 mb-4"></i> 
+        <p class="text-xl text-gray-600 mb-6 font-semibold">Your Cart is Empty</p> 
+        <p class="text-sm text-gray-500 mb-8">It looks like you haven't added anything yet.</p> 
+        <a href="{% url 'pharmacy:home' %}" class="bg-ph-teal text-white hover:bg-ph-teal-dark font-semibold py-2.5 px-6 rounded-md transition duration-300 shadow-md text-sm">
+            Start Shopping Now
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // DUMMY DATA: Example cart items
+    let cartItems = [
+        { id: 1, name: "Panadol Tablet (20 pack)", price: 50.00, quantity: 2, imageUrl: "https://via.placeholder.com/100/14B8A6/FFFFFF?text=Tablet" },
+        { id: 2, name: "Cefim Syrup (100ml)", price: 280.00, quantity: 1, imageUrl: "https://via.placeholder.com/100/14B8A6/FFFFFF?text=Syrup" }
+    ];
+    // To view the empty cart state, uncomment the line below:
+    // let cartItems = [];
+
+    const SHIPPING_COST = 250.00;
+    const cartItemsList = document.getElementById('cart-items-list');
+    const emptyCartView = document.getElementById('empty-cart-view');
+    const cartWithItemsView = document.getElementById('cart-with-items-view');
+    const subtotalElement = document.getElementById('subtotal');
+    const totalAmountElement = document.getElementById('total-amount');
+    const cartItemCountElement = document.getElementById('cart-item-count');
+    const itemCountInListElement = document.getElementById('item-count-in-list');
+    const checkoutLink = document.getElementById('proceed-to-checkout-btn'); // Checkout Link Element
+
+    function createCartItemHTML(item) {
+        // Font size adjusted to text-sm
+        // NOTE: This structure is responsible for the correct button appearance.
+        return `
+            <div class="cart-item flex items-start p-3 border border-gray-200 rounded-lg bg-white text-sm" data-id="${item.id}">
+                <img src="${item.imageUrl}" alt="${item.name}" class="w-16 h-16 object-cover rounded mr-3 border border-gray-100">
+                <div class="flex-grow">
+                    <h3 class="font-semibold text-gray-800">${item.name}</h3>
+                    <p class="text-xs text-gray-500">PKR ${item.price.toFixed(2)} / item</p>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center border border-gray-300 rounded overflow-hidden">
+                        <button class="decrease-qty px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-600 transition" data-id="${item.id}">-</button>
+                        <input type="number" class="w-10 text-center quantity-input text-gray-700 focus:outline-none text-sm" value="${item.quantity}" min="1" readonly>
+                        <button class="increase-qty px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-600 transition" data-id="${item.id}">+</button>
+                    </div>
+                    
+                    <span class="font-bold text-ph-teal w-24 text-left">PKR ${(item.price * item.quantity).toFixed(2)}</span>
+                    
+                    <button class="remove-item text-red-500 hover:text-red-700 transition p-1" data-id="${item.id}">
+                        <i class="ri-delete-bin-line text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateCartSummary() {
+        let subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        let total = subtotal + (subtotal > 0 ? SHIPPING_COST : 0);
+
+        subtotalElement.textContent = `PKR ${subtotal.toFixed(2)}`;
+        totalAmountElement.textContent = `PKR ${total.toFixed(2)}`;
+        document.getElementById('shipping-cost').textContent = subtotal > 0 ? `PKR ${SHIPPING_COST.toFixed(2)}` : 'PKR 0.00';
+        
+        // Checkout button disable/enable logic
+        if (subtotal === 0) {
+            checkoutLink.classList.add('opacity-50', 'pointer-events-none');
+            checkoutLink.setAttribute('href', '#'); // Remove redirection
+        } else {
+            checkoutLink.classList.remove('opacity-50', 'pointer-events-none');
+            checkoutLink.setAttribute('href', "{% url 'pharmacy:delivery_information' %}"); 
+        }
+    }
+    
+    function renderCart() {
+        if (cartItems.length === 0) {
+            emptyCartView.classList.remove('hidden');
+            cartWithItemsView.classList.add('hidden');
+            if (cartItemCountElement) cartItemCountElement.textContent = 0;
+        } else {
+            emptyCartView.classList.add('hidden');
+            cartWithItemsView.classList.remove('hidden');
+            cartItemsList.innerHTML = cartItems.map(createCartItemHTML).join('');
+            updateCartSummary();
+            attachEventListeners();
+            if (cartItemCountElement) cartItemCountElement.textContent = cartItems.length;
+            itemCountInListElement.textContent = cartItems.length;
+        }
+    }
+
+    function attachEventListeners() {
+        document.querySelectorAll('.increase-qty').forEach(button => {
+            button.onclick = (e) => updateQuantity(e.target.dataset.id, 1);
+        });
+        document.querySelectorAll('.decrease-qty').forEach(button => {
+            button.onclick = (e) => updateQuantity(e.target.dataset.id, -1);
+        });
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.onclick = (e) => removeItem(e.target.closest('.remove-item').dataset.id);
+        });
+    }
+
+    function updateQuantity(itemId, change) {
+        const item = cartItems.find(i => i.id == itemId);
+        if (item) {
+            const newQuantity = item.quantity + change;
+            if (newQuantity >= 1) {
+                item.quantity = newQuantity;
+                renderCart();
+            } else if (newQuantity === 0) {
+                removeItem(itemId);
+            }
+        }
+    }
+
+    function removeItem(itemId) {
+        if(confirm("Are you sure you want to remove this item?")) {
+            cartItems = cartItems.filter(i => i.id != itemId);
+            renderCart();
+        }
+    }
+
+    window.onload = renderCart;
+</script>
+{% endblock %}

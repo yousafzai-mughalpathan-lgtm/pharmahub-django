@@ -1,0 +1,414 @@
+{% extends 'customers_d/customer_base.html' %}
+{% load static %}
+
+{% block title %}Secure Checkout - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-7xl px-4 py-8 font-['Inter']">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 border-b pb-4">Secure Checkout</h1>
+
+    <form method="POST" action="{% url 'orders:place_order' %}" class="lg:grid lg:grid-cols-3 lg:gap-8">
+        {% csrf_token %} 
+        
+        <div class="lg:col-span-2 space-y-8 p-6 bg-white rounded-xl shadow-lg">
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-phone-line text-ph-teal"></i> Contact Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="email" id="email" name="email" placeholder="Email Address *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="tel" id="phone" name="phone" placeholder="Phone Number *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-truck-line text-ph-teal"></i> Shipping Address
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="first-name" name="first_name" placeholder="First Name *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="text" id="last-name" name="last_name" placeholder="Last Name (Optional)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <input type="text" id="address" name="address" placeholder="Apartment, Street Address, etc. *" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="city" name="city" placeholder="City *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="text" id="province" name="province" placeholder="Province/State (Optional)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="text" id="postal-code" name="postal_code" placeholder="Postal Code (Optional)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-wallet-3-line text-ph-teal"></i> Select Payment Method
+                </h2>
+                <div class="space-y-4">
+                    
+                    <label for="payment-cod" class="block p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-teal-500 transition-all has-[:checked]:ring-2 has-[:checked]:ring-teal-500 bg-white">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" id="payment-cod" name="payment_method" value="COD" checked 
+                                   class="form-radio h-5 w-5 text-ph-teal border-gray-300 focus:ring-ph-teal">
+                            <i class="ri-money-rupee-circle-line text-2xl text-ph-teal"></i>
+                            <span class="text-lg font-semibold text-gray-800">Cash on Delivery (COD)</span>
+                        </div>
+                    </label>
+
+                    <div class="p-4 border border-gray-300 rounded-lg transition-all space-y-3 bg-white">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="radio" id="payment-jazzcash" name="payment_method" value="JazzCash"
+                                   class="form-radio h-5 w-5 text-ph-teal border-gray-300 focus:ring-ph-teal">
+                            <span class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="ri-smartphone-line text-2xl text-ph-teal"></i> JazzCash / EasyPaisa / Wallets
+                            </span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="radio" id="payment-bank" name="payment_method" value="Card"
+                                   class="form-radio h-5 w-5 text-ph-teal border-gray-300 focus:ring-ph-teal">
+                            <span class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="ri-bank-card-line text-2xl text-ph-teal"></i> Credit/Debit Card or Bank Transfer
+                            </span>
+                        </label>
+
+                        <div class="text-sm text-gray-500 pt-2 border-t mt-3 hidden" id="online-details">
+                            <p class="font-bold text-gray-700">Online payment information will be displayed once your order is confirmed.</p>
+                            <p>You will receive an SMS/Email with the payment link.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-file-text-line text-ph-teal"></i> Order Notes
+                </h2>
+                <textarea id="notes" name="notes" rows="3" placeholder="Add any special instructions for the delivery rider..."
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-1 mt-8 lg:mt-0 p-6 bg-gray-50 rounded-xl shadow-inner h-fit sticky top-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b pb-3">Order Summary</h2>
+            
+ <div class="space-y-4 mb-6">
+    {% for item in cart_items %}
+    <div class="flex justify-between items-center text-gray-700">
+        <span>{{ item.product.name }} (x{{ item.quantity }})</span>
+        <span class="font-medium">Rs. {{ item.total_price }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="border-t pt-4 space-y-2">
+    <div class="flex justify-between text-gray-600">
+        <span>Subtotal</span>
+        <span>Rs. {{ subtotal }}</span>
+    </div>
+    <div class="flex justify-between text-gray-600">
+        <span>Shipping</span>
+        <span>Rs. {{ shipping }}</span>
+    </div>
+    <div class="flex justify-between text-xl font-bold text-gray-900 border-t pt-2">
+        <span>Total</span>
+        <span>Rs. {{ total }}</span>
+    </div>
+</div>
+         <button type="submit" id="place-order-btn" 
+        class="w-full bg-teal-600 text-white py-4 rounded-xl font-bold text-xl tracking-wider hover:bg-teal-700 transition-colors duration-300 shadow-lg shadow-teal-200/50 focus:outline-none focus:ring-4 focus:ring-teal-500/50">
+    Place Order (PKR {{ total_amount_float|floatformat:2|default:"800.00" }})
+</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.querySelector("form");
+
+    const email = document.getElementById("email");
+    const phone = document.getElementById("phone");
+    const firstName = document.getElementById("first-name");
+    const lastName = document.getElementById("last-name");
+    const address = document.getElementById("address");
+    const city = document.getElementById("city");
+    const province = document.getElementById("province");
+    const postalCode = document.getElementById("postal-code");
+    const notes = document.getElementById("notes");
+
+    //========================
+    // Payment Details
+    //========================
+
+    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+    const onlineDetails = document.getElementById("online-details");
+
+    paymentRadios.forEach(radio => {
+        radio.addEventListener("change", function () {
+            if (this.value === "COD") {
+                onlineDetails.classList.add("hidden");
+            } else {
+                onlineDetails.classList.remove("hidden");
+            }
+        });
+    });
+
+    //========================
+    // Validation Helpers
+    //========================
+
+    function showError(input, message) {
+
+        removeError(input);
+
+        input.classList.remove("border-gray-300");
+        input.classList.add("border-red-500");
+
+        const error = document.createElement("small");
+        error.className = "text-red-600 text-sm mt-1 block";
+        error.innerText = message;
+
+        input.parentNode.appendChild(error);
+    }
+
+    function removeError(input) {
+
+        input.classList.remove("border-red-500");
+        input.classList.add("border-gray-300");
+
+        const errors = input.parentNode.querySelectorAll("small");
+
+        errors.forEach(e => e.remove());
+
+    }
+
+    function validateName(input, field) {
+
+        const value = input.value.trim();
+
+        if (value === "") {
+            showError(input, field + " is required.");
+            return false;
+        }
+
+        if (!/^[A-Za-z\s]{2,30}$/.test(value)) {
+            showError(input, field + " should contain only letters.");
+            return false;
+        }
+
+        removeError(input);
+        return true;
+    }
+
+    function validateEmail() {
+
+        const value = email.value.trim();
+
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (value === "") {
+            showError(email, "Email is required.");
+            return false;
+        }
+
+        if (!regex.test(value)) {
+            showError(email, "Enter a valid email.");
+            return false;
+        }
+
+        removeError(email);
+        return true;
+    }
+
+    function validatePhone() {
+
+        const value = phone.value.trim();
+
+        const regex = /^(03\d{9}|\+92\d{10})$/;
+
+        if (value === "") {
+            showError(phone, "Phone number is required.");
+            return false;
+        }
+
+        if (!regex.test(value)) {
+            showError(phone, "Enter valid Pakistani phone number.");
+            return false;
+        }
+
+        removeError(phone);
+        return true;
+    }
+
+    function validateAddress() {
+
+        const value = address.value.trim();
+
+        if (value.length < 10) {
+            showError(address, "Complete address is required.");
+            return false;
+        }
+
+        removeError(address);
+        return true;
+    }
+
+    function validateCity() {
+
+        const value = city.value.trim();
+
+        if (value === "") {
+            showError(city, "City is required.");
+            return false;
+        }
+
+        if (!/^[A-Za-z\s]+$/.test(value)) {
+            showError(city, "Invalid city.");
+            return false;
+        }
+
+        removeError(city);
+        return true;
+    }
+
+    function validateProvince() {
+
+        if (province.value.trim() === "")
+            return true;
+
+        if (!/^[A-Za-z\s]+$/.test(province.value.trim())) {
+            showError(province, "Invalid province.");
+            return false;
+        }
+
+        removeError(province);
+        return true;
+    }
+
+    function validatePostal() {
+
+        if (postalCode.value.trim() === "")
+            return true;
+
+        if (!/^\d{5}$/.test(postalCode.value.trim())) {
+            showError(postalCode, "Postal code must be 5 digits.");
+            return false;
+        }
+
+        removeError(postalCode);
+        return true;
+    }
+
+    function validateNotes() {
+
+        if (notes.value.length > 300) {
+            showError(notes, "Maximum 300 characters allowed.");
+            return false;
+        }
+
+        removeError(notes);
+        return true;
+    }
+
+    //========================
+    // Live Validation
+    //========================
+
+    email.addEventListener("input", validateEmail);
+
+    phone.addEventListener("input", validatePhone);
+
+    firstName.addEventListener("input", () => validateName(firstName, "First Name"));
+
+    if (lastName) {
+        lastName.addEventListener("input", function () {
+
+            if (this.value.trim() === "") {
+                removeError(this);
+                return;
+            }
+
+            if (!/^[A-Za-z\s]+$/.test(this.value.trim())) {
+                showError(this, "Invalid Last Name");
+            } else {
+                removeError(this);
+            }
+
+        });
+    }
+
+    address.addEventListener("input", validateAddress);
+
+    city.addEventListener("input", validateCity);
+
+    province.addEventListener("input", validateProvince);
+
+    postalCode.addEventListener("input", validatePostal);
+
+    notes.addEventListener("input", validateNotes);
+
+    //========================
+    // Submit Validation
+    //========================
+
+    form.addEventListener("submit", function (e) {
+
+        let valid = true;
+
+        valid &= validateEmail();
+
+        valid &= validatePhone();
+
+        valid &= validateName(firstName, "First Name");
+
+        valid &= validateAddress();
+
+        valid &= validateCity();
+
+        valid &= validateProvince();
+
+        valid &= validatePostal();
+
+        valid &= validateNotes();
+
+        const payment = document.querySelector('input[name="payment_method"]:checked');
+
+        if (!payment) {
+            alert("Please select a payment method.");
+            valid = false;
+        }
+
+        if (!valid) {
+
+            e.preventDefault();
+
+            const firstError = document.querySelector(".border-red-500");
+
+            if (firstError)
+                firstError.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+            return;
+        }
+
+        document.getElementById("place-order-btn").disabled = true;
+        document.getElementById("place-order-btn").innerText = "Processing Order...";
+    });
+
+});
+</script>
+{% endblock %}

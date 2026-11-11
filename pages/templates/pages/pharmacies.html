@@ -1,0 +1,133 @@
+{% extends base_template %}
+{% load static %}
+{% block title %}Pharmacies - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="pharmacies-page">
+    <section class="relative bg-cover bg-center py-20" style="background-image: url('{% static 'pharmacy/images/pharm.jpg' %}');">
+        <div class="absolute inset-0 bg-teal-800 bg-opacity-75"></div>
+        <div class="relative z-10 max-w-7xl mx-auto px-4 text-center">
+            <h1 class="text-5xl font-extrabold text-white mb-4">Find Pharmacies Near You</h1>
+            <p class="text-xl text-teal-50 mb-8">Verified health partners at your fingertips.</p>
+            
+            <div class="max-w-2xl mx-auto bg-white rounded-xl p-2 shadow-2xl flex flex-col sm:flex-row gap-2">
+                <div class="flex-1 relative">
+                    <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-teal-600"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, city or area..." 
+                           class="w-full pl-11 pr-4 py-4 rounded-lg focus:outline-none text-gray-700">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 py-12">
+        <div class="flex justify-between items-center mb-10 border-b pb-6">
+            <div>
+                <h2 id="resultsHeading" class="text-3xl font-bold text-gray-800">Popular Pharmacies</h2>
+                <p class="text-gray-500 mt-2">
+                    Total: <span id="pharmacyCount" class="font-bold text-teal-600 text-lg">{{ pharmacies|length }}</span> verified partners found
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="pharmacyList">
+            {% for pharma in pharmacies %}
+            <div class="pharmacies-card bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300"
+                 data-location="{{ pharma.address }} {{ pharma.city }}">
+                
+                <div class="flex flex-col gap-6">
+                    <div class="w-full relative">
+                        {% if pharma.logo %}
+                            <img src="{{ pharma.logo.url }}" alt="{{ pharma.name }}" class="w-full h-56 object-cover rounded-xl">
+                        {% else %}
+                            <img src="{% static 'pharmacy/images/default_ph.jpg' %}" alt="Pharmacy" class="w-full h-56 object-cover rounded-xl grayscale-[0.2]">
+                        {% endif %}
+                        
+                        <span class="absolute top-4 right-4 bg-white/90 text-teal-800 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm city-label">
+                            {{ pharma.city }}
+                        </span>
+                    </div>
+
+                    <div class="flex flex-col justify-between flex-grow">
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <h3 class="text-2xl font-bold text-gray-900 pharma-name">{{ pharma.name }}</h3>
+                                <i class="ri-checkbox-circle-fill text-blue-500 text-xl" title="Verified by PharmaHub"></i>
+                            </div>
+
+                            <div class="space-y-3 text-gray-600 text-sm">
+                                <p class="flex items-start"><i class="ri-map-pin-line mr-2 text-teal-500 mt-0.5"></i> {{ pharma.address }}</p>
+                                <p class="flex items-center"><i class="ri-phone-line mr-2 text-teal-500"></i> {{ pharma.phone }}</p>
+                                <p class="flex items-center text-gray-400"><i class="ri-time-line mr-2 text-teal-500"></i> {{ pharma.operating_hours }}</p>
+                            </div>
+                        </div>
+
+                        
+                        <div class="mt-6">
+    <a href="{% url 'pages:view_shop' pharma.id %}" 
+       class="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+        <i class="ri-store-2-line"></i> Visit Pharmacy Shop
+    </a>
+</div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                <i class="ri-shield-user-line text-6xl text-gray-200 mb-4 block"></i>
+                <h3 class="text-gray-600 text-xl font-bold">No Verified Pharmacies Found</h3>
+                <p class="text-gray-400 mt-2">New registrations are currently being reviewed by our administration.</p>
+            </div>
+            {% endfor %}
+            
+            <div id="noResults" class="hidden col-span-full text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                <p class="text-gray-500 text-xl font-medium">No pharmacy matches your search.</p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('searchInput');
+        const countDisplay = document.getElementById('pharmacyCount');
+        const resultsHeading = document.getElementById('resultsHeading');
+        const pharmacyCards = document.querySelectorAll('.pharmacies-card');
+        const noResultsDiv = document.getElementById('noResults');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            pharmacyCards.forEach(card => {
+                const name = card.querySelector('.pharma-name').textContent.toLowerCase();
+                const city = card.querySelector('.city-label').textContent.toLowerCase();
+                const locationData = card.getAttribute('data-location').toLowerCase();
+
+                if (name.includes(query) || city.includes(query) || locationData.includes(query)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            countDisplay.textContent = visibleCount;
+
+            if (query === "") {
+                resultsHeading.textContent = "Popular Pharmacies";
+            } else {
+                resultsHeading.textContent = `Results for "${this.value}"`;
+            }
+
+            if (visibleCount === 0 && pharmacyCards.length > 0) {
+                noResultsDiv.classList.remove('hidden');
+            } else {
+                noResultsDiv.classList.add('hidden');
+            }
+        });
+    });
+</script>
+{% endblock %}

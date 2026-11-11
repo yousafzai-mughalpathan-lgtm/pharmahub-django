@@ -1,0 +1,554 @@
+<!-- templates/admin/orders_monitoring.html -->
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Orders Monitoring | PharmaHub Admin{% endblock %}
+{% block page_title %}Orders Monitoring{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm">Complete control and monitoring of PharmaHub platform</p>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsContainer">
+    <!-- Stats will be loaded via JavaScript -->
+    <div class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="mt-2 text-gray-500">Loading statistics...</p>
+    </div>
+</div>
+
+<div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 md:gap-0">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-shopping-basket mr-3 text-indigo-600"></i> All Platform Orders
+        </h2>
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="relative w-full md:w-auto">
+                <input type="text" id="searchInput" placeholder="Search orders..." 
+                       class="pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all w-full text-sm">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            
+            <div class="relative inline-block text-left w-full md:w-auto">
+                <button id="statusDropdownButton" type="button" 
+                        class="inline-flex justify-between items-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500/20" 
+                        aria-haspopup="true" aria-expanded="true">
+                    All Status
+                    <i class="fas fa-chevron-down -mr-1 ml-2 h-4 w-4"></i>
+                </button>
+
+                <div id="statusDropdownMenu" 
+                     class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none hidden">
+                    <div class="py-1">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-status="all">All Status</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-status="delivered">Completed</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-status="pending">Pending</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" data-status="cancelled">Cancelled</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200" id="ordersTable">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ORDER ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CUSTOMER</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PHARMACY</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AMOUNT</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <!-- Orders will be loaded via JavaScript -->
+                <tr id="loadingRow">
+                    <td colspan="7" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            <p class="mt-2 text-gray-500">Loading orders...</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4" id="paginationContainer">
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700" id="paginationInfo">
+                        Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="totalOrders">0</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination" id="paginationNav">
+                        <!-- Pagination buttons will be generated by JavaScript -->
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div id="orderDetailsModal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-900" id="modalTitle">Order Details</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <div id="orderDetailsContent">
+            <!-- Order details will be loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        @apply px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full;
+    }
+    .status-delivered { @apply bg-emerald-100 text-emerald-800; }
+    .status-pending { @apply bg-amber-100 text-amber-800; }
+    .status-cancelled { @apply bg-red-100 text-red-800; }
+    .status-confirmed { @apply bg-blue-100 text-blue-800; }
+    .status-processing { @apply bg-purple-100 text-purple-800; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // API Configuration
+    // NOTE: API_BASE_URL is already declared in base_admin.html (loaded on
+    // every admin page) — redeclaring it here as `const` threw a
+    // SyntaxError ("Identifier 'API_BASE_URL' has already been declared"),
+    // which silently killed this entire script block before anything in it
+    // ever ran. That's why the stats/orders never loaded.
+    const ORDERS_API_URL = `${API_BASE_URL}/orders/`;
+    const STATS_API_URL = `${API_BASE_URL}/dashboard/stats/`;
+    
+    // Get CSRF token for API calls
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+    
+    // Get JWT token from localStorage or cookies
+    function getAuthToken() {
+        // Assuming you're storing JWT in localStorage
+        return localStorage.getItem('access_token') || '';
+    }
+    
+    // Make API request with authentication
+    async function makeApiRequest(url, method = 'GET', data = null) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        };
+
+        // Only send a Bearer header when a real JWT exists. This admin
+        // panel is logged in via Django session (see admin_login view),
+        // so there is normally no access_token in localStorage — sending
+        // "Authorization: Bearer " (empty) would make JWTAuthentication
+        // fail the request outright instead of falling back to session auth.
+        const token = getAuthToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const config = {
+            method: method,
+            headers: headers,
+            credentials: 'include' // Include cookies for session auth
+        };
+        
+        if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+            config.body = JSON.stringify(data);
+        }
+        
+        try {
+            const response = await fetch(url, config);
+            
+            if (response.status === 401) {
+                // Token expired, try to refresh
+                await refreshToken();
+                // Retry with new token
+                headers.Authorization = `Bearer ${getAuthToken()}`;
+                const retryResponse = await fetch(url, config);
+                return await retryResponse.json();
+            }
+            
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API request failed:', error);
+            showNotification('Failed to load data. Please try again.', 'error');
+            throw error;
+        }
+    }
+    
+    // Refresh JWT token
+    async function refreshToken() {
+        try {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+                window.location.href = '/admin/login/';
+                return;
+            }
+            
+            const response = await fetch(`${API_BASE_URL}/auth/refresh/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refresh: refreshToken })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('access_token', data.access);
+                return true;
+            }
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            window.location.href = '/admin/login/';
+        }
+        return false;
+    }
+    
+    // Load statistics
+    async function loadStatistics() {
+        try {
+            const data = await makeApiRequest(STATS_API_URL);
+            // DashboardStatsView returns a nested shape: { orders: { total,
+            // pending, completed, cancelled }, ... } — not flat fields.
+            const orderStats = data.orders || {};
+
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.innerHTML = `
+                <div class="bg-orange-50 p-6 rounded-2xl border border-orange-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-orange-500 uppercase tracking-wider">Total Orders</p>
+                        <h3 class="text-3xl font-extrabold text-orange-900 mt-1">${(orderStats.total || 0).toLocaleString()}</h3>
+                    </div>
+                    <div class="p-3 bg-orange-600 text-white rounded-xl shadow-lg">
+                        <i class="fas fa-shopping-basket text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-emerald-500 uppercase tracking-wider">Completed</p>
+                        <h3 class="text-3xl font-extrabold text-emerald-900 mt-1">${(orderStats.completed || 0).toLocaleString()}</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-600 text-white rounded-xl shadow-lg">
+                        <i class="fas fa-check-circle text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-amber-500 uppercase tracking-wider">Pending</p>
+                        <h3 class="text-3xl font-extrabold text-amber-900 mt-1">${(orderStats.pending || 0).toLocaleString()}</h3>
+                    </div>
+                    <div class="p-3 bg-amber-500 text-white rounded-xl shadow-lg">
+                        <i class="fas fa-hourglass-half text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 p-6 rounded-2xl border border-red-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-red-500 uppercase tracking-wider">Cancelled</p>
+                        <h3 class="text-3xl font-extrabold text-red-900 mt-1">${(orderStats.cancelled || 0).toLocaleString()}</h3>
+                    </div>
+                    <div class="p-3 bg-red-600 text-white rounded-xl shadow-lg">
+                        <i class="fas fa-times-circle text-2xl"></i>
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('Failed to load statistics:', error);
+        }
+    }
+    
+    // Global variables for pagination
+    let currentPage = 1;
+    let currentStatus = 'all';
+    let currentSearch = '';
+    let pageSize = 10;
+    let totalOrders = 0;
+    let totalPages = 0;
+    
+    // Load orders with pagination
+    async function loadOrders(page = 1, status = currentStatus, search = currentSearch) {
+        try {
+            currentPage = page;
+            currentStatus = status;
+            currentSearch = search;
+            
+            const params = new URLSearchParams({
+                page: page,
+                page_size: pageSize,
+                ...(status && status !== 'all' && { status: status }),
+                ...(search && { search: search })
+            });
+            
+            const data = await makeApiRequest(`${ORDERS_API_URL}?${params}`);
+
+            // DRF's default PageNumberPagination returns
+            // { count, next, previous, results } — not a custom
+            // { total, total_pages, orders } shape.
+            totalOrders = data.count || 0;
+            totalPages = Math.ceil(totalOrders / pageSize) || 1;
+
+            renderOrdersTable(data.results || []);
+            renderPagination();
+            
+        } catch (error) {
+            console.error('Failed to load orders:', error);
+        }
+    }
+    
+    // Render orders table
+    function renderOrdersTable(orders) {
+        const tbody = document.getElementById('ordersTableBody');
+        
+        if (orders.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-inbox text-4xl text-gray-300 mb-2"></i>
+                            <p class="text-gray-500">No orders found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = orders.map(order => `
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.order_id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${order.customer_name || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${order.pharmacy_name || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">₹${parseFloat(order.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="status-badge status-${(order.status || '').toLowerCase()}">${order.status}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(order.created_at).toLocaleDateString()}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="viewOrderDetails(${order.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="updateOrderStatus(${order.id})" class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    // Render pagination
+    function renderPagination() {
+        const start = (currentPage - 1) * pageSize + 1;
+        const end = Math.min(currentPage * pageSize, totalOrders);
+        
+        document.getElementById('pageStart').textContent = start;
+        document.getElementById('pageEnd').textContent = end;
+        document.getElementById('totalOrders').textContent = totalOrders;
+        
+        const paginationNav = document.getElementById('paginationNav');
+        let paginationHTML = '';
+        
+        // Previous button
+        paginationHTML += `
+            <button onclick="loadOrders(${currentPage - 1})" 
+                    ${currentPage === 1 ? 'disabled' : ''}
+                    class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}">
+                <i class="fas fa-chevron-left h-5 w-5"></i>
+            </button>
+        `;
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                paginationHTML += `
+                    <button onclick="loadOrders(${i})"
+                            ${currentPage === i ? 'aria-current="page"' : ''}
+                            class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === i ? 'bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600' : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'}">
+                        ${i}
+                    </button>
+                `;
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                paginationHTML += `
+                    <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">
+                        ...
+                    </span>
+                `;
+            }
+        }
+        
+        // Next button
+        paginationHTML += `
+            <button onclick="loadOrders(${currentPage + 1})" 
+                    ${currentPage === totalPages ? 'disabled' : ''}
+                    class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}">
+                <i class="fas fa-chevron-right h-5 w-5"></i>
+            </button>
+        `;
+        
+        paginationNav.innerHTML = paginationHTML;
+    }
+    
+    // View order details
+    async function viewOrderDetails(orderId) {
+        try {
+            const data = await makeApiRequest(`${API_BASE_URL}/orders/${orderId}/`);
+            
+            const modalContent = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Order Information</h4>
+                        <div class="space-y-2">
+                            <p><span class="font-medium">Order ID:</span> ${data.order_id}</p>
+                            <p><span class="font-medium">Customer:</span> ${data.customer_name}</p>
+                            <p><span class="font-medium">Pharmacy:</span> ${data.pharmacy_name}</p>
+                            <p><span class="font-medium">Status:</span> <span class="status-badge status-${(data.status || '').toLowerCase()}">${data.status}</span></p>
+                            <p><span class="font-medium">Payment Status:</span> <span class="status-badge status-${data.payment_status}">${data.payment_status}</span></p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h4>
+                        <div class="space-y-2">
+                            <p><span class="font-medium">Subtotal:</span> ₹${parseFloat(data.subtotal).toFixed(2)}</p>
+                            <p class="text-lg font-bold"><span class="font-medium">Total:</span> ₹${parseFloat(data.total_amount).toFixed(2)}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${data.items && data.items.length > 0 ? `
+                <div class="mt-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Order Items</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Medicine</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${data.items.map(item => `
+                                    <tr>
+                                        <td class="px-4 py-2">${item.medicine_name}</td>
+                                        <td class="px-4 py-2">${item.quantity}</td>
+                                        <td class="px-4 py-2">₹${parseFloat(item.price_per_unit).toFixed(2)}</td>
+                                        <td class="px-4 py-2">₹${parseFloat(item.total_price).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('orderDetailsContent').innerHTML = modalContent;
+            document.getElementById('modalTitle').textContent = `Order: ${data.order_id}`;
+            document.getElementById('orderDetailsModal').classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Failed to load order details:', error);
+            showNotification('Failed to load order details', 'error');
+        }
+    }
+    
+    // Update order status
+    async function updateOrderStatus(orderId) {
+        const status = prompt('Enter new status (pending/confirmed/processing/ready/shipped/delivered/cancelled):');
+        
+        if (status && ['pending', 'confirmed', 'processing', 'ready', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+            try {
+                const response = await makeApiRequest(`${API_BASE_URL}/orders/${orderId}/update_status/`, 'POST', { status });
+                showNotification('Order status updated successfully', 'success');
+                loadOrders(currentPage, currentStatus, currentSearch);
+            } catch (error) {
+                showNotification('Failed to update order status', 'error');
+            }
+        } else if (status) {
+            showNotification('Invalid status. Please enter a valid status.', 'error');
+        }
+    }
+    
+    // Show notification
+    function showNotification(message, type = 'info') {
+        // You can implement a proper notification system here
+        alert(`${type.toUpperCase()}: ${message}`);
+    }
+    
+    // Close modal
+    function closeModal() {
+        document.getElementById('orderDetailsModal').classList.add('hidden');
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load initial data
+        loadStatistics();
+        loadOrders();
+        
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadOrders(1, currentStatus, this.value);
+            }, 500);
+        });
+        
+        // Status filter dropdown
+        const dropdownButton = document.getElementById('statusDropdownButton');
+        const dropdownMenu = document.getElementById('statusDropdownMenu');
+        
+        dropdownButton.addEventListener('click', function() {
+            dropdownMenu.classList.toggle('hidden');
+        });
+        
+        dropdownMenu.querySelectorAll('a').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedStatus = this.dataset.status;
+                dropdownButton.innerHTML = `${this.textContent} <i class="fas fa-chevron-down -mr-1 ml-2 h-4 w-4"></i>`;
+                dropdownMenu.classList.add('hidden');
+                loadOrders(1, selectedStatus, currentSearch);
+            });
+        });
+        
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(event) {
+            if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+    });
+</script>
+{% endblock %}

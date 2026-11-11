@@ -1,0 +1,182 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Payments & Revenue | PharmaHub Admin{% endblock %}
+{% block page_title %}Payments & Revenue{% endblock %}
+
+{% block content %}
+<p class="text-gray-500 -mt-6 mb-8 text-sm font-medium">Track all transactions and financial performance</p>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest leading-none mb-2">Total Revenue</p>
+            <h3 class="text-3xl font-extrabold text-emerald-900">PKR {{ total_revenue|floatformat:0 }}</h3>
+        </div>
+        <div class="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-100">
+            <i class="fas fa-wallet text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-blue-500 uppercase tracking-widest leading-none mb-2">Monthly Sales</p>
+            <h3 class="text-3xl font-extrabold text-blue-900">PKR {{ monthly_revenue|floatformat:0 }}</h3>
+        </div>
+        <div class="p-4 bg-blue-500 text-white rounded-2xl shadow-lg shadow-blue-100">
+            <i class="fas fa-chart-line text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-amber-500 uppercase tracking-widest leading-none mb-2">Pending Payouts</p>
+            <h3 class="text-3xl font-extrabold text-amber-900">PKR {{ pending_payouts|floatformat:0 }}</h3>
+        </div>
+        <div class="p-4 bg-amber-600 text-white rounded-2xl shadow-lg shadow-amber-100">
+            <i class="fas fa-clock text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
+        <div>
+            <p class="text-[11px] font-bold text-indigo-500 uppercase tracking-widest leading-none mb-2">Success Rate</p>
+            <h3 class="text-3xl font-extrabold text-indigo-900">{{ success_rate }}%</h3>
+        </div>
+        <div class="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100">
+            <i class="fas fa-check-double text-2xl"></i>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    <div class="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Revenue Trend</h2>
+                <p class="text-xs text-gray-400 font-medium">Last 6 months earnings</p>
+            </div>
+        </div>
+        <div class="h-[300px] w-full">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+        <h2 class="text-xl font-bold text-gray-800 tracking-tight mb-6">Top Earners</h2>
+        <div class="space-y-6">
+            {% for ph in top_pharmacies %}
+            <div class="flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-{{ ph.color }}-50 text-{{ ph.color }}-600 flex items-center justify-center font-bold text-sm border border-{{ ph.color }}-100 group-hover:bg-{{ ph.color }}-600 group-hover:text-white transition-all">
+                        {{ ph.initials }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-800">{{ ph.name }}</p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{{ ph.label }}</p>
+                    </div>
+                </div>
+                <p class="text-sm font-black text-{{ ph.color }}-600">PKR {{ ph.revenue|floatformat:0 }}</p>
+            </div>
+            {% empty %}
+            <p class="text-sm text-gray-400 font-medium">No pharmacy revenue recorded yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden mb-10">
+    <div class="p-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-[#fffafb]">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white mr-4 shadow-lg shadow-emerald-100">
+                <i class="fas fa-history text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Recent Transactions</h2>
+                <p class="text-xs text-gray-400 font-medium">Last {{ recent_transactions|length }} activities</p>
+            </div>
+        </div>
+        <a href="{% url 'admin_panel:export_payments_csv' %}" class="bg-white border border-gray-200 px-6 py-3 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center shadow-sm">
+            <i class="fas fa-download mr-2 text-emerald-500"></i> Export
+        </a>
+    </div>
+
+    <div class="overflow-x-auto px-4 pb-4">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-gray-400 text-[11px] font-bold uppercase tracking-widest border-b border-gray-50">
+                    <th class="px-6 py-5">Transaction ID</th>
+                    <th class="px-6 py-5">Customer</th>
+                    <th class="px-6 py-5">Amount</th>
+                    <th class="px-6 py-5 text-center">Status</th>
+                    <th class="px-6 py-5">Date</th>
+                    <th class="px-6 py-5 text-right">Order</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in recent_transactions %}
+                <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-all group">
+                    <td class="px-6 py-6 text-sm font-bold text-gray-800 tracking-tight">#{{ txn.transaction_id|default:txn.id }}</td>
+                    <td class="px-6 py-6 text-sm font-bold text-gray-700">
+                        {% if txn.order.user %}{{ txn.order.user.get_full_name|default:txn.order.user.email }}{% else %}—{% endif %}
+                    </td>
+                    <td class="px-6 py-6 text-sm font-extrabold text-gray-900">PKR {{ txn.amount|floatformat:0 }}</td>
+                    <td class="px-6 py-6 text-center">
+                        {% if txn.status == 'success' %}
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-600 border border-emerald-200 tracking-tighter">Success</span>
+                        {% elif txn.status == 'pending' %}
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-600 border border-amber-200 tracking-tighter">Pending</span>
+                        {% else %}
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-600 border border-rose-200 tracking-tighter">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-6 text-sm font-medium text-gray-500">{{ txn.created_at|date:"M d, Y" }}</td>
+                    <td class="px-6 py-6 text-right">
+                        {% if txn.order %}
+                        <a href="{% url 'admin_panel:order_details' txn.order.pk %}" class="text-emerald-500 font-bold text-sm hover:underline tracking-tight">Details</a>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-400 font-medium">No transactions recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Revenue',
+                    data: {{ chart_values|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 4,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

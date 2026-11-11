@@ -1,0 +1,1190 @@
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Login/Signup - PharmaHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+      (function () {
+        const savedTheme = localStorage.getItem('pharmahub-theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+        document.documentElement.classList.toggle('dark', isDark);
+      })();
+    </script>
+    <style>
+        :root {
+            /* Brand Colors */
+            --teal: #008080;
+            --orange: #FF7F50;
+            /* Theme Colors - Light Mode */
+            --bg: #F9F7F5;           /* Body background */
+            --text: #111827;          /* Primary text */
+            --text-secondary: #4b5563; /* Secondary text */
+            --card: #ffffff;           /* Cards, forms, container */
+            --input: #eeeeee;           /* Input background */
+            --input-border: #dddddd;    /* Input border */
+            --border: #dddddd;          /* General borders */
+            --shadow: rgba(0, 0, 0, 0.1); /* Shadow color */
+            --overlay-text: #ffffff;     /* Overlay panel text */
+            --link: #333333;             /* Link color */
+            --icon: #008080;              /* Social icons */
+            --placeholder: #9ca3af;       /* Placeholder text */
+            --error: #dc3545;              /* Error color */
+            --success: #28a745;            /* Success color */
+        }
+        
+        /* --- DARK THEME VARIABLES --- */
+        html.dark {
+            --bg: #0f172a;               /* Dark navy background */
+            --text: #e5e7eb;              /* Light gray text */
+            --text-secondary: #cbd5e1;     /* Muted text */
+            --card: #111827;               /* Dark card background */
+            --input: #1f2937;               /* Dark input background */
+            --input-border: #374151;        /* Dark input border */
+            --border: #374151;               /* Dark borders */
+            --shadow: rgba(0, 0, 0, 0.5);    /* Darker shadow */
+            --overlay-text: #ffffff;          /* Overlay text remains white */
+            --link: #d1d5db;                  /* Light link color */
+            --icon: #008080;                   /* Teal icons unchanged */
+            --placeholder: #6b7280;            /* Dark placeholder */
+            /* Error/Success colors same */
+        }
+
+        /* ============================================ */
+        /* ========== BASE STYLES USING VARIABLES ===== */
+        /* ============================================ */
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);         
+            color: var(--text);              
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: sans-serif;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.6s ease, color 0.3s ease;
+        }
+
+        h1 {
+            font-weight: bold;
+            margin: 0;
+            color: var(--teal);
+            font-size: 24px;
+        }
+
+        p {
+            font-size: 14px;
+            font-weight: 100;
+            line-height: 20px;
+            letter-spacing: 0.5px;
+            margin: 20px 0 30px;
+            color: var(--text-secondary);
+        }
+
+        span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        a {
+            color: var(--link);
+            font-size: 14px;
+            text-decoration: none;
+            margin: 15px 0;
+            transition: color 0.2s ease;
+        }
+        
+        a:hover {
+            color: var(--orange);
+        }
+
+        /* --- Buttons --- */
+        button {
+            border-radius: 20px;
+            border: 1px solid var(--teal);
+            background-color: var(--teal);
+            color: #FFFFFF;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 12px 45px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: transform 80ms ease-in, background-color 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        /* --- Ghost Button --- */
+        button.ghost {
+            background-color: transparent;
+            border-color: var(--orange);
+            color: var(--overlay-text);
+            transition: all 0.3s ease;
+        }
+        
+        button.ghost:hover {
+            background-color: var(--orange);
+            color: #FFFFFF;
+            border-color: var(--orange);
+        }
+
+        /* --- Forms --- */
+        form {
+            background: var(--card);        
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 35px;
+            height: 100%;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        /* --- Inputs --- */
+        input {
+            background: var(--input);                
+            border: 1px solid var(--input-border);   
+            color: var(--text);                        
+            padding:8px 12px;
+            margin: 3px 0;
+            width: 100%;
+            border-radius: 5px;
+            display: block;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        
+        input::placeholder {
+            color: var(--placeholder);
+            opacity: 1;
+        }
+        
+        /* --- Password Eye Button (No change needed, but ensure icon color works) --- */
+        .password-wrap {
+            position: relative;
+            width: 100%;
+        }
+        .password-wrap input {
+            padding-right: 42px;
+        }
+/* Hide default browser eye icons */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none;
+        }
+
+        .password-wrap {
+            position: relative;
+            width: 100%;
+            display: block; /* Ensure it wraps correctly */
+        }
+
+/* Purana .password-eye wala sara block delete karky ye dalein */
+.password-eye {
+    position: absolute;
+    right: 15px; /* Alignment bilkul professional icon jesi */
+    top: 50%;
+    transform: translateY(-50%);
+    border: none !important;
+    background: transparent !important;
+    color: #6b7280 !important; /* Professional grey color */
+    cursor: pointer;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 18px; /* Standard size */
+    z-index: 10;
+    display: flex;
+    align-items: center;
+}
+
+/* Browser ka apna faltu icon khatam karne ke liye */
+input::-ms-reveal, 
+input::-ms-clear {
+    display: none !important;
+}
+
+.password-wrap {
+    position: relative;
+    width: 100%;
+}
+
+        /* --- Main Container --- */
+        .container {
+            background: var(--card);        
+            border-radius: 10px;
+            box-shadow: 0 14px 28px var(--shadow), 0 10px 10px var(--shadow);
+            position: relative;
+            overflow: hidden;
+            width: 768px;
+            max-width: 90%;
+            min-height: 560px !important;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* --- Form Containers --- */
+        .form-container {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.6s ease-in-out;
+            overflow-y: auto;
+        }
+
+        .sign-in-container {
+            left: 0;
+            width: 50%;
+            z-index: 2;
+        }
+
+        .sign-up-container {
+            left: 0;
+            width: 50%;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        /* --- Social Icons Container (Old style) --- */
+        .social-container {
+            margin: 20px 0;
+        }
+
+        .social-container a {
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            height: 40px;
+            width: 40px;
+            color: var(--icon);
+            transition: all 0.2s ease;
+        }
+        
+        .social-container a:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        
+        .social-container a.google:hover {
+            border-color: #DB4437;
+            color: #DB4437;
+        }
+
+        /* --- Role Selection --- */
+        .role-selection {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .role-selection label {
+            flex-grow: 1;
+            padding: 10px 0;
+            margin: 0 5px;
+            border-radius: 20px;
+            border: 1px solid var(--teal);
+            color: var(--teal);
+            background-color: transparent;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .role-selection input[type="radio"] {
+            display: none;
+        }
+        
+        .role-selection input[type="radio"]:checked + label {
+            background-color: var(--teal);
+            color: #FFFFFF;
+        }
+        
+        .role-selection label:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        .role-selection input[type="radio"]:checked + label:hover {
+            border-color: var(--teal);
+            color: #FFFFFF;
+            background-color: var(--teal);
+        }
+
+        /* --- Overlay/Image Panel --- */
+        .overlay-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            transition: transform 0.6s ease-in-out;
+            z-index: 100;
+        }
+            
+        .overlay {
+            background: var(--teal);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+            url("{% static 'authentication/images/pic1.jpg' %}");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            color: var(--overlay-text);
+            position: relative;
+            left: -100%;
+            height: 100%;
+            width: 200%;
+            transform: translateX(0);
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .overlay-panel {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 40px;
+            text-align: center;
+            top: 0;
+            height: 100%;
+            width: 50%;
+            transform: translateX(0);
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .overlay-left {
+            transform: translateX(-20%);
+        }
+
+        .overlay-right {
+            right: 0;
+            transform: translateX(0);
+        }
+
+        .overlay h1 {
+            color: var(--overlay-text);
+        }
+        .overlay p {
+            color: var(--overlay-text);
+        }
+
+        /* --- Active State for Sliding Animation --- */
+        .container.right-panel-active .overlay-container {
+            transform: translateX(-100%);
+        }
+        .container.right-panel-active .sign-in-container {
+            transform: translateX(100%);
+        }
+        .container.right-panel-active .sign-up-container {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 5;
+        }
+        .container.right-panel-active .overlay {
+            transform: translateX(50%);
+        }
+        .container.right-panel-active .overlay-left {
+            transform: translateX(0);
+        }
+        .container.right-panel-active .overlay-right {
+            transform: translateX(20%);
+        }
+
+        /* --- Messages Styling --- */
+        ul.mb-4 {
+            list-style: none;
+            padding: 0;
+            margin: 2px 0 !important; /* Margin minimize kiya */
+            width: 100%;
+        }
+
+        ul.mb-4 li {
+            color: var(--error);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* --- Input Error Border --- */
+        .input-error {
+            border: 2px solid var(--error) !important;
+        }
+
+        /* --- Pharmacy Wrapper Animation --- */
+        .pharmacy-wrapper {
+            width: 100%;
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.4s ease-in-out;
+            margin-bottom: 0;
+        }
+
+        .pharmacy-wrapper.active {
+            height: 50px;
+            opacity: 1;
+            margin-bottom: 0px;
+            overflow: visible;
+        }
+
+        /* --- New Social Button Styles --- */
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: bold;
+            padding: 10px 15px;
+            margin: 5px 0;
+            width: 100%;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-family: sans-serif;
+        }
+
+        .social-btn i {
+            margin-right: 10px;
+            font-size: 14px;
+            color: currentColor;
+        }
+
+        .social-btn.google:hover {
+            border-color: #DB4437;
+            color: #DB4437;
+        }
+
+        /* --- Error Message Styling --- */
+        .error-message {
+            color: var(--error);
+            font-size: 12px;
+            margin-top: 2px;
+            text-align: left;
+            width: 100%;
+            display: none;
+            padding-left: 5px;
+            font-style: italic;
+        }
+
+        /* ── Inline form messages ── */
+        .inline-msg {
+            font-size: 12px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            text-align: left;
+            width: 100%;
+        }
+        .inline-msg--error {
+            background: rgba(220,53,69,0.10);
+            color: var(--error);
+            border-left: 3px solid var(--error);
+        }
+        .inline-msg--success {
+            background: rgba(40,167,69,0.10);
+            color: var(--success);
+            border-left: 3px solid var(--success);
+        }
+
+        /* ── Role not selected warning ── */
+        .role-error-hint {
+            font-size: 11px;
+            color: var(--error);
+            display: none;
+            margin-top: -4px;
+            margin-bottom: 4px;
+        }
+
+        /* --- Password Strength Indicators (unchanged, but using variables) --- */
+        .strength-container {
+            width: 100%;
+            margin-top: 2px !important;
+            display: none;
+        }
+
+        .strength-requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+            font-size: 11px;
+        }
+
+        .strength-icon {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: var(--text);
+        }
+
+        .strength-icon.valid {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .strength-text {
+            color: var(--text-secondary);
+        }
+
+        .strength-text.valid {
+            color: var(--success);
+        }
+
+        /* Subtle accent color for a link in the form */
+        .form-container a:last-of-type {
+            color: var(--orange);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- =================================================== -->
+    <!-- ========== HTML CONTENT =========================== -->
+    <!-- =================================================== -->
+    <div class="container" id="container">
+        <!-- SIGN UP FORM -->
+        <div class="form-container sign-up-container">
+            <form id="signupForm" method="POST" action="{% url 'authentication:signup' %}" novalidate>
+                {% csrf_token %}
+                <h1>Create Account</h1>
+                
+                <div class="role-selection">
+                    <input type="radio" id="role-customer" name="signup-role" value="customer" required onchange="toggleSignupFields()">
+                    <label for="role-customer">Customer</label>
+
+                    <input type="radio" id="role-pharmacy" name="signup-role" value="pharmacy" required onchange="toggleSignupFields()">
+                    <label for="role-pharmacy">Pharmacy</label>
+                </div>
+                <!-- Permanent hint — hamesha nazar aata hai -->
+                <p id="role-hint-text" style="font-size:12px; color:#008080; margin: 4px 0 8px 0; text-align:center; width:100%; transition: all 0.3s ease;">
+    ⚠ Please select a role before signing up.
+</p>
+
+                <div style="display: flex; flex-direction: column; width: 100%; gap: 5px; margin-bottom: 10px;">
+<!-- Button ko ID dein aur href ko '#' rakhein -->
+<a href="#" id="google-signup-link" class="social-btn google">
+    <i class="fab fa-google"></i> Sign up with Google
+</a>
+                </div>
+                <span>or use your email for registration</span>               
+                
+                <input type="text" id="name-field" placeholder="Full Name / Pharmacy Name" name="name_or_pharmacy_name" required value="{{ signup_name|default:'' }}"/>                                
+                <input type="email" id="email-field" placeholder="Email" name="email" required value="{{ signup_email|default:'' }}"/>                 
+                <input type="password" id="password-field" placeholder="Password" name="password" required/>               
+                <div class="strength-container" id="strength-container">
+                    <div class="strength-requirement">
+                        <div class="strength-icon" id="length-icon">!</div>
+                        <span class="strength-text" id="length-text">At least 8 characters</span>
+                    </div>
+                    <div class="strength-requirement">
+                        <div class="strength-icon" id="uppercase-icon">!</div>
+                        <span class="strength-text" id="uppercase-text">1 uppercase letter</span>
+                    </div>
+                    <div class="strength-requirement">
+                        <div class="strength-icon" id="number-icon">!</div>
+                        <span class="strength-text" id="number-text">1 number</span>
+                    </div>
+                    <div class="strength-requirement">
+                        <div class="strength-icon" id="special-icon">!</div>
+                        <span class="strength-text" id="special-text">1 special character</span>
+                    </div>
+                </div>
+                
+ <input type="password" id="confirm-password-field" placeholder="Confirm Password" name="confirm_password" required {% if password_mismatch %}class="input-error"{% endif %}/>
+
+<div id="signup-msg-box">
+{% if messages %}
+    {% for message in messages %}
+
+        {% if 'signup_error' in message.tags %}
+            <div class="inline-msg inline-msg--error">
+                {{ message }}
+            </div>
+        {% endif %}
+
+    {% endfor %}
+{% endif %}
+</div>
+
+<button type="submit" id="signup-btn" style="margin-top: 5px;">Sign Up</button>
+            </form>
+        </div>
+
+        <!-- SIGN IN FORM -->
+        <div class="form-container sign-in-container">
+            <form id="loginForm" method="POST" action="{% url 'authentication:login' %}">
+                {% csrf_token %}
+                <h1>Sign in</h1>
+               
+                <div style="display: flex; flex-direction: column; width: 100%; gap: 5px; margin-bottom: 10px;">
+<!-- Button ko ID dein aur href ko '#' rakhein -->
+<a href="/auth/login-signup/?action=login"
+   id="google-login-link"
+   class="social-btn google">
+    <i class="fab fa-google"></i> Continue with Google
+</a>
+                </div>
+                
+                <span>or use your account</span>
+                
+                <input type="email" placeholder="Email" name="email" required/>
+                <input type="password" placeholder="Password" name="password" required/>
+               
+                <a href="javascript:void(0);" class="forgot-password-link" id="forgotPassLink">Forgot your password?</a>
+
+<div id="login-msg-box">
+{% if messages %}
+    {% for message in messages %}
+
+        {% if 'login_error' in message.tags %}
+            <div class="inline-msg inline-msg--error">
+                {{ message }}
+            </div>
+        {% endif %}
+
+        {% if 'login_success' in message.tags %}
+            <div class="inline-msg inline-msg--success">
+                {{ message }}
+            </div>
+        {% endif %}
+
+    {% endfor %}
+{% endif %}
+</div>
+
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+
+        <!-- OVERLAY PANEL -->
+        <div class="overlay-container"> 
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Welcome Back!</h1>
+                    <p>Access your health profile, prescriptions, and pharmacy network.</p>
+                    <button class="ghost" id="signIn">Sign In</button>
+                </div>
+                
+                <div class="overlay-panel overlay-right">
+                    <h1>Start Your PharmaHub Journey!</h1>
+                    <p>Register quickly to access services, manage prescriptions, and start connecting.</p>
+                    <button class="ghost" id="signUp">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================== -->
+    <!-- ========== JAVASCRIPT============================== -->
+    <!-- =================================================== -->
+    <script>
+        const signUpButton = document.getElementById('signUp');
+        const signInButton = document.getElementById('signIn');
+        const container = document.getElementById('container');
+
+        // Slide to sign-up
+        signUpButton.addEventListener('click', () => {
+            container.classList.add("right-panel-active");
+        });
+
+        // Slide to sign-in
+        signInButton.addEventListener('click', () => {
+            container.classList.remove("right-panel-active");
+        });
+    </script>
+
+    <script>
+// --- DATA PERSISTENCE & ROLE MEMORY LOGIC ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const show = params.get("show");
+            const role = params.get("role");
+            const name = params.get("name");
+            const email = params.get("email");
+
+             // 1. Agar error signup mein aaya tha, to signup panel hi kholien
+            const djangoShow = "{{ show|default:'' }}";
+            if (show === "signup" || djangoShow === "signup") {
+                container.classList.add("right-panel-active");
+                
+                // 2. Role Memory: Agar role 'pharmacy' tha, to wahi select rahay
+                const djangoRole = "{{ signup_role|default:'' }}";
+                if (role === "pharmacy" || djangoRole === "pharmacy") {
+                    const pharmacyRadio = document.getElementById('role-pharmacy');
+                    if (pharmacyRadio) {
+                        pharmacyRadio.checked = true;
+                        toggleSignupFields();
+                    }
+                } else if (role === "customer" || djangoRole === "customer") {
+                    const customerRadio = document.getElementById('role-customer');
+                    if (customerRadio) {
+                        customerRadio.checked = true;
+                        toggleSignupFields();
+                    }
+                }
+            }
+
+            // 3. Form Data Fill
+            // Django context se fill (HTML value attribute se already ho jata hai, ye backup hai)
+            if (name) document.getElementById('name-field').value = name;
+            
+            if (email) {
+                const signupEmail = document.getElementById('email-field');
+                if (signupEmail) signupEmail.value = email;
+                
+                const loginEmail = document.querySelector('.sign-in-container input[name="email"]');
+                if (loginEmail) loginEmail.value = email;
+            }
+        });
+
+
+        // Highlight fields on error
+        const messageList = document.querySelector('.form-container ul.mb-4');
+        if (messageList && messageList.children.length > 0) {
+            const signupContainer = messageList.closest('.sign-up-container');
+            if (signupContainer) {
+                const signupPasswordInput = signupContainer.querySelector('input[name="password"]');
+                const confirmPasswordInput = signupContainer.querySelector('input[name="confirm_password"]');
+                if (signupPasswordInput) {
+                    signupPasswordInput.classList.add('input-error');
+                }
+                if (confirmPasswordInput) {
+                    confirmPasswordInput.classList.add('input-error');
+                }
+            }
+        }
+
+        // Toggle fields based on role
+        function toggleSignupFields() {
+
+    const customerRadio = document.getElementById('role-customer');
+    const pharmacyRadio = document.getElementById('role-pharmacy');
+    const nameField = document.getElementById('name-field');
+    const hintText = document.getElementById('role-hint-text');
+
+    // ===== ROLE SELECTED =====
+    if ((customerRadio && customerRadio.checked) || (pharmacyRadio && pharmacyRadio.checked)) {
+
+        // TEXT HIDE HO JAYE
+        hintText.style.display = 'none';
+
+        // Placeholder Change
+        if (customerRadio.checked) {
+            nameField.placeholder = "Full Name";
+        } else {
+            nameField.placeholder = "Pharmacy Name";
+        }
+    }
+
+    // ===== ROLE NOT SELECTED =====
+    else {
+
+        // Default Teal Message
+        hintText.style.display = 'block';
+        hintText.style.color = '#008080';
+        hintText.style.fontWeight = '400';
+        hintText.innerHTML = '⚠ Please select a role before signing up.';
+    }
+}
+
+        // Password Validation
+        function validatePassword() {
+            const password = document.getElementById('password-field').value;
+            const strengthContainer = document.getElementById('strength-container');
+            
+            const lengthIcon = document.getElementById('length-icon');
+            const lengthText = document.getElementById('length-text');
+            const uppercaseIcon = document.getElementById('uppercase-icon');
+            const uppercaseText = document.getElementById('uppercase-text');
+            const numberIcon = document.getElementById('number-icon');
+            const numberText = document.getElementById('number-text');
+            const specialIcon = document.getElementById('special-icon');
+            const specialText = document.getElementById('special-text');
+            
+            if (password.length === 0) {
+                strengthContainer.style.display = 'none';
+                return false;
+            }
+            
+            strengthContainer.style.display = 'block';
+            
+            const hasLength = password.length >= 8;
+            lengthIcon.classList.toggle('valid', hasLength);
+            lengthText.classList.toggle('valid', hasLength);
+            lengthIcon.textContent = hasLength ? '✓' : '!';
+            
+            const hasUppercase = /[A-Z]/.test(password);
+            uppercaseIcon.classList.toggle('valid', hasUppercase);
+            uppercaseText.classList.toggle('valid', hasUppercase);
+            uppercaseIcon.textContent = hasUppercase ? '✓' : '!';
+            
+            const hasNumber = /[0-9]/.test(password);
+            numberIcon.classList.toggle('valid', hasNumber);
+            numberText.classList.toggle('valid', hasNumber);
+            numberIcon.textContent = hasNumber ? '✓' : '!';
+            
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            specialIcon.classList.toggle('valid', hasSpecial);
+            specialText.classList.toggle('valid', hasSpecial);
+            specialIcon.textContent = hasSpecial ? '✓' : '!';
+            
+            return hasLength && hasUppercase && hasNumber && hasSpecial;
+        }
+
+        // Real-time validation
+        document.getElementById('password-field')?.addEventListener('input', validatePassword);
+
+        // Form submission check — sirf comment, actual listener neeche hai
+
+        // Run toggle on load
+        document.addEventListener('DOMContentLoaded', toggleSignupFields);
+        
+        // Attach listeners to radio buttons
+        document.getElementById('role-customer').addEventListener('change', toggleSignupFields);
+        document.getElementById('role-pharmacy').addEventListener('change', toggleSignupFields);
+
+        // Role validation listener neeche last script block mein hai ✓
+
+        // Forgot Password Modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('forgotPasswordModal');
+            const forgotLink = document.getElementById('forgotPassLink');
+            const closeBtn = document.getElementById('closeModal');
+            const form = document.getElementById('forgotPasswordForm');
+            const msgDiv = document.getElementById('modalMessage');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (forgotLink) {
+                forgotLink.onclick = function(e) {
+                    e.preventDefault();
+                    modal.style.display = 'flex';
+                };
+            }
+
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = 'none';
+                    msgDiv.style.display = 'none';
+                };
+            }
+
+            if (form) {
+                form.onsubmit = function(e) {
+                    e.preventDefault(); 
+                    
+                    submitBtn.innerText = "Sending...";
+                    submitBtn.disabled = true;
+
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        }
+                    })
+                    .then(async response => {
+                        const data = await response.json().catch(() => ({}));
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        if (response.ok && data.ok) {
+                            msgDiv.innerText = data.message || "Email sent successfully! Check your inbox.";
+                            msgDiv.style.backgroundColor = "#d4edda";
+                            msgDiv.style.color = "#155724";
+                            msgDiv.style.display = "block";
+                            submitBtn.innerText = "Sent!";
+                            submitBtn.style.backgroundColor = "#28a745";
+                            submitBtn.disabled = true;
+
+                            setTimeout(() => {
+                                const modal = document.getElementById('forgotPasswordModal');
+                                modal.style.display = 'none';
+                                form.reset();
+                                msgDiv.style.display = 'none';
+                                submitBtn.innerText = "Send Reset Link";
+                                submitBtn.style.backgroundColor = ""; 
+                                submitBtn.disabled = false;
+                            }, 3000);
+
+                        } else {
+                            msgDiv.innerText = data.message || "Error! Connection failed or invalid email.";
+                            msgDiv.style.backgroundColor = "#f8d7da";
+                            msgDiv.style.color = "#721c24";
+                            msgDiv.style.display = "block";
+                            submitBtn.innerText = "Send Reset Link";
+                            submitBtn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        msgDiv.innerText = "Error! Connection failed or invalid email.";
+                        msgDiv.style.backgroundColor = "#f8d7da";
+                        msgDiv.style.color = "#721c24";
+                        msgDiv.style.display = "block";
+                        submitBtn.innerText = "Send Reset Link";
+                        submitBtn.disabled = false;
+                    });
+                };
+            }
+        });
+    </script>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
+        <div style="background:var(--card); padding:30px; border-radius:15px; width:400px; text-align:center; position:relative; box-shadow: 0 5px 15px var(--shadow); transition: background-color 0.3s ease;">
+            <span id="closeModal" style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:24px; color:var(--text-secondary);">&times;</span>
+            <h2 style="color:var(--teal); margin-bottom:10px;">Reset Password</h2>
+            <p style="font-size: 14px; margin-bottom: 20px; color:var(--text-secondary);">Enter your email address, we will send you a password reset link.</p>
+
+            <form id="forgotPasswordForm" method="POST" action="/auth/forgot-password-ajax/">
+                {% csrf_token %}
+                <div id="modalMessage" style="display:none; padding:10px; border-radius:5px; margin-bottom:10px; font-size:14px; text-align:center;"></div>
+                
+                <input type="email" name="email" placeholder="Enter your email" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input); color: var(--text);">
+                
+                <button type="submit" id="submitBtn" style="background: var(--teal); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; transition: background-color 0.3s ease;">Send Reset Link</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Visibility Toggle -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Ye function sirf un fields par icon lagaye ga jin par pehle se nahi hai
+    function applyEyeIcons() {
+        document.querySelectorAll('input[type="password"]').forEach(function (input) {
+            // Check if already processed
+            if (input.dataset.eyeDone === 'true') return;
+            
+            input.dataset.eyeDone = 'true';
+
+            // Create wrapper
+            const wrap = document.createElement('div');
+            wrap.className = 'password-wrap';
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(input);
+
+            // Create button with Remix Icon
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'password-eye';
+            // Initial icon state (Eye closed/off)
+            btn.innerHTML = '<i class="ri-eye-off-line"></i>';
+
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                // Toggle between Eye and Eye-Off
+                btn.innerHTML = isPassword ? '<i class="ri-eye-line"></i>' : '<i class="ri-eye-off-line"></i>';
+            });
+
+            wrap.appendChild(btn);
+        });
+    }
+
+    applyEyeIcons();
+
+    // ── ROLE VALIDATION — submit par check karo ──
+    // Role Validation on Submit
+const signupForm = document.getElementById('signupForm');
+
+if (signupForm) {
+
+    signupForm.addEventListener('submit', function(e) {
+
+        const customerRadio = document.getElementById('role-customer');
+        const pharmacyRadio = document.getElementById('role-pharmacy');
+        const hintText = document.getElementById('role-hint-text');
+
+        // ===== AGAR ROLE SELECT NAHI =====
+        if (!customerRadio.checked && !pharmacyRadio.checked) {
+            e.preventDefault();
+            hintText.style.display = 'block';
+            hintText.style.color = '#ff2d2d';
+            hintText.style.fontWeight = '700';
+            hintText.style.fontSize = '13px';
+            hintText.innerHTML = '⛔ Selecting a role is required before creating an account!';
+            return false;
+        }
+
+        // ===== EMAIL VALIDATION =====
+        const emailInput = document.getElementById('email-field');
+        const emailVal = emailInput ? emailInput.value.trim() : '';
+        const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+        if (emailVal && !emailRegex.test(emailVal)) {
+            e.preventDefault();
+            emailInput.style.borderColor = '#e74c3c';
+            let errDiv = document.getElementById('signup-email-err');
+            if (!errDiv) {
+                errDiv = document.createElement('div');
+                errDiv.id = 'signup-email-err';
+                errDiv.style.cssText = 'color:#e74c3c;font-size:12px;margin-top:3px;text-align:left;';
+                emailInput.parentNode.insertBefore(errDiv, emailInput.nextSibling);
+            }
+            errDiv.textContent = '⚠ Please enter a valid email (e.g., user@example.com)';
+            emailInput.focus();
+            return false;
+        }
+
+        // Input sahi ho to border reset karo
+        if (emailInput) emailInput.style.borderColor = '';
+        const oldErr = document.getElementById('signup-email-err');
+        if (oldErr) oldErr.remove();
+
+    });
+
+}
+});
+
+// ── LOGIN FORM EMAIL VALIDATION ──
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+        const emailInput = this.querySelector('input[name="email"]');
+        const emailVal = emailInput ? emailInput.value.trim() : '';
+        const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+        if (emailVal && !emailRegex.test(emailVal)) {
+            e.preventDefault();
+            emailInput.style.borderColor = '#e74c3c';
+            let errDiv = document.getElementById('login-email-err');
+            if (!errDiv) {
+                errDiv = document.createElement('div');
+                errDiv.id = 'login-email-err';
+                errDiv.style.cssText = 'color:#e74c3c;font-size:12px;margin-top:3px;text-align:left;';
+                emailInput.parentNode.insertBefore(errDiv, emailInput.nextSibling);
+            }
+            errDiv.textContent = '⚠ Please enter a valid email address';
+            emailInput.focus();
+            return false;
+        }
+
+        if (emailInput) emailInput.style.borderColor = '';
+        const oldErr = document.getElementById('login-email-err');
+        if (oldErr) oldErr.remove();
+    });
+}
+
+// Google link ko role ke mutabiq update karne ka function
+function updateGoogleSignupLink(e) {
+
+    const customerRadio = document.getElementById('role-customer');
+    const pharmacyRadio = document.getElementById('role-pharmacy');
+
+    const googleBtn = document.getElementById('google-signup-link');
+
+    const hintText = document.getElementById('role-hint-text');
+
+    // ============================
+    // ROLE VALIDATION
+    // ============================
+    if (e && e.type === 'click') {
+
+        if (!customerRadio.checked && !pharmacyRadio.checked) {
+
+            e.preventDefault();
+
+            hintText.style.display = 'block';
+            hintText.style.color = '#ff2d2d';
+            hintText.style.fontWeight = '700';
+
+            hintText.innerHTML =
+                '⛔ Selecting a role is required before using Google Signup!';
+
+            return false;
+        }
+    }
+
+    // ============================
+    // ROLE DETECTION
+    // ============================
+    let selectedRole = '';
+
+    if (customerRadio.checked) {
+        selectedRole = 'customer';
+    }
+
+    if (pharmacyRadio.checked) {
+        selectedRole = 'pharmacy';
+    }
+
+    // ============================
+    // GOOGLE SIGNUP URL
+    // ============================
+    if (googleBtn && selectedRole !== '') {
+
+        googleBtn.href =
+            `/auth/login-signup/?action=signup&role=${selectedRole}`;
+    }
+}
+
+// In event listeners ko 'DOMContentLoaded' ke andar add karein
+document.addEventListener('DOMContentLoaded', function() {
+    const googleBtn = document.getElementById('google-signup-link');
+    
+    // Initial call
+    updateGoogleSignupLink(); 
+
+    // Radio buttons change hone par URL update karein
+    document.getElementById('role-customer').addEventListener('change', updateGoogleSignupLink);
+    document.getElementById('role-pharmacy').addEventListener('change', updateGoogleSignupLink);
+
+    // Google button click par validation check karein
+    if (googleBtn) {
+        googleBtn.addEventListener('click', updateGoogleSignupLink);
+    }
+});
+
+// js add kr rhe hon msg show krwany k lyea..
+document.addEventListener("DOMContentLoaded", function () {
+
+    const isSignup = document.getElementById("container")
+        .classList.contains("right-panel-active");
+
+    const loginBox = document.getElementById("login-msg-box");
+    const signupBox = document.getElementById("signup-msg-box");
+
+    if (isSignup) {
+        if (loginBox) loginBox.innerHTML = "";
+    } else {
+        if (signupBox) signupBox.innerHTML = "";
+    }
+
+});
+
+</script>
+</body>
+</html>

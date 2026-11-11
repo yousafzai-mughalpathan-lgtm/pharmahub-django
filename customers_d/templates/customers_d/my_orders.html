@@ -1,0 +1,206 @@
+{% extends "customers_d/customer_dashboard.html" %}
+{% load static %}
+
+{% block title %}My Orders - PharmaHub{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+    .order-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .order-card:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 20px 25px -5px rgba(13, 148, 136, 0.1), 0 10px 10px -5px rgba(13, 148, 136, 0.04); 
+    }
+    #map { height: 420px; border-radius: 16px; z-index: 1; }
+    .leaflet-popup-content-wrapper { background: #ffffff; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 4px; }
+    .timeline-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+        70% { box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+    }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <div class="bg-gradient-to-r from-teal-700 to-cyan-800 rounded-2xl p-6 md:p-8 shadow-lg mb-8 relative overflow-hidden text-white">
+        <div class="absolute right-0 top-0 opacity-10 transform translate-x-12 -translate-y-6">
+            <i class="ri-heart-pulse-fill text-[200px]"></i>
+        </div>
+        <div class="relative z-10">
+            <h2 class="text-3xl font-extrabold tracking-tight flex items-center gap-3">
+                <i class="ri-shopping-bag-3-line bg-white/20 p-2 rounded-xl text-2xl"></i> My Orders
+            </h2>
+            <p class="text-teal-100/90 mt-2 text-sm md:text-base">Track your prescription processing, delivery stages, and interact with live dynamic mapping routers.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-8">
+        {% if orders %}
+            {% for order in orders %}
+            <div class="order-card bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/80 rounded-2xl p-6 md:p-8 shadow-sm" data-order-id="{{ order.order_id }}">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start pb-6 border-b border-gray-100 dark:border-gray-700/60 gap-4">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-xs font-mono font-bold tracking-wider uppercase px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md">ID</span>
+                            <h3 class="font-extrabold text-xl text-gray-900 dark:text-white">{{ order.order_id }}</h3>
+                        </div>
+                        
+                        <div class="mt-3 flex flex-wrap gap-2 items-center">
+                            {% if order.status == 'Delivered' %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-xs font-bold rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Delivered
+                                </span>
+                            {% elif order.status == 'Pending' %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-xs font-bold rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 timeline-pulse"></span> Pending Approval
+                                </span>
+                            {% elif order.status == 'On the Way' or order.status == 'Ready' %}
+
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400 text-xs font-bold rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-sky-500 timeline-pulse"></span> In Transit
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-xs font-bold rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ order.status }}
+                                </span>
+                            {% endif %}
+                            <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">Ordered on {{ order.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-left md:text-right w-full md:w-auto">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Total Invoice Amount</p>
+                        <p class="text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5">Rs. {{ order.total_amount }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-medium">{{ order.items.count }} Item(s) ordered</p>
+                    </div>
+                </div>
+
+                <div class="py-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm border-b border-gray-100 dark:border-gray-700/60">
+                    <div class="space-y-2">
+                        <p class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Shipping Consignee Info</p>
+                        <p class="font-bold text-gray-800 dark:text-gray-200">{{ order.full_name }}</p>
+                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed flex items-start gap-2">
+                            <i class="ri-map-pin-2-line text-teal-600 mt-0.5 shrink-0"></i>
+                            <span class="truncate-2-lines" title="{{ order.address }}">{{ order.address }}</span>
+                        </p>
+                    </div>
+                    <div class="space-y-2 flex flex-col justify-end md:items-end">
+                        <p class="text-xs text-gray-400 uppercase font-semibold tracking-wider md:text-right w-full">Payment System Channel</p>
+                        <p class="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                            <i class="ri-wallet-3-line text-cyan-600"></i> Cash on Delivery (COD)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <h4 class="font-bold text-xs text-gray-400 uppercase tracking-wider mb-5">Order Processing Stages</h4>
+                    
+                    <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-4 ml-3 md:ml-0">
+                        <div class="hidden md:block absolute left-0 right-0 top-3.5 h-0.5 bg-gray-200 dark:bg-gray-700 z-0"></div>
+                        <div class="block md:hidden absolute left-3.5 top-2 bottom-2 w-0.5 bg-gray-200 dark:bg-gray-700 z-0"></div>
+
+                        <div class="relative z-10 flex flex-row md:flex-col items-center gap-4 md:gap-2 md:text-center flex-1">
+                            <div class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-sm shadow">
+                                <i class="ri-check-line"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-teal-600">Order Placed</p>
+                                <p class="text-xs text-gray-400 font-medium">{{ order.created_at|date:"g:i A" }}</p>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex flex-row md:flex-col items-center gap-4 md:gap-2 md:text-center flex-1">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow border-2 
+                                {% if order.status != 'Pending' and order.status != 'Cancelled' %} bg-teal-600 text-white border-teal-600 {% else %} bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 {% endif %}">
+                                {% if order.status != 'Pending' and order.status != 'Cancelled' %}<i class="ri-check-line"></i>{% else %}2{% endif %}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold {% if order.status != 'Pending' and order.status != 'Cancelled' %} text-gray-800 dark:text-gray-200 {% else %} text-gray-400 {% endif %}">Verified by Partner</p>
+                                <p class="text-xs text-gray-400">
+                                    {% if order.status != 'Pending' and order.status != 'Cancelled' %}Approved{% else %}Awaiting verification{% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex flex-row md:flex-col items-center gap-4 md:gap-2 md:text-center flex-1">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow border-2 
+                                {% if order.status == 'On the Way' or order.status == 'Ready' or order.status == 'Delivered' %} bg-teal-600 text-white border-teal-600 {% else %} bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 {% endif %}">
+                                {% if order.status == 'On the Way' or order.status == 'Ready' or order.status == 'Delivered' %}<i class="ri-check-line"></i>{% else %}3{% endif %}
+                            </div>
+
+                            <div>
+                                <p class="text-sm font-bold {% if order.status == 'On the Way' or order.status == 'Ready' or order.status == 'Delivered' %} text-gray-800 dark:text-gray-200 {% else %} text-gray-400 {% endif %}">Out For Delivery</p>
+
+                                <p class="text-xs text-gray-400">
+                                    {% if order.status == 'On the Way' or order.status == 'Ready' %}In transit now{% else %}Dispatched stage{% endif %}
+
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex flex-row md:flex-col items-center gap-4 md:gap-2 md:text-center flex-1">
+                            {% if order.status == 'Cancelled' %}
+                                <div class="w-8 h-8 rounded-full bg-rose-600 text-white flex items-center justify-center font-bold text-sm shadow">
+                                    <i class="ri-close-line"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-rose-600">Cancelled</p>
+                                    <p class="text-xs text-gray-400">Order voided</p>
+                                </div>
+                            {% else %}
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow border-2 
+                                    {% if order.status == 'Delivered' %} bg-teal-600 text-white border-teal-600 {% else %} bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 {% endif %}">
+                                    {% if order.status == 'Delivered' %}<i class="ri-checkbox-circle-line"></i>{% else %}4{% endif %}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold {% if order.status == 'Delivered' %} text-emerald-600 {% else %} text-gray-400 {% endif %}">Delivered Destination</p>
+                                    <p class="text-xs text-gray-400">Package handed over</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex flex-wrap justify-end items-center gap-3 pt-4 border-t border-gray-50 dark:border-gray-700/30">
+{% if order.status == 'Delivered' %}
+                        <a href="{% url 'customers_d:reorder' order.id %}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
+                                <i class="ri-refresh-line"></i> Reorder Items
+                            </a>
+                        {% endif %}
+
+{% if order.status == 'Pending' %}
+                        <form action="{% url 'customers_d:cancel_order' order.id %}" method="POST" onsubmit="return confirm('Cancel this order? Stock will be restored.');">
+                            {% csrf_token %}
+                            <button type="submit" class="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 dark:hover:bg-rose-900/30 text-rose-700 dark:text-rose-200 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
+                                <i class="ri-close-line"></i> Cancel Order
+                            </button>
+                        </form>
+{% endif %}
+
+                        <a href="{% url 'customers_d:order_detail' order.id %}" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold transition-colors shadow-sm flex items-center gap-2">
+                            View Order Details <i class="ri-arrow-right-line"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-16 bg-white dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
+                <div class="w-20 h-20 bg-teal-50 dark:bg-teal-950/40 rounded-full flex items-center justify-center mx-auto mb-4 text-teal-600 dark:text-teal-400">
+                    <i class="ri-shopping-bag-3-line text-4xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">No Orders Found</h3>
+                <p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto text-sm mb-6">Looks like you haven't placed any medical prescription or health product orders yet.</p>
+                <a href="{% url 'customers_d:search_medicines' %}" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md">
+                    Browse Medicines <i class="ri-arrow-right-line"></i>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

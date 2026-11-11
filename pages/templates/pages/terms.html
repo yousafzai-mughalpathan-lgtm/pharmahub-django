@@ -1,0 +1,92 @@
+{% extends 'pharmacy/base.html' %}
+{% block title %}Terms of Service - PharmaHub{% endblock %}
+
+{% block content %}
+<style>
+    /* Smooth scrolling enable karne ke liye */
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
+
+<div class="bg-slate-50 dark:bg-gray-900 min-h-screen py-16 px-4 sm:px-6 lg:px-8 font-sans">
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl tracking-tight">
+                Terms of <span class="text-teal-600">Service</span>
+            </h1>
+            <p class="mt-6 text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl mx-auto">
+                Please read these terms carefully before using the PharmaHub platform. By accessing our services, you agree to be bound by these conditions.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="hidden md:block col-span-1">
+                <div class="sticky top-24 space-y-4">
+                    <div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-bold text-gray-900 dark:text-white mb-4 italic">Quick Navigation</h3>
+                        <ul class="text-sm text-gray-500 space-y-3">
+                            <li>
+                                <a href="#section-1" class="hover:text-teal-600 transition-colors duration-200 block w-full">1. Acceptance of Terms</a>
+                            </li>
+                            <li>
+                                <a href="#section-2" class="hover:text-teal-600 transition-colors duration-200 block w-full">2. User Responsibilities</a>
+                            </li>
+                            <li>
+                                <a href="#section-3" class="hover:text-teal-600 transition-colors duration-200 block w-full">3. Prescription Policy</a>
+                            </li>
+                            <li>
+                                <a href="#section-4" class="hover:text-teal-600 transition-colors duration-200 block w-full">4. Limitation of Liability</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-2 space-y-8">
+                
+                <div id="section-1" class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 scroll-mt-24">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">1. Acceptance of Terms</h2>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                        PharmaHub provides a digital marketplace connecting independent licensed pharmacies with customers. By creating an account, you acknowledge that PharmaHub is a platform facilitator and not a direct healthcare provider.
+                    </p>
+                </div>
+
+                <div id="section-2" class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 scroll-mt-24">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">2. User Roles & Account Security</h2>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Users are responsible for maintaining the confidentiality of their credentials. 
+                        <strong>Pharmacies</strong> must ensure all uploaded inventory and licenses are valid. 
+                        <strong>Customers</strong> must provide accurate delivery information to ensure successful fulfillment.
+                    </p>
+                </div>
+
+                <div id="section-3" class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 scroll-mt-24">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">3. Prescription & Compliance</h2>
+                    <div class="bg-teal-50 dark:bg-teal-900/20 border-l-4 border-teal-500 p-4 mb-4">
+                        <p class="text-sm text-teal-800 dark:text-teal-200">
+                            <strong>Note:</strong> Prescription-only medicines (POM) will not be dispensed without a valid, verifiable prescription uploaded through our secure system.
+                        </p>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                        The final decision to dispense medication rests with the licensed pharmacist at the partner pharmacy. PharmaHub reserves the right to cancel orders if the provided prescription does not meet legal standards.
+                    </p>
+                </div>
+
+                <div id="section-4" class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 scroll-mt-24">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">4. Limitation of Liability</h2>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                        PharmaHub shall not be held liable for any adverse effects, misuse of medication, or delays in delivery caused by partner pharmacies. All medical concerns should be directed to a qualified healthcare professional.
+                    </p>
+                </div>
+
+                <div class="text-center pt-8">
+                    <p class="text-sm text-gray-400">
+                        Last updated: October 2025 | Version 1.0.0 (Beta)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

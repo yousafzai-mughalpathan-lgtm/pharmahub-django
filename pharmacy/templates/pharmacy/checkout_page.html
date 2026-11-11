@@ -1,0 +1,188 @@
+{% extends 'pharmacy/base.html' %} 
+{% load static %}
+
+{% block title %}Secure Checkout - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-7xl px-4 py-8 font-['Inter']">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 border-b pb-4">Secure Checkout</h1>
+
+    <form method="POST" action="{% url 'pharmacy:place_order' %}" class="lg:grid lg:grid-cols-3 lg:gap-8">
+        {% csrf_token %} 
+        
+        <div class="lg:col-span-2 space-y-8 p-6 bg-white rounded-xl shadow-lg">
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-phone-line text-ph-teal"></i> Contact Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="email" id="email" name="email" placeholder="Email Address *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="tel" id="phone" name="phone" placeholder="Phone Number *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-truck-line text-ph-teal"></i> Shipping Address
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="first-name" name="first_name" placeholder="First Name *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="text" id="last-name" name="last_name" placeholder="Last Name (Optional)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <input type="text" id="address" name="address" placeholder="Apartment, Street Address, etc. *" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="city" name="city" placeholder="City *" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="text" id="province" name="province" placeholder="Province/State (Optional)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="text" id="postal-code" name="postal_code" placeholder="Postal Code (Optional)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-wallet-3-line text-ph-teal"></i> Select Payment Method
+                </h2>
+                <div class="space-y-4">
+                    
+                    <label for="payment-cod" class="block p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-teal-500 transition-all has-[:checked]:ring-2 has-[:checked]:ring-teal-500 bg-white">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" id="payment-cod" name="payment_method" value="COD" checked 
+                                   class="form-radio h-5 w-5 text-ph-teal border-gray-300 focus:ring-ph-teal">
+                            <i class="ri-money-rupee-circle-line text-2xl text-ph-teal"></i>
+                            <span class="text-lg font-semibold text-gray-800">Cash on Delivery (COD)</span>
+                        </div>
+                    </label>
+
+                    <div class="p-4 border border-gray-300 rounded-lg transition-all space-y-3 bg-white">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="radio" id="payment-jazzcash" name="payment_method" value="JazzCash_EasyPaisa"
+                                   class="form-radio h-5 w-5 text-ph-teal border-gray-300 focus:ring-ph-teal">
+                            <span class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="ri-smartphone-line text-2xl text-ph-teal"></i> JazzCash / EasyPaisa / Wallets
+                            </span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="radio" id="payment-bank" name="payment_method" value="BankTransfer"
+                                   class="form-radio h-5 w-5 text-ph-teal border-gray-300 focus:ring-ph-teal">
+                            <span class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="ri-bank-card-line text-2xl text-ph-teal"></i> Credit/Debit Card or Bank Transfer
+                            </span>
+                        </label>
+
+                        <div class="text-sm text-gray-500 pt-2 border-t mt-3 hidden" id="online-details">
+                            <p class="font-bold text-gray-700">آن لائن ادائیگی کی تفصیلات آرڈر دینے کے بعد ظاہر ہوں گی۔</p>
+                            <p>You will receive an SMS/Email with the payment link.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-file-text-line text-ph-teal"></i> Order Notes
+                </h2>
+                <textarea id="notes" name="notes" rows="3" placeholder="Add any special instructions for the delivery rider..."
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-1 mt-8 lg:mt-0 p-6 bg-gray-50 rounded-xl shadow-inner h-fit sticky top-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b pb-3">Order Summary</h2>
+            
+            <div class="space-y-4 mb-6">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <p class="text-base text-gray-600">Paracetamol (x2)</p>
+                    <p class="text-base font-medium text-gray-800">PKR 400.00</p>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <p class="text-base text-gray-600">Amoxicillin (x1)</p>
+                    <p class="text-base font-medium text-gray-800">PKR 150.00</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-500">Subtotal</p>
+                    <p class="text-lg font-semibold text-gray-900" id="summary-subtotal">{{ subtotal|default:"PKR 550.00" }}</p> 
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-200 pb-3">
+                    <p class="text-sm text-gray-500">Shipping Cost</p>
+                    <p class="text-lg font-semibold text-gray-900">PKR 250.00</p>
+                </div>
+                <div class="flex justify-between items-center pt-3">
+                    <h2 class="text-xl font-bold text-gray-900">Total Amount</h2>
+                    <p class="text-2xl font-extrabold text-ph-teal" id="summary-total">{{ total|default:"PKR 800.00" }}</p> 
+                </div>
+            </div>
+
+         <button type="submit" id="place-order-btn" 
+        class="w-full bg-teal-600 text-white py-4 rounded-xl font-bold text-xl tracking-wider hover:bg-teal-700 transition-colors duration-300 shadow-lg shadow-teal-200/50 focus:outline-none focus:ring-4 focus:ring-teal-500/50">
+    Place Order (PKR {{ total_amount_float|floatformat:2|default:"800.00" }})
+</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide online payment details based on selection
+        const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+        const onlineDetails = document.getElementById('online-details');
+
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Check if COD is selected, else show online details
+                const isOnline = this.value !== 'COD'; 
+                if (isOnline) {
+                    onlineDetails.classList.remove('hidden');
+                } else {
+                    onlineDetails.classList.add('hidden');
+                }
+            });
+        });
+
+        // --- Form Validation Logic ---
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const firstName = document.getElementById('first-name').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const city = document.getElementById('city').value.trim();
+            
+            const requiredFields = [email, phone, firstName, address, city];
+            
+            // Basic validation check
+            if (requiredFields.some(field => field === '')) {
+                e.preventDefault(); // Prevent form submission
+                alert("براہ کرم تمام لازمی فیلڈز (رابطہ، نام، پتہ، شہر) پُر کریں تاکہ آرڈر دیا جا سکے۔");
+                return;
+            }
+
+            // Simple email format check
+            if (!/^[\w.-]+@[\w.-]+\.\w{2,3}$/.test(email)) {
+                e.preventDefault(); // Prevent form submission
+                alert("براہ کرم ایک درست ای میل ایڈریس درج کریں۔");
+                return;
+            }
+            
+            // Agar validation pass ho jaaye, toh form submit ho jayega 'place_order' view par.
+            // Server side validation bhi zaroori hai.
+        });
+    });
+</script>
+{% endblock %}

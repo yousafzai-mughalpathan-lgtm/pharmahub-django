@@ -1,0 +1,102 @@
+{% extends "customers_d/customer_base.html" %}
+
+{% block content %}
+{% csrf_token %}
+
+<section class="max-w-4xl mx-auto p-6 min-h-screen">
+    <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-bold text-teal-700">Notifications</h2>
+        <span class="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-sm font-medium">
+            {{ notifications.count }} Total
+        </span>
+    </div>
+
+    {% if notifications %}
+    <div class="space-y-4">
+        {% for note in notifications %}
+        <div class="bg-white border-l-4 {% if 'rejected' in note.message.lower %}border-red-500{% else %}border-teal-500{% endif %} rounded-xl shadow-md p-5 transition-transform hover:scale-[1.01]">
+            <div class="flex items-start gap-4">
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start">
+                        <p class="text-sm font-bold text-gray-800">
+                            {% if 'rejected' in note.message.lower %}Order Update{% else %}Status Update{% endif %}
+                        </p>
+                        <span class="text-[10px] text-gray-400 font-medium">{{ note.created_at|timesince }} ago</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">{{ note.message }}</p>
+                    
+                    {% if note.prescription %}
+                        <div class="mt-4">
+                            <a href="{% url 'customers_d:prescription_details' note.prescription.id %}" 
+                               class="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-teal-700 transition-all shadow-md">
+                                View Quote & Add to Cart <i class="ri-arrow-right-s-line"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="mt-2 text-[10px] text-red-400 font-italic">
+                            Note: No prescription link attached to this notification.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-8 text-center">
+        <button class="clear-all-btn text-sm font-semibold text-gray-500 hover:text-teal-600 transition flex items-center gap-2 mx-auto"
+                data-url="{% url 'customers_d:clear_customer_notifications' %}">
+            <i class="ri-delete-bin-line"></i>
+            Clear all notifications
+        </button>
+    </div>
+
+    {% else %}
+    <div class="text-center py-20 bg-white rounded-2xl shadow-sm border border-dashed border-gray-200">
+        <p class="text-gray-500">No notifications yet.</p>
+    </div>
+    {% endif %}
+</section>
+
+
+<script>
+document.querySelectorAll('.clear-all-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (!confirm('Are you sure you want to clear all notifications?')) return;
+
+        const targetUrl = this.getAttribute('data-url');
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                          document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+
+        console.log("Attempting to hit URL:", targetUrl); // Browser console mein check karne ke liye
+
+        fetch(targetUrl, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': csrftoken, 
+                'Content-Type': 'application/json' 
+            }
+        })
+        .then(res => {
+            console.log("Response status:", res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message); // Agar success hua to pop-up aayega
+                window.location.reload();
+            } else {
+                alert('Backend Error: ' + data.message); // Agar Django ne error diya
+            }
+        })
+        .catch(err => {
+            console.error('AJAX Error:', err);
+            alert('Network or JS Error: ' + err); // Agar JavaScript crash hui
+        });
+    });
+});
+
+</script>
+{% endblock %}

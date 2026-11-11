@@ -1,0 +1,48 @@
+{% extends "admin/base_admin.html" %}
+{% load static %}
+
+{% block title %}Server Error - PharmaHub{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center px-4">
+    <div class="max-w-2xl w-full text-center">
+        <div class="mb-8 relative">
+            <div class="absolute inset-0 flex items-center justify-center opacity-10">
+                <i class="ri-server-line text-[15rem] text-teal-600"></i>
+            </div>
+            <h1 class="text-9xl font-extrabold text-teal-600 tracking-widest relative">500</h1>
+            <div class="bg-orange-500 px-2 text-sm rounded rotate-12 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-bold">
+                SERVER ERROR
+            </div>
+        </div>
+
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-4">
+            We're experiencing some technical difficulties on our end.
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 text-lg mb-10 leading-relaxed">
+            Please refresh the page or try again in a few moments. Our team has been notified.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="{% url 'pharmacy:index' %}" 
+               class="w-full sm:w-auto px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center">
+                <i class="ri-home-4-line mr-2"></i> Back to Home
+            </a>
+            
+            <a href="{% url 'pages:contact' %}" 
+               class="w-full sm:w-auto px-8 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 flex items-center justify-center">
+                <i class="ri-customer-service-2-line mr-2"></i> Contact Support
+            </a>
+        </div>
+
+        <div class="mt-16 pt-8 border-t border-gray-100 dark:border-gray-800">
+            <p class="text-sm text-gray-500 mb-4 uppercase tracking-widest">Popular Categories</p>
+            <div class="flex flex-wrap justify-center gap-6">
+                <a href="{% url 'customers_d:search_medicines' %}" class="text-teal-600 hover:underline">Medicines</a>
+                <a href="{% url 'pages:pharmacies' %}" class="text-teal-600 hover:underline">Top Pharmacies</a>
+                <a href="{% url 'pages:about' %}" class="text-teal-600 hover:underline">About Us</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

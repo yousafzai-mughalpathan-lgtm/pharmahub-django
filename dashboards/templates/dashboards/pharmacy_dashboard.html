@@ -1,0 +1,1596 @@
+{% extends 'dashboards/pharmacy_base.html' %}
+{% load static %}
+{% block title %}Pharmacy Dashboard - PharmaHub{% endblock %}
+{% block content %}
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+    <style>
+        /* Removed unused 'Pacifico' font import. 'Inter' remains for the dashboard UI. */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+        }
+
+        /* Custom Styles that are not standard Tailwind utilities */
+        .gradient-bg {
+            background-image: linear-gradient(to bottom, #d9f3ff, #f3f4f6);
+        }
+
+        .edit-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+
+        .tab-btn.active {
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .low-stock-alert {
+            background-color: #fffbe6;
+            border-left: 4px solid #f6b400;
+            color: #8c5d00;
+        }
+
+        .action-button-icon {
+            transition: color 0.2s;
+        }
+
+        .action-button-icon.edit {
+            background-color: #e0f2fe;
+            color: #3b82f6;
+        }
+
+        .action-button-icon.edit:hover {
+            background-color: #dbeafe;
+        }
+
+        .action-button-icon.delete {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .action-button-icon.delete:hover {
+            background-color: #fecaca;
+        }
+
+        /* Form Visibility Transition */
+        #medicineFormContainer {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+           
+            overflow: hidden;
+           
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        #medicineFormContainer.visible {
+            max-height: 1000px;
+            opacity: 1;
+            margin-top: 1.5rem;
+        }
+
+        /* Status Badges */
+        .status-badge.Pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.Processing {
+            background-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.Shipped {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-badge.Delivered {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.Cancelled {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.Returned {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .modal-backdrop {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+}
+.interactive-card {
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Isay apne <style> block mein add karein */
+#quote-modal {
+    position: fixed !important; /* Force fixed position */
+    inset: 0 !important;
+    z-index: 9999 !important; /* Sab se upar */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    overflow-y: auto; /* Agar modal screen se bada ho to scroll bar modal ke andar aaye */
+}
+
+#quote-modal > div {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+    </style>
+{% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 relative z-50">
+        {% for message in messages %}
+            <div class="flex items-center p-4 mb-4 rounded-2xl border 
+                {% if message.tags == 'success' %} bg-green-50 border-green-200 text-green-800 
+                {% else %} bg-red-50 border-red-200 text-red-800 {% endif %} shadow-sm">
+                <i class="ri-information-line mr-3 text-xl"></i>
+                <span class="font-medium">{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Pharmacy Dashboard</h1>
+            <p class="text-gray-600">Manage your pharmacy, inventory, and orders.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6 overflow-x-auto">
+    <button id="tab-profile"
+        class="tab-btn py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer transition-colors border-blue-600 text-blue-600 active"
+        onclick="showSection('profile')">
+        <i class="ri-store-3-line mr-2"></i>Pharmacy Profile
+    </button>
+
+    {% if is_verified %}
+        <button id="tab-inventory" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer text-gray-500 hover:text-gray-700" onclick="showSection('inventory')">
+            <i class="ri-medicine-bottle-line mr-2"></i>Inventory
+        </button>
+        <button id="tab-prescription" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer text-gray-500 hover:text-gray-700" onclick="showSection('prescription')">
+            <i class="ri-file-list-3-line mr-2"></i>Prescriptions
+        </button>
+        <button id="tab-orders" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer text-gray-500 hover:text-gray-700" onclick="showSection('orders')">
+            <i class="ri-shopping-bag-line mr-2"></i>Orders
+        </button>
+        <button id="tab-analytics" class="tab-btn py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap cursor-pointer text-gray-500 hover:text-blue-600 border-transparent" onclick="showSection('analytics')">
+            <i class="ri-bar-chart-line mr-2"></i>Analytics
+        </button>
+    {% else %}
+    <button id="tab-inventory" onclick="showSection('inventory', true)" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-blue-500 cursor-pointer transition-all border-transparent">
+        <i class="ri-medicine-bottle-line mr-2"></i>Inventory <i class="ri-lock-2-line text-[12px] text-amber-500"></i>
+    </button>
+    
+    <button id="tab-prescription" onclick="showSection('prescription', true)" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-blue-500 cursor-pointer transition-all border-transparent">
+        <i class="ri-file-list-3-line mr-2"></i>Prescriptions <i class="ri-lock-2-line text-[12px] text-amber-500"></i>
+    </button>
+    
+    <button id="tab-orders" onclick="showSection('orders', true)" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-gray-400 hover:text-blue-500 cursor-pointer transition-all border-transparent">
+        <i class="ri-shopping-bag-line mr-2"></i>Orders <i class="ri-lock-2-line text-[12px] text-amber-500"></i>
+    </button>
+    
+    <button id="tab-analytics" onclick="showSection('analytics', true)" class="tab-btn py-4 px-1 border-b-2 font-bold text-sm text-gray-400 hover:text-blue-500 cursor-pointer transition-all border-transparent group">
+        <i class="ri-bar-chart-line mr-2"></i>Analytics 
+        <i class="ri-lock-2-line ml-1 text-amber-500 group-hover:scale-110 transition-transform"></i>
+    </button>
+{% endif %}
+</nav>
+            </div>
+
+           {% load static %}
+<div class="p-6">
+    <div id="section-profile" class="space-y-8">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Pharmacy Profile</h2>
+            <button id="editButton"
+                    class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md flex items-center"
+                    onclick="toggleEditMode()">
+                <i class="ri-edit-line mr-2"></i>Edit Profile
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="bg-white border border-gray-100 shadow-sm rounded-3xl p-8 text-center">
+                    <div id="logoView">
+                        {% if pharmacy.logo %}
+                            <img src="{{ pharmacy.logo.url }}" class="w-32 h-32 rounded-3xl mx-auto mb-4 object-cover shadow-inner border-4 border-gray-50">
+                        {% else %}
+                            <div class="w-32 h-32 bg-teal-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                                <i class="ri-store-3-line text-teal-600 text-5xl"></i>
+                            </div>
+                        {% endif %}
+                        <h3 class="text-xl font-black text-gray-900">{{ pharmacy.name }}</h3>
+                        <p class="text-sm text-gray-500 mt-1">Pharmacy Partner</p>
+                    </div>
+
+                    <div id="logoEdit" class="hidden flex flex-col items-center">
+                        <img id="logoPreview" class="w-32 h-32 rounded-3xl mx-auto mb-4 object-cover border-4 border-dashed border-teal-200 p-1"
+                             src="{% if pharmacy.logo %}{{ pharmacy.logo.url }}{% else %}https://placehold.co/128x128/f0fdfa/0d9488?text=Upload{% endif %}" alt="Logo">
+                        <label for="logoUpload" class="cursor-pointer bg-gray-900 text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-teal-600 transition-colors">
+                            <i class="ri-camera-3-line mr-2"></i>Change Photo
+                        </label>
+                        <input type="file" id="logoUpload" class="hidden" accept="image/*" onchange="handleLogoUpload(event)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Pharmacy Name</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.name }}</p>
+                        <input type="text" id="pharmacyName" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" value="{{ pharmacy.name }}">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Owner Name</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.owner_name }}</p>
+                        <input type="text" id="ownerName" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" value="{{ pharmacy.owner_name }}">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Business Email</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.email }}</p>
+                        <input type="email" id="email" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" value="{{ pharmacy.email }}">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Phone Number</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.phone }}</p>
+                        <input type="text" id="phone" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" value="{{ pharmacy.phone }}">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Full Address</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.address }}</p>
+                        <textarea id="address" rows="3" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">{{ pharmacy.address }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">City</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.city }}</p>
+                        <input type="text" id="city" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" value="{{ pharmacy.city }}">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Operating Hours</label>
+                        <p class="view-field text-gray-900 font-medium px-1">{{ pharmacy.operating_hours }}</p>
+                        <input type="text" id="hours" class="hidden edit-field w-full border border-gray-200 bg-gray-50 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" value="{{ pharmacy.operating_hours }}">
+                    </div>
+                </div>
+
+                <div id="actionButtons" class="mt-10 flex space-x-4 hidden">
+                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold transition-all" onclick="cancelEdit()">Discard</button>
+                    <button class="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-100 transition-all" onclick="saveProfile()">Update Profile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEditMode() {
+    const editBtn = document.getElementById('editButton');
+    const isEnteringEdit = editBtn.innerText.includes('Edit');
+    
+    document.querySelectorAll('.view-field').forEach(el => el.classList.toggle('hidden', isEnteringEdit));
+    document.querySelectorAll('.edit-field').forEach(el => el.classList.toggle('hidden', !isEnteringEdit));
+    
+    document.getElementById('logoView').classList.toggle('hidden', isEnteringEdit);
+    document.getElementById('logoEdit').classList.toggle('hidden', !isEnteringEdit);
+    document.getElementById('actionButtons').classList.toggle('hidden', !isEnteringEdit);
+
+    if (isEnteringEdit) {
+        editBtn.innerHTML = '<i class="ri-close-line mr-2"></i>Exit Editing';
+        editBtn.classList.replace('bg-teal-600', 'bg-red-500');
+    } else {
+        location.reload();
+    }
+}
+
+function cancelEdit() { location.reload(); }
+
+function handleLogoUpload(event) {
+    const reader = new FileReader();
+    reader.onload = (e) => document.getElementById('logoPreview').src = e.target.result;
+    if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+}
+
+function saveProfile() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('pharmacyName').value);
+    formData.append('owner_name', document.getElementById('ownerName').value);
+    formData.append('email', document.getElementById('email').value);
+    formData.append('phone', document.getElementById('phone').value);
+    formData.append('address', document.getElementById('address').value);
+    formData.append('city', document.getElementById('city').value);
+    formData.append('operating_hours', document.getElementById('hours').value);
+
+    const logoInput = document.getElementById('logoUpload');
+    if (logoInput.files.length > 0) formData.append('logo', logoInput.files[0]);
+
+    fetch("{% url 'dashboards:pharmacy_dashboard' %}", {
+        method: "POST",
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("Success: Pharmacy profile updated!");
+            location.reload();
+        } else {
+            alert("Error: Could not save changes.");
+        }
+    })
+    .catch(err => console.error("Error:", err));
+}
+</script>
+
+<div id="section-inventory" class="hidden space-y-6 p-6">
+                    <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-gray-900">Inventory Management</h2>
+    
+    <div class="flex items-center gap-3">
+        <button onclick="toggleBulkModal()" 
+        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors cursor-pointer flex items-center">
+    <i class="ri-file-excel-2-line mr-2"></i>Bulk Upload
+</button>
+
+        <button
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors cursor-pointer whitespace-nowrap flex items-center"
+            onclick="toggleForm()">
+            <i class="ri-add-line mr-2"></i>Add New Medicine
+        </button>
+
+        <button onclick="deleteAllMedicines()"
+            class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors cursor-pointer whitespace-nowrap flex items-center">
+            <i class="ri-delete-bin-line mr-2"></i>Delete All
+        </button>
+
+        <form id="bulkUploadForm" method="POST" action="{% url 'dashboards:bulk_upload_medicine' %}" enctype="multipart/form-data" class="hidden">
+            {% csrf_token %}
+            <input type="file" id="bulkUploadInput" name="excel_file" accept=".xlsx, .xls, .csv" onchange="submitBulkUpload()">
+        </form>
+
+        <form id="deleteAllForm" method="POST" action="{% url 'dashboards:delete_all_medicines' %}" class="hidden">
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+
+
+
+<script>
+function toggleBulkModal() {
+    const modal = document.getElementById('bulkModal');
+    modal.classList.toggle('hidden');
+    modal.classList.toggle('flex');
+}
+
+function submitBulkUpload() {
+    const fileInput = document.getElementById('bulkUploadInput');
+    if (fileInput.files.length > 0) {
+        if (confirm("Proceed with uploading: " + fileInput.files[0].name + "?")) {
+            document.getElementById('bulkUploadForm').submit();
+        } else {
+            fileInput.value = '';
+        }
+    }
+}
+
+// Delete ALL medicines in one click (irreversible) -- typed confirmation
+// so it can't happen from a stray/accidental click.
+function deleteAllMedicines() {
+    const typed = prompt('This will permanently delete EVERY medicine in your inventory. This cannot be undone.\n\nType DELETE to confirm:');
+    if (typed === 'DELETE') {
+        document.getElementById('deleteAllForm').submit();
+    } else if (typed !== null) {
+        alert('Confirmation text did not match. Nothing was deleted.');
+    }
+}
+</script>
+<div id="bulkModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 class="font-bold text-lg text-gray-800">Bulk Inventory Upload</h3>
+            <button onclick="toggleBulkModal()" class="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <p class="text-sm text-gray-600">Quickly add multiple medicines using our Excel template.</p>
+            
+            <div class="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div class="bg-blue-600 text-white p-2 rounded-md mr-3">
+                    <i class="ri-file-download-line text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-blue-900">Step 1: Get Template</p>
+                    <a href="{% url 'dashboards:download_inventory_template' %}" class="text-xs text-blue-700 underline hover:text-blue-800">Download Sample Excel File</a>
+                </div>
+            </div>
+
+            <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <p class="font-bold mb-1 text-gray-700 italic">Quick Guidelines:</p>
+                <ul class="list-disc ml-4 space-y-1">
+                    <li>Use exact column headers: <b>Name, Brand, Price, Stock</b></li>
+                    <li>Date format: <b>YYYY-MM-DD</b></li>
+                    <li>Ensure <b>Category</b> matches your dashboard options.</li>
+                </ul>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="document.getElementById('bulkUploadInput').click()" 
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+                    <i class="ri-upload-cloud-2-line"></i> Select & Upload File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 flex items-center justify-between">
+        <div>
+            <p class="text-xs text-blue-600 uppercase font-bold tracking-wider">Total Items</p>
+            <h4 class="text-2xl font-black text-blue-900">{{ total_count|default:"0" }}</h4>
+        </div>
+        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+            <i class="ri-capsule-fill text-xl"></i>
+        </div>
+    </div>
+    
+    <div class="bg-green-50 p-5 rounded-2xl border border-green-100 flex items-center justify-between">
+        <div>
+            <p class="text-xs text-green-600 uppercase font-bold tracking-wider">In Stock</p>
+            <h4 class="text-2xl font-black text-green-900">{{ in_stock_count|default:"0" }}</h4>
+        </div>
+        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-200">
+            <i class="ri-checkbox-circle-fill text-xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-orange-50 p-5 rounded-2xl border border-orange-100 flex items-center justify-between">
+        <div>
+            <p class="text-xs text-orange-600 uppercase font-bold tracking-wider">Low Stock</p>
+            <h4 class="text-2xl font-black text-orange-900">{{ low_stock_count|default:"0" }}</h4>
+        </div>
+        <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
+            <i class="ri-error-warning-fill text-xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-purple-50 p-5 rounded-2xl border border-purple-100 flex items-center justify-between">
+        <div>
+            <p class="text-xs text-purple-600 uppercase font-bold tracking-wider">Categories</p>
+            <h4 class="text-2xl font-black text-purple-900">{{ categories_count|default:"0" }}</h4>
+        </div>
+        <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
+            <i class="ri-folders-fill text-xl"></i>
+        </div>
+    </div>
+</div>
+
+    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-600">
+            <i class="ri-error-warning-line text-2xl"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-bold">Out of Stock</p>
+            <h4 class="text-2xl font-bold text-red-600">{{ out_of_stock_count|default:"0" }}</h4>
+        </div>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-b border-gray-100 flex gap-4">
+        <div class="relative flex-1">
+            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" id="inventorySearch" onkeyup="filterInventory()" placeholder="Search medicines..." 
+                   class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <select id="categoryFilter" onchange="filterInventory()" class="px-4 py-2 rounded-lg border border-gray-200 outline-none">
+            <option value="All">All Categories</option>
+            <option value="Antibiotics">Antibiotics</option>
+            <option value="Painkillers">Painkillers</option>
+            <option value="Antihistamine">Antihistamine (Allergy)</option>
+            <option value="Maternal Health">Maternal & Pregnancy</option>
+            <option value="Cardiovascular">Heart & BP</option>
+            <option value="Diabetic Care">Diabetes / Sugar</option>
+            <option value="Vitamins">Vitamins & Supplements</option>
+            <option value="Skincare">Skincare & Haircare</option>
+            <option value="Baby Care">Baby Care</option>
+            <option value="General Items">General Items</option>
+        </select>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 text-gray-600 text-sm uppercase font-semibold">
+                <tr>
+                    <th class="px-6 py-4">Medicine</th>
+                    <th class="px-6 py-4">Category</th>
+                    <th class="px-6 py-4">Price</th>
+                    <th class="px-6 py-4">Stock</th>
+                    <th class="px-6 py-4">Expiry</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTableBody" class="divide-y divide-gray-100">
+                {% for medicine in inventory_list %}
+                <tr data-category="{{ medicine.category }}" data-name="{{ medicine.name|lower }}" data-brand="{{ medicine.brand|default:''|lower }}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            {% if medicine.image %}
+                                <img src="{{ medicine.image.url }}" class="w-10 h-10 rounded-lg object-cover">
+                            {% else %}
+                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs italic">No img</div>
+                            {% endif %}
+                            <div>
+                                <div class="font-medium text-gray-900">{{ medicine.name }}</div>
+                                <div class="text-xs text-gray-500">{{ medicine.brand }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ medicine.category }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">PKR {{ medicine.price }}</td>
+                  <td class="px-6 py-4">
+    {% if medicine.stock_quantity == 0 %}
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+            <i class="ri-close-circle-fill mr-1"></i> Out of Stock
+        </span>
+    {% elif medicine.stock_quantity < 10 %}
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200">
+            <i class="ri-alert-fill mr-1"></i> {{ medicine.stock_quantity }} Low Stock
+        </span>
+    {% else %}
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+            <i class="ri-checkbox-circle-fill mr-1"></i> {{ medicine.stock_quantity }} Units
+        </span>
+    {% endif %}
+</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ medicine.expiry_date|date:"Y-m-d" }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button type="button" onclick="editMedicine('{{ medicine.id }}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                <i class="ri-pencil-line"></i>
+                            </button>
+                            <button type="button" onclick="deleteMedicine('{{ medicine.id }}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center text-gray-400 italic">No medicines found in inventory.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="medicineFormContainer" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <form id="medicineForm" method="POST" action="{% url 'dashboards:add_edit_medicine' %}" enctype="multipart/form-data" class="p-8">
+            {% csrf_token %}
+            <input type="hidden" name="medicine_id" id="medicineIdField">
+            
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="formTitle" class="text-xl font-bold text-gray-800">Add New Medicine</h3>
+                <button type="button" onclick="toggleForm()" class="text-gray-400 hover:text-gray-600"><i class="ri-close-line text-2xl"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Medicine Name</label>
+                    <input type="text" name="name" id="medName" required class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                    <input type="text" name="brand" id="medBrand" required class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select name="category" id="medCategory" class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none">
+                        <option value="Antibiotics">Antibiotics</option>
+                        <option value="Painkillers">Painkillers</option>
+                        <option value="Antihistamine">Antihistamine (Allergy)</option>
+                        <option value="Maternal Health">Maternal & Pregnancy</option>
+                        <option value="Cardiovascular">Heart & BP</option>
+                        <option value="Diabetic Care">Diabetes / Sugar</option>
+                        <option value="Vitamins">Vitamins & Supplements</option>
+                        <option value="Skincare">Skincare & Haircare</option>
+                        <option value="Baby Care">Baby Care</option>
+                        <option value="General Items">General Items</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Price (PKR)</label>
+                    <input type="number" step="0.01" name="price" id="medPrice" required class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
+                    <input type="number" name="stock_quantity" id="medStock" required class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                    <input type="date" name="expiry_date" id="medExpiry" required class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Medicine Image</label>
+    <div class="flex items-center gap-4">
+        <div id="imagePreviewContainer" class="hidden">
+            <img id="currentMedImage" src="" class="w-16 h-16 rounded-lg object-cover border">
+            <p class="text-[10px] text-center text-gray-500">Current</p>
+        </div>
+        
+        <input type="file" name="image" id="medImage" accept="image/*" 
+               class="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+    </div>
+    <p class="text-xs text-gray-400 mt-1">Recommended size: Square (e.g., 500x500px)</p>
+</div>
+</div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-4">
+                <button type="button" onclick="toggleForm()" class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" id="submitBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save Medicine</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Toggle Form Visibility
+function toggleForm() {
+    const container = document.getElementById('medicineFormContainer');
+    container.classList.toggle('hidden');
+    if (container.classList.contains('hidden')) {
+        document.getElementById('medicineForm').reset();
+        document.getElementById('medicineIdField').value = '';
+        document.getElementById('formTitle').innerText = 'Add New Medicine';
+        document.getElementById('submitBtn').innerText = 'Save Medicine';
+    }
+}
+
+// Edit Medicine (Fetch & Fill)
+// Edit Medicine (Fetch & Fill)
+function editMedicine(id) {
+    // Show a loading state or change cursor if desired
+    fetch(`/pharmacy_dashboard/inventory/get_data/${id}/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            // Fill text fields
+            document.getElementById('medicineIdField').value = data.id;
+            document.getElementById('medName').value = data.name;
+            document.getElementById('medBrand').value = data.brand;
+            document.getElementById('medCategory').value = data.category;
+            document.getElementById('medPrice').value = data.price;
+            document.getElementById('medStock').value = data.stock_quantity;
+            document.getElementById('medExpiry').value = data.expiry_date;
+            
+            // --- IMAGE PREVIEW LOGIC ---
+            // Ensure you have an <img> tag with id="currentMedImage" in your HTML form
+            const previewImg = document.getElementById('currentMedImage');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            if (data.image_url && previewImg) {
+                previewImg.src = data.image_url; // Set the image source to the URL from the server
+                if (previewContainer) previewContainer.classList.remove('hidden');
+            } else if (previewContainer) {
+                previewContainer.classList.add('hidden'); // Hide if no image exists
+            }
+            // ---------------------------
+
+            // Change UI to Edit Mode
+            document.getElementById('formTitle').innerText = 'Edit Medicine';
+            document.getElementById('submitBtn').innerText = 'Update Medicine';
+            document.getElementById('medicineFormContainer').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Could not fetch medicine data.");
+        });
+}
+
+// Delete Medicine (Improved Security)
+function deleteMedicine(id) {
+    if (confirm("Are you sure you want to delete this item?")) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        // Ensure this URL matches your urls.py path exactly
+        form.action = `/pharmacy_dashboard/inventory/delete/${id}/`;
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        // Get the token directly from the existing Django CSRF input on the page
+        csrf.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Search & Filter Logic
+function filterInventory() {
+    const search = document.getElementById('inventorySearch').value.toLowerCase();
+    const category = document.getElementById('categoryFilter').value;
+    const rows = document.querySelectorAll('#inventoryTableBody tr');
+
+    rows.forEach(row => {
+        // "No medicines found" placeholder row has no data-category — skip it, never hide it.
+        if (!row.hasAttribute('data-category')) return;
+
+        // Name/brand ab dedicated data attributes se aate hain (class-based
+        // selectors fragile the — Stock badges bhi '.text-xs' class share karte
+        // the, jo galat element pick kar sakta tha ya crash kar sakta tha).
+        const name = row.getAttribute('data-name') || '';
+        const brand = row.getAttribute('data-brand') || '';
+        const rowCat = row.getAttribute('data-category');
+
+        const matchesSearch = name.includes(search) || brand.includes(search);
+        const matchesCat = (category === 'All' || rowCat === category);
+
+        row.style.display = (matchesSearch && matchesCat) ? '' : 'none';
+    });
+}
+
+</script>
+
+<div id="orderViewModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full shadow-2xl transform transition-all border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="bg-gradient-to-r from-teal-700 to-cyan-800 px-6 py-4 flex justify-between items-center text-white">
+            <h3 class="text-lg font-bold flex items-center gap-2">
+                <i class="ri-file-list-3-line"></i> Order Document: <span id="modalOrderId" class="font-mono"></span>
+            </h3>
+            <button onclick="closeOrderModal()" class="text-white/80 hover:text-white transition-transform duration-200 hover:scale-110">
+                <i class="ri-close-fill text-2xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar text-sm text-gray-600 dark:text-gray-300">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer Profile Contact</h4>
+                    <p class="font-semibold text-gray-900 dark:text-white mb-0.5" id="modalCustomerName"></p>
+                    <p class="flex items-center gap-1.5 font-medium"><i class="ri-phone-line text-teal-600"></i> <span id="modalCustomerPhone"></span></p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Order Tracking Metadata</h4>
+                    <p class="font-medium">Placed: <span id="modalOrderDate" class="text-gray-900 dark:text-white font-semibold"></span></p>
+                    <p class="font-medium">Gateway Channel: <span id="modalPaymentMethod" class="text-cyan-600 font-bold"></span></p>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1"><i class="ri-map-pin-line text-teal-600"></i> Delivery Address Location</h4>
+                <p id="modalCustomerAddress" class="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 font-medium leading-relaxed"></p>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Invoice Inventory Breakdowns</h4>
+                <div class="border dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold uppercase border-b dark:border-gray-600">
+                                <th class="p-3">Prescription Items</th>
+                                <th class="p-3 text-center">Qty</th>
+                                <th class="p-3 text-right">Unit Net</th>
+                                <th class="p-3 text-right">Gross Accum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1 text-amber-600 dark:text-amber-400"><i class="ri-message-3-line"></i> Customer Delivery Notes & Instructions</h4>
+                <div id="modalOrderNotes" class="bg-amber-50/50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200 p-3 rounded-lg border border-amber-100 dark:border-amber-900/60 font-medium italic"></div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-900/70 border-t dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Total Verified Invoice</p>
+                <p class="text-2xl font-black text-teal-600 dark:text-teal-400">Rs. <span id="modalTotalAmount"></span></p>
+            </div>
+            <button onclick="closeOrderModal()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm transition-colors shadow-sm">Close Invoice</button>
+        </div>
+    </div>
+</div>
+
+<div id="section-orders" class="hidden space-y-6 p-6">
+
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Order Management</h2>
+            <p class="text-sm text-gray-500">Track and manage customer orders</p>
+        </div>
+        <select class="border border-gray-200 rounded-lg px-4 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            <option>All Orders</option>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Ready</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center justify-between">
+    <div>
+        <p class="text-[10px] text-blue-600 uppercase font-bold tracking-wider">Total Orders</p>
+        <h4 class="text-2xl font-black text-blue-900">{{ total_orders_count|default:"0" }}</h4>
+    </div>
+    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-md">
+        <i class="ri-shopping-bag-3-fill text-lg"></i>
+    </div>
+</div>
+<div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 flex items-center justify-between">
+    <div>
+        <p class="text-[10px] text-yellow-600 uppercase font-bold tracking-wider">Pending</p>
+        <h4 class="text-2xl font-black text-yellow-900">{{ order_pending_count|default:"0" }}</h4>
+    </div>
+    <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-white shadow-md">
+        <i class="ri-time-fill text-lg"></i>
+    </div>
+</div>
+<div class="bg-purple-50 p-4 rounded-xl border border-purple-100 flex items-center justify-between">
+    <div>
+        <p class="text-[10px] text-purple-600 uppercase font-bold tracking-wider">Approved</p>
+        <h4 class="text-2xl font-black text-purple-900">{{ order_approved_count|default:"0" }}</h4>
+    </div>
+    <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white shadow-md">
+        <i class="ri-checkbox-circle-fill text-lg"></i>
+    </div>
+</div>
+<div class="bg-green-50 p-4 rounded-xl border border-green-100 flex items-center justify-between">
+    <div>
+        <p class="text-[10px] text-green-600 uppercase font-bold tracking-wider">Ready</p>
+        <h4 class="text-2xl font-black text-green-900">{{ order_ready_count|default:"0" }}</h4>
+    </div>
+    <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white shadow-md">
+        <i class="ri-moped-fill text-lg"></i>
+    </div>
+</div>
+<div class="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center justify-between">
+    <div>
+        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Delivered</p>
+        <h4 class="text-2xl font-black text-gray-900">{{ order_delivered_count|default:"0" }}</h4>
+    </div>
+    <div class="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center text-white shadow-md">
+        <i class="ri-check-double-line text-lg"></i>
+    </div>
+</div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div id="ordersCardsContainer" class="contents"></div>
+        <div id="ordersEmptyState" class="hidden col-span-1 lg:col-span-3 bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center text-gray-500">
+            No orders found.
+        </div>
+    </div>
+</div>
+
+<script>
+    function showSection(sectionId) {
+        // Sabhi sections ko hide karo
+        document.getElementById('section-profile').classList.add('hidden');
+        document.getElementById('section-inventory').classList.add('hidden');
+        document.getElementById('section-orders').classList.add('hidden');
+        if(document.getElementById('section-analytics')) document.getElementById('section-analytics').classList.add('hidden');
+
+        // Target section ko dikhao
+        document.getElementById('section-' + sectionId).classList.remove('hidden');
+
+        // Sabhi buttons se active class hatao
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'border-blue-600', 'text-blue-600');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+
+        // Active button ko highlight karo
+        const activeTab = document.getElementById('tab-' + sectionId);
+        activeTab.classList.add('active', 'border-blue-600', 'text-blue-600');
+        activeTab.classList.remove('border-transparent', 'text-gray-500');
+    }
+</script>
+<div id="section-prescription" class="space-y-6 p-6 bg-gray-50/50">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Prescription Review</h2>
+            <p class="text-sm text-gray-500">Review customer prescriptions and create quotes</p>
+        </div>
+        <select class="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg p-2 shadow-sm focus:ring-blue-500">
+            <option>All Prescriptions</option>
+            <option>Pending</option>
+            <option>Quoted</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-[11px] text-gray-500 uppercase font-bold tracking-wider">Total Requests</p>
+                <h4 class="text-2xl font-black text-gray-900">{{ total_requests }}</h4>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                <i class="ri-file-list-3-line text-xl"></i>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-[11px] text-yellow-600 uppercase font-bold tracking-wider">Pending</p>
+                <h4 class="text-2xl font-black text-gray-900">{{ pending_count }}</h4>
+            </div>
+            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600">
+                <i class="ri-time-line text-xl"></i>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-[11px] text-green-600 uppercase font-bold tracking-wider">Quotes Sent</p>
+                <h4 class="text-2xl font-black text-gray-900">{{ quoted_count }}</h4>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                <i class="ri-checkbox-circle-line text-xl"></i>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-[11px] text-red-600 uppercase font-bold tracking-wider">Rejected</p>
+                <h4 class="text-2xl font-black text-gray-900">{{ rejected_count }}</h4>
+            </div>
+            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
+                <i class="ri-close-circle-line text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {% for p in prescriptions %}
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col relative overflow-hidden group transition-all hover:shadow-md">
+            
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg">PRX-{{ p.id }}</h3>
+                    <p class="text-[11px] text-gray-400 font-medium">{{ p.created_at|date:"M d, Y" }}</p>
+                </div>
+                {% if p.status == 'pending' %}
+                    <span class="bg-yellow-50 text-yellow-600 px-3 py-1 rounded-full text-[10px] font-bold">● Pending</span>
+                {% elif p.status == 'approved' or p.status == 'quoted' %}
+                    <span class="bg-green-50 text-green-600 px-3 py-1 rounded-full text-[10px] font-bold">✓ Quoted</span>
+                {% else %}
+                    <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-bold">✖ Rejected</span>
+                {% endif %}
+            </div>
+
+            <div class="rounded-2xl overflow-hidden mb-5 aspect-[4/3] bg-gray-50 border border-gray-100">
+                <img src="{{ p.prescription_image.url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex items-center text-gray-700">
+                    <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mr-3">
+                        <i class="ri-user-3-fill text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold">{{ p.customer.get_full_name|default:p.customer.username }}</p>
+                        <p class="text-[10px] text-gray-400">{{ p.customer.phone|default:"No Phone" }}</p>
+                    </div>
+                </div>
+                {% if p.notes %}
+                <div class="bg-yellow-50/50 border border-yellow-100 p-2.5 rounded-xl flex items-start">
+                    <i class="ri-chat-smile-2-line text-yellow-600 mr-2 mt-0.5"></i>
+                    <p class="text-[11px] text-yellow-700 italic line-clamp-1">{{ p.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if p.status == 'pending' %}
+                <a href="{% url 'dashboards:review_prescription' p.id %}" 
+                   class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
+                    <i class="ri-eye-line text-sm"></i> Review Prescription
+                </a>
+            {% else %}
+                <button disabled class="w-full bg-gray-100 text-gray-400 py-3 rounded-xl text-xs font-bold cursor-not-allowed">
+                    Already Processed
+                </button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+                
+                <div id="section-analytics" class="hidden space-y-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900">Sales Analytics & Reports</h2>
+                        <div class="flex space-x-3">
+                            <button id="export-sales-report"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer text-sm">
+                                <i class="ri-download-line mr-2"></i>Export Report
+                            </button>
+                            <button id="configure-alerts"
+                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer text-sm">
+                                <i class="ri-settings-3-line mr-2"></i>Configure Alerts
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                            <p class="text-sm font-medium text-gray-500">Total Sales (30 Days)</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">PKR {{ analytics.total_sales|default:"0.00" }}</p>
+                            <div class="flex items-center text-sm mt-2">
+                                <span class="text-green-600 font-medium mr-1"><i class="ri-arrow-up-line"></i> {{ analytics.sales_change|default:"5.2" }}%</span>
+                                <span class="text-gray-500">from last month</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                            <p class="text-sm font-medium text-gray-500">Total Orders</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ analytics.total_orders|default:0 }}</p>
+                            <div class="flex items-center text-sm mt-2">
+                                <span class="text-red-600 font-medium mr-1"><i class="ri-arrow-down-line"></i> {{ analytics.order_change|default:"2.1" }}%</span>
+                                <span class="text-gray-500">from last month</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                            <p class="text-sm font-medium text-gray-500">Avg. Order Value</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">PKR {{ analytics.aov|default:"0.00" }}</p>
+                            <div class="flex items-center text-sm mt-2">
+                                <span class="text-green-600 font-medium mr-1"><i class="ri-arrow-up-line"></i> {{ analytics.aov_change|default:"1.8" }}%</span>
+                                <span class="text-gray-500">from last month</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+                            <p class="text-sm font-medium text-gray-500">Top Selling Category</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ analytics.top_category|default:"Pain Relief" }}</p>
+                            <div class="flex items-center text-sm mt-2">
+                                <span class="text-gray-500">Sales: **{{ analytics.top_category_sales|default:"45" }}%**</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Sales Performance (Last 6 Months)</h3>
+                        <div class="relative h-96">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Top 5 Selling Medicines</h3>
+                        <ul class="divide-y divide-gray-200">
+                            {% for item in analytics.top_selling_items %}
+                            <li class="flex justify-between items-center py-3">
+                                <span class="text-gray-900 font-medium">{{ forloop.counter }}. {{ item.name }} ({{ item.brand }})</span>
+                                <span class="text-gray-600 text-sm">Units Sold: **{{ item.units_sold }}**</span>
+                            </li>
+                            {% empty %}
+                            <li class="py-3 text-center text-gray-500">No sales data available.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+
+
+    <script>
+        // Placeholder data to keep the JS functional until Django data is passed to it
+       
+        let lowStockThreshold = 20;
+
+        // DB-backed orders (injected from dashboards/views.py)
+        const ordersData = {{ orders_data|default:"[]"|safe }};
+
+        // DB-backed sales analytics chart (last 6 months, injected from dashboards/views.py)
+        const analyticsChartLabels = {{ analytics_chart.labels|default:"[]"|safe }};
+        const analyticsChartSales = {{ analytics_chart.sales|default:"[]"|safe }};
+        const analyticsChartOrders = {{ analytics_chart.orders|default:"[]"|safe }};
+
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial setup: activate the default tab and render data
+            const defaultSection = 'orders';
+            showSection(defaultSection, false); // Initialize orders section
+            // Render orders cards
+            if (typeof renderOrdersCards === 'function') {
+                renderOrdersCards(ordersData);
+            }
+        });
+
+
+
+        // --- Profile Management Functions ---
+
+        
+      // Toggle Add Medicine Form
+ // --- Order Functions ---
+
+        function renderOrdersCards(data) {
+            const container = document.getElementById('ordersCardsContainer');
+            const emptyState = document.getElementById('ordersEmptyState');
+
+            if (!container || !emptyState) return;
+
+            container.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            data.forEach(order => {
+                const status = order.status || 'Pending';
+                const badgeClass = getStatusBadgeClass(status);
+
+                // action buttons based on status (Pending -> Approve/Reject, Approved -> Ready, Ready -> Deliver)
+                const statusActionsHtml = (() => {
+                    const id = order.id;
+                    if (status === 'Pending') {
+                        return `
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="updateOrderStatus('${id}', 'approve')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-xs font-bold transition-colors">Approve</button>
+                                <button onclick="updateOrderStatus('${id}', 'reject')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition-colors">Reject</button>
+                            </div>
+                        `;
+                    }
+                    if (status === 'Approved') {
+                        return `
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="updateOrderStatus('${id}', 'ready')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition-colors">Mark Ready</button>
+                            </div>
+                        `;
+                    }
+                    if (status === 'Ready') {
+                        return `
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="updateOrderStatus('${id}', 'deliver')" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold transition-colors">Mark Delivered</button>
+                            </div>
+                        `;
+                    }
+                    // Rejected/Delivered/Cancelled => no actions
+                    return '';
+                })();
+
+                const actionsHtml = `
+                    ${statusActionsHtml}
+
+                    <div class="mt-3 flex gap-2">
+                        <button onclick="viewOrder('${order.id}')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-bold transition-colors">View</button>
+                    </div>
+                `;
+
+
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow col-span-1';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-gray-900">${order.id ? 'ORD-' + order.id : 'ORD'}</h3>
+                            <p class="text-[11px] text-gray-400">${order.date || ''}</p>
+                        </div>
+                        <span class="status-badge ${badgeClass} px-3 py-1 rounded-full text-[10px] font-bold">● ${status}</span>
+                    </div>
+
+                    <div class="space-y-2 mb-4 p-3 bg-blue-50/30 rounded-xl text-xs text-gray-600">
+                        <p><i class="ri-user-3-line mr-2"></i>${order.customer || ''}</p>
+                    </div>
+
+                    <div class="bg-blue-50/50 p-3 rounded-xl mb-4 flex justify-between items-center">
+                        <span class="text-xs font-semibold text-blue-800">Total Amount:</span>
+                        <span class="text-lg font-black text-blue-700">PKR ${Number(order.amount || 0).toFixed(2)}</span>
+                    </div>
+
+                    ${actionsHtml}
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+
+        function updateOrderSummary(data) {
+            const counts = data.reduce((acc, order) => {
+                acc[order.status.toLowerCase()] = (acc[order.status.toLowerCase()] || 0) + 1;
+                acc.total = (acc.total || 0) + 1;
+                return acc;
+            }, {});
+
+            document.getElementById('pending-count').textContent = counts.pending || 0;
+            document.getElementById('processing-count').textContent = counts.processing || 0;
+            document.getElementById('shipped-count').textContent = counts.shipped || 0;
+            document.getElementById('delivered-count').textContent = counts.delivered || 0;
+            document.getElementById('total-count').textContent = counts.total || 0;
+        }
+
+        function filterOrders(status) {
+            const rows = document.querySelectorAll('#ordersTableBody tr');
+            rows.forEach(row => {
+                const orderStatus = row.dataset.status;
+                if (status === 'all' || orderStatus === status) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        function getStatusBadgeClass(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'pending') return 'Pending';
+            if (s === 'approved') return 'Approved';
+            if (s === 'ready') return 'Ready';
+            if (s === 'delivered') return 'Delivered';
+            if (s === 'rejected') return 'Cancelled';
+            return status || 'Pending';
+        }
+
+        function statusToAction(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'pending') return 'approve';
+            return null;
+        }
+
+        async function updateOrderStatus(id, action) {
+            const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
+            const csrf = csrfTokenEl ? csrfTokenEl.value : '';
+
+            // backend: /order/<order_id>/<action>/
+            const url = `/pharmacy_dashboard/order/${id}/${action}/`;
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!res.ok) {
+                    const txt = await res.text();
+                    alert(`Failed to update order: ${txt || res.status}`);
+                    return;
+                }
+
+                // Backend redirects; for AJAX, just reload tab.
+                // Force a real reload even if pathname/search/hash are already
+                // identical to the current URL (a same-URL href change is a no-op
+                // in the browser and won't re-fetch the page, leaving stale
+                // ordersData rendered). window.location.reload() always reloads.
+                window.location.hash = 'orders';
+                window.location.reload();
+            } catch (e) {
+                console.error(e);
+                alert('Network error while updating order');
+            }
+        }
+
+
+        function viewOrder(orderId) {
+            const modal = document.getElementById('orderViewModal');
+            if (!modal) {
+                console.error('Missing modal element: #orderViewModal');
+                return;
+            }
+
+            const modalTableBody = document.getElementById('modalTableBody');
+            if (modalTableBody) {
+                modalTableBody.innerHTML = `<tr><td colspan="4" class="p-6 text-center font-medium text-gray-400">` +
+                    `<i class="ri-loader-5-line animate-spin text-xl inline-block mr-2 text-teal-600"></i>` +
+                    `Fetching live order details...</td></tr>`;
+            }
+
+            const setText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val ?? '';
+            };
+
+            setText('modalOrderId', orderId);
+            setText('modalCustomerName', '');
+            setText('modalCustomerPhone', '');
+            setText('modalCustomerAddress', '');
+            setText('modalOrderDate', '');
+            setText('modalPaymentMethod', '');
+            setText('modalOrderNotes', '');
+            setText('modalTotalAmount', '0.00');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            fetch(`/pharmacy_dashboard/orders/${orderId}/json/`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(res => {
+                    if (!res.success) {
+                        alert('Failed to load order details: ' + (res.message || 'Unknown error'));
+                        closeOrderModal();
+                        return;
+                    }
+
+                    setText('modalCustomerName', res.customer_name || '');
+                    setText('modalCustomerPhone', res.phone || '');
+                    const addrEl = document.getElementById('modalCustomerAddress');
+                    if (addrEl) addrEl.innerText = res.address || '';
+                    setText('modalOrderDate', res.created_at || '');
+                    setText('modalPaymentMethod', res.payment_method || '');
+                    setText('modalOrderNotes', res.notes || '');
+                    setText('modalTotalAmount', Number(res.total_amount || 0).toFixed(2));
+
+                    if (modalTableBody) {
+                        let htmlRows = '';
+                        (res.items || []).forEach(item => {
+                            htmlRows += `
+                                <tr class="border-b dark:border-gray-700/60 hover:bg-gray-50/50 dark:hover:bg-gray-900/20 text-gray-800 dark:text-gray-300 font-medium">
+                                    <td class="p-3">
+                                        <p class="font-bold text-gray-900 dark:text-white">${item.name || ''}</p>
+                                        <p class="text-xs text-gray-400 font-mono">${item.brand || 'Generic'}</p>
+                                    </td>
+                                    <td class="p-3 text-center font-bold font-mono">${item.quantity ?? 0}</td>
+                                    <td class="p-3 text-right font-mono text-gray-500">Rs. ${(Number(item.price || 0)).toFixed(2)}</td>
+                                    <td class="p-3 text-right font-bold font-mono text-teal-600 dark:text-teal-400">Rs. ${(Number(item.total || 0)).toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+                        modalTableBody.innerHTML = htmlRows || `<tr><td colspan="4" class="p-4 text-center text-gray-400">No items</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error('viewOrder fetch failed:', err);
+                    if (modalTableBody) {
+                        modalTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-rose-500 font-bold">Failed to retrieve order details.</td></tr>`;
+                    }
+                });
+        }
+
+        function closeOrderModal() {
+            const modal = document.getElementById('orderViewModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeOrderModal();
+        });
+
+
+        // --- Tab Navigation and Core Logic ---
+
+        function showSection(sectionId, updateURL = true) {
+            const sections = document.querySelectorAll('[id^="section-"]');
+            const tabs = document.querySelectorAll('.tab-btn');
+
+            sections.forEach(sec => {
+                sec.classList.add('hidden');
+            });
+
+            tabs.forEach(tab => {
+                tab.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+
+            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${sectionId}`);
+            if (activeTab) {
+                activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
+                activeTab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            }
+
+            if (sectionId === 'analytics' && typeof window.salesChart === 'undefined') {
+                initializeAnalyticsChart();
+            }
+
+            if (updateURL) {
+                history.pushState(null, '', `#${sectionId}`);
+            }
+        }
+
+
+        // --- Analytics Functions (Requires Chart.js) ---
+
+        let salesChart = null;
+
+        function initializeAnalyticsChart() {
+            if (salesChart) {
+                salesChart.destroy();
+            }
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const hasLiveChartData = Array.isArray(analyticsChartLabels) && analyticsChartLabels.length > 0;
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hasLiveChartData ? analyticsChartLabels : [],
+                    datasets: [{
+                        label: 'Total Sales (PKR)',
+                        data: hasLiveChartData ? analyticsChartSales : [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                    },
+                    {
+                        label: 'Number of Orders',
+                        data: hasLiveChartData ? analyticsChartOrders : [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allows chart to respect the h-96 container
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Sales Amount (PKR)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false, // Only draw grid lines for the main scale
+                            },
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Order Count'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+    </script>
+   <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+
+    if (tab && tab !== 'profile') {
+        // Agar URL mein koi tab manga hai, to check karein verification
+        showSection(tab, false); 
+    } else {
+        // Default sirf profile dikhao, koi modal nahi ayega
+        showSection('profile', false); 
+    }
+});
+
+function openLockModal() {
+    const modal = document.getElementById('lockModal');
+    modal.style.display = 'flex'; 
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; 
+}
+
+function closeLockModal() {
+    const modal = document.getElementById('lockModal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto'; 
+}
+
+function showSection(sectionId, isUserClick = false) {
+    const isVerified = {{ is_verified|yesno:"true,false" }};
+    
+    // LOGIC: Agar verified nahi hai aur user ne kisi locked section par CLICK kiya hai
+    if (!isVerified && sectionId !== 'profile') {
+        if (isUserClick) {
+            openLockModal(); // Sirf click par box dikhao
+            return; 
+        } else {
+            // Agar page load ho raha hai (click nahi hai), to chup-chap profile par rakho
+            sectionId = 'profile'; 
+        }
+    }
+
+    // Baqi sections hide/show karne ka logic
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+    const activeSection = document.getElementById('section-' + sectionId);
+    if (activeSection) activeSection.classList.remove('hidden');
+
+    // Tab buttons ki styling
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-blue-600', 'text-blue-600', 'active');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    const activeTab = document.getElementById('tab-' + sectionId);
+    if (activeTab) {
+        activeTab.classList.remove('border-transparent', 'text-gray-500');
+        activeTab.classList.add('border-blue-600', 'text-blue-600', 'active');
+    }
+}
+</script>
+   <div id="lockModal" class="hidden modal-backdrop" 
+     style="position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center;" 
+     onclick="closeLockModal()">
+    
+    <div class="interactive-card bg-white rounded-3xl shadow-2xl w-[90%] max-w-sm overflow-hidden border border-gray-100" 
+         style="position: relative;" 
+         onclick="event.stopPropagation()">
+        
+        <div class="bg-amber-50 p-5 text-center">
+            <div class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="ri-lock-2-fill text-amber-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Verification Required</h3>
+        </div>
+
+        <div class="p-6 text-center">
+            <p class="text-sm text-gray-600 mb-6">
+               Please submit your professional license to unlock full dashboard capabilities.
+            </p>
+            </p>
+            <div class="space-y-3">
+                <a href="{% url 'authentication:verification_view' %}" 
+                   class="block w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg text-center">
+                    Verify Now
+                </a>
+                <button onclick="closeLockModal()" class="w-full text-gray-400 text-sm">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

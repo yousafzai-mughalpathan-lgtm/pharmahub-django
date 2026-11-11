@@ -1,0 +1,194 @@
+{% extends 'dashboards/pharmacy_base.html' %} 
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] p-6 lg:p-10">
+    <div class="max-w-6xl mx-auto bg-white rounded-[24px] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+        
+        <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-white">
+            <h2 class="text-xl font-bold text-[#1e293b]">Review Prescription - <span class="text-blue-600">PRX-{{ p.id }}</span></h2>
+            <a href="{% url 'dashboards:pharmacy_dashboard' %}" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="ri-close-line text-2xl"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2">
+            
+            <div class="p-8 border-r border-gray-50 bg-[#fcfcfd]">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Prescription Image</p>
+                
+                <a href="{{ p.prescription_image.url }}" target="_blank" class="block group relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm transition-all hover:shadow-md">
+                    <img src="{{ p.prescription_image.url }}" class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                        <span class="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold text-gray-800">
+                            <i class="ri-external-link-line mr-1"></i> View Full Image
+                        </span>
+                    </div>
+                </a>
+
+                <div class="mt-8 space-y-6">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Customer Information</p>
+                        <div class="space-y-2">
+                            <p class="text-sm text-gray-600 font-medium"><span class="text-gray-400 mr-2">Name:</span> {{ p.customer.get_full_name|default:p.customer.username }}</p>
+                            <p class="text-sm text-gray-600 font-medium"><span class="text-gray-400 mr-2">Phone:</span> {{ p.customer.phone|default:"+92 300 0000000" }}</p>
+                            <p class="text-sm text-gray-600 font-medium"><span class="text-gray-400 mr-2">Email:</span> {{ p.customer.email }}</p>
+                        </div>
+                    </div>
+
+                    {% if p.notes %}
+                    <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-xs text-blue-800 leading-relaxed font-medium">
+                            <span class="font-bold block mb-1 uppercase tracking-tighter text-[10px] opacity-60">Customer Note:</span>
+                            {{ p.notes }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="p-8 flex flex-col">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Search & Map Medicines</p>
+                
+                <div class="relative mb-6">
+                    <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="inventory-search" onkeyup="filterInventory()" placeholder="Search medicines from your inventory..." 
+                           class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none">
+                </div>
+
+                <div class="flex-grow max-h-[300px] overflow-y-auto pr-2 mb-6 space-y-2 custom-scrollbar" id="inventory-list">
+                    {% for med in all_medicines %}
+                    <div class="inventory-item flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/20 transition-all" data-name="{{ med.name|lower }}">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-800">{{ med.name }}</span>
+                            <span class="text-[11px] text-gray-400 uppercase font-bold tracking-tight">Stock: 500+</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-black text-blue-600 mb-1">Rs. {{ med.price }}</p>
+                            <button onclick="addMedicine('{{ med.id }}', '{{ med.name }}', '{{ med.price }}')" class="text-[11px] font-bold text-blue-500 hover:text-blue-700">
+                                + Add
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Selected Medicines</p>
+                <div id="selected-items-container" class="space-y-2 min-h-[120px]">
+                    <div class="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                        <i class="ri-capsule-line text-2xl text-gray-300 mb-2"></i>
+                        <p class="text-xs text-gray-400">No medicines selected yet</p>
+                    </div>
+                </div>
+
+                <div class="mt-10 grid grid-cols-2 gap-4">
+                    <form method="POST" action="{% url 'dashboards:reject_prescription' p.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <select id="rejection-select" name="rejection_reason" onchange="toggleOtherReason()" 
+                                    class="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-600 outline-none">
+                                <option value="" disabled selected>Reason (Optional)</option>
+                                <option>Handwriting not clear</option>
+                                <option>Out of stock</option>
+                                <option value="Other">Other Reason...</option>
+                            </select>
+                            <textarea id="other-reason" name="custom_reason" placeholder="Explain reason..." 
+                                      class="hidden w-full mt-2 p-3 bg-white border border-red-100 rounded-xl text-xs outline-none focus:border-red-300 resize-none"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-[#ef4444] text-white rounded-xl font-bold text-sm shadow-lg shadow-red-100 hover:bg-red-600 transition-all flex items-center justify-center gap-2">
+                            <i class="ri-close-circle-line"></i> Reject
+                        </button>
+                    </form>
+
+                    <form id="quote-form" method="POST" action="{% url 'dashboards:review_prescription' p.id %}" class="flex flex-col justify-end">
+                        {% csrf_token %}
+                        <input type="hidden" name="medicines_json" id="medicines-json">
+                        <button type="button" onclick="submitQuote()" class="w-full py-4 bg-[#6366f1] text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                            <i class="ri-send-plane-fill"></i> Send Quote
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    #inventory-list { scroll-behavior: smooth; }
+</style>
+
+<script>
+    let selectedMedicines = [];
+
+    function toggleOtherReason() {
+        const select = document.getElementById('rejection-select');
+        const area = document.getElementById('other-reason');
+        area.style.display = (select.value === "Other") ? "block" : "none";
+    }
+
+    function updateSelectedUI() {
+        const container = document.getElementById('selected-items-container');
+        const jsonInput = document.getElementById('medicines-json');
+        
+        if (selectedMedicines.length === 0) {
+            container.innerHTML = `<div class="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 text-xs"><i class="ri-capsule-line text-2xl mb-2"></i>No medicines selected yet</div>`;
+            jsonInput.value = "";
+            return;
+        }
+
+        let total = 0;
+        const itemsHtml = selectedMedicines.map(m => {
+            total += parseFloat(m.price);
+            return `
+            <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-gray-800">${m.name}</span>
+                    <span class="text-xs text-blue-500 font-bold">Rs. ${m.price}</span>
+                </div>
+                <button type="button" onclick="removeMedicine('${m.id}')" class="text-gray-300 hover:text-red-500 transition-colors">
+                    <i class="ri-delete-bin-6-line"></i>
+                </button>
+            </div>`;
+        }).join('');
+
+        const totalHtml = `
+            <div class="flex justify-between items-center pt-4 mt-2 px-1">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Amount</span>
+                <span class="text-lg font-black text-gray-900">Rs. ${total.toFixed(2)}</span>
+            </div>`;
+
+        container.innerHTML = itemsHtml + totalHtml;
+        jsonInput.value = JSON.stringify(selectedMedicines);
+    }
+
+    function addMedicine(id, name, price) {
+        if (!selectedMedicines.find(m => m.id === id)) {
+            selectedMedicines.push({ id, name, price });
+            updateSelectedUI();
+        }
+    }
+
+    function removeMedicine(id) {
+        selectedMedicines = selectedMedicines.filter(m => m.id !== id);
+        updateSelectedUI();
+    }
+
+    function submitQuote() {
+        if (selectedMedicines.length === 0) {
+            alert("Select medicine first!");
+            return;
+        }
+        document.getElementById('quote-form').submit();
+    }
+
+    function filterInventory() {
+        const query = document.getElementById('inventory-search').value.toLowerCase();
+        document.querySelectorAll('.inventory-item').forEach(item => {
+            const name = item.getAttribute('data-name');
+            item.style.display = name.includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', updateSelectedUI);
+</script>
+{% endblock %}
